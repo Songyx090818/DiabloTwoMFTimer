@@ -39,12 +39,12 @@ namespace DTwoMFTimerHelper
         private void InitializeComponent()
         {
             this.btnConfirmSettings = new System.Windows.Forms.Button();
+            this.radioTopLeft = new System.Windows.Forms.RadioButton();
+            this.radioTopCenter = new System.Windows.Forms.RadioButton();
+            this.radioTopRight = new System.Windows.Forms.RadioButton();
             this.radioBottomLeft = new System.Windows.Forms.RadioButton();
             this.radioBottomCenter = new System.Windows.Forms.RadioButton();
             this.radioBottomRight = new System.Windows.Forms.RadioButton();
-            this.radioTopRight = new System.Windows.Forms.RadioButton();
-            this.radioTopCenter = new System.Windows.Forms.RadioButton();
-            this.radioTopLeft = new System.Windows.Forms.RadioButton();
             this.groupBoxPosition = new System.Windows.Forms.GroupBox();
             this.chineseRadioButton = new System.Windows.Forms.RadioButton();
             this.englishRadioButton = new System.Windows.Forms.RadioButton();
@@ -57,143 +57,162 @@ namespace DTwoMFTimerHelper
             // 
             // btnConfirmSettings
             // 
-            this.btnConfirmSettings.Location = new System.Drawing.Point(76, 350);
+            this.btnConfirmSettings.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnConfirmSettings.Location = new System.Drawing.Point(295, 362);
             this.btnConfirmSettings.Name = "btnConfirmSettings";
-            this.btnConfirmSettings.Size = new System.Drawing.Size(140, 30);
-            this.btnConfirmSettings.TabIndex = 1;
+            this.btnConfirmSettings.Size = new System.Drawing.Size(75, 23);
+            this.btnConfirmSettings.TabIndex = 0;
+            this.btnConfirmSettings.Text = "确认";
             this.btnConfirmSettings.UseVisualStyleBackColor = true;
             this.btnConfirmSettings.Click += new System.EventHandler(this.btnConfirmSettings_Click);
-            // 
-            // radioBottomLeft
-            // 
-            this.radioBottomLeft.AutoSize = true;
-            this.radioBottomLeft.Location = new System.Drawing.Point(20, 100);
-            this.radioBottomLeft.Name = "radioBottomLeft";
-            this.radioBottomLeft.Size = new System.Drawing.Size(47, 19);
-            this.radioBottomLeft.TabIndex = 5;
-            this.radioBottomLeft.UseVisualStyleBackColor = true;
-            // 
-            // radioBottomCenter
-            // 
-            this.radioBottomCenter.AutoSize = true;
-            this.radioBottomCenter.Location = new System.Drawing.Point(100, 100);
-            this.radioBottomCenter.Name = "radioBottomCenter";
-            this.radioBottomCenter.Size = new System.Drawing.Size(47, 19);
-            this.radioBottomCenter.TabIndex = 4;
-            this.radioBottomCenter.UseVisualStyleBackColor = true;
-            // 
-            // radioBottomRight
-            // 
-            this.radioBottomRight.AutoSize = true;
-            this.radioBottomRight.Location = new System.Drawing.Point(180, 100);
-            this.radioBottomRight.Name = "radioBottomRight";
-            this.radioBottomRight.Size = new System.Drawing.Size(47, 19);
-            this.radioBottomRight.TabIndex = 3;
-            this.radioBottomRight.UseVisualStyleBackColor = true;
-            // 
-            // radioTopRight
-            // 
-            this.radioTopRight.AutoSize = true;
-            this.radioTopRight.Location = new System.Drawing.Point(180, 40);
-            this.radioTopRight.Name = "radioTopRight";
-            this.radioTopRight.Size = new System.Drawing.Size(47, 19);
-            this.radioTopRight.TabIndex = 2;
-            this.radioTopRight.UseVisualStyleBackColor = true;
-            // 
-            // radioTopCenter
-            // 
-            this.radioTopCenter.AutoSize = true;
-            this.radioTopCenter.Location = new System.Drawing.Point(100, 40);
-            this.radioTopCenter.Name = "radioTopCenter";
-            this.radioTopCenter.Size = new System.Drawing.Size(47, 19);
-            this.radioTopCenter.TabIndex = 1;
-            this.radioTopCenter.UseVisualStyleBackColor = true;
             // 
             // radioTopLeft
             // 
             this.radioTopLeft.AutoSize = true;
             this.radioTopLeft.Checked = true;
-            this.radioTopLeft.Location = new System.Drawing.Point(20, 40);
+            this.radioTopLeft.Location = new System.Drawing.Point(30, 30);
             this.radioTopLeft.Name = "radioTopLeft";
             this.radioTopLeft.Size = new System.Drawing.Size(47, 19);
-            this.radioTopLeft.TabIndex = 0;
+            this.radioTopLeft.TabIndex = 1;
             this.radioTopLeft.TabStop = true;
+            this.radioTopLeft.Text = "左上";
             this.radioTopLeft.UseVisualStyleBackColor = true;
+            // 
+            // radioTopCenter
+            // 
+            this.radioTopCenter.AutoSize = true;
+            this.radioTopCenter.Location = new System.Drawing.Point(140, 30);
+            this.radioTopCenter.Name = "radioTopCenter";
+            this.radioTopCenter.Size = new System.Drawing.Size(47, 19);
+            this.radioTopCenter.TabIndex = 2;
+            this.radioTopCenter.TabStop = true;
+            this.radioTopCenter.Text = "上中";
+            this.radioTopCenter.UseVisualStyleBackColor = true;
+            // 
+            // radioTopRight
+            // 
+            this.radioTopRight.AutoSize = true;
+            this.radioTopRight.Location = new System.Drawing.Point(250, 30);
+            this.radioTopRight.Name = "radioTopRight";
+            this.radioTopRight.Size = new System.Drawing.Size(47, 19);
+            this.radioTopRight.TabIndex = 3;
+            this.radioTopRight.TabStop = true;
+            this.radioTopRight.Text = "右上";
+            this.radioTopRight.UseVisualStyleBackColor = true;
+            // 
+            // radioBottomLeft
+            // 
+            this.radioBottomLeft.AutoSize = true;
+            this.radioBottomLeft.Location = new System.Drawing.Point(30, 70);
+            this.radioBottomLeft.Name = "radioBottomLeft";
+            this.radioBottomLeft.Size = new System.Drawing.Size(47, 19);
+            this.radioBottomLeft.TabIndex = 4;
+            this.radioBottomLeft.TabStop = true;
+            this.radioBottomLeft.Text = "左下";
+            this.radioBottomLeft.UseVisualStyleBackColor = true;
+            // 
+            // radioBottomCenter
+            // 
+            this.radioBottomCenter.AutoSize = true;
+            this.radioBottomCenter.Location = new System.Drawing.Point(140, 70);
+            this.radioBottomCenter.Name = "radioBottomCenter";
+            this.radioBottomCenter.Size = new System.Drawing.Size(47, 19);
+            this.radioBottomCenter.TabIndex = 5;
+            this.radioBottomCenter.TabStop = true;
+            this.radioBottomCenter.Text = "下中";
+            this.radioBottomCenter.UseVisualStyleBackColor = true;
+            // 
+            // radioBottomRight
+            // 
+            this.radioBottomRight.AutoSize = true;
+            this.radioBottomRight.Location = new System.Drawing.Point(250, 70);
+            this.radioBottomRight.Name = "radioBottomRight";
+            this.radioBottomRight.Size = new System.Drawing.Size(47, 19);
+            this.radioBottomRight.TabIndex = 6;
+            this.radioBottomRight.TabStop = true;
+            this.radioBottomRight.Text = "右下";
+            this.radioBottomRight.UseVisualStyleBackColor = true;
             // 
             // groupBoxPosition
             // 
-            this.groupBoxPosition.Controls.Add(this.radioBottomLeft);
-            this.groupBoxPosition.Controls.Add(this.radioBottomCenter);
-            this.groupBoxPosition.Controls.Add(this.radioBottomRight);
+            this.groupBoxPosition.Controls.Add(this.radioTopLeft);
             this.groupBoxPosition.Controls.Add(this.radioTopRight);
             this.groupBoxPosition.Controls.Add(this.radioTopCenter);
-            this.groupBoxPosition.Controls.Add(this.radioTopLeft);
-            this.groupBoxPosition.Location = new System.Drawing.Point(30, 20);
+            this.groupBoxPosition.Controls.Add(this.radioBottomLeft);
+            this.groupBoxPosition.Controls.Add(this.radioBottomRight);
+            this.groupBoxPosition.Controls.Add(this.radioBottomCenter);
+            this.groupBoxPosition.Location = new System.Drawing.Point(10, 10);
             this.groupBoxPosition.Name = "groupBoxPosition";
-            this.groupBoxPosition.Size = new System.Drawing.Size(230, 140);
-            this.groupBoxPosition.TabIndex = 0;
+            this.groupBoxPosition.Size = new System.Drawing.Size(360, 110);
+            this.groupBoxPosition.TabIndex = 7;
             this.groupBoxPosition.TabStop = false;
+            this.groupBoxPosition.Text = "窗口位置";
             // 
             // chineseRadioButton
             // 
             this.chineseRadioButton.AutoSize = true;
+            this.chineseRadioButton.Checked = true;
             this.chineseRadioButton.Location = new System.Drawing.Point(30, 30);
             this.chineseRadioButton.Name = "chineseRadioButton";
-            this.chineseRadioButton.Size = new System.Drawing.Size(47, 19);
-            this.chineseRadioButton.TabIndex = 0;
-            this.chineseRadioButton.Checked = true;
+            this.chineseRadioButton.Size = new System.Drawing.Size(59, 19);
+            this.chineseRadioButton.TabIndex = 8;
             this.chineseRadioButton.TabStop = true;
+            this.chineseRadioButton.Text = "Chinese";
             this.chineseRadioButton.UseVisualStyleBackColor = true;
             // 
             // englishRadioButton
             // 
             this.englishRadioButton.AutoSize = true;
-            this.englishRadioButton.Location = new System.Drawing.Point(100, 30);
+            this.englishRadioButton.Location = new System.Drawing.Point(140, 30);
             this.englishRadioButton.Name = "englishRadioButton";
-            this.englishRadioButton.Size = new System.Drawing.Size(47, 19);
-            this.englishRadioButton.TabIndex = 1;
+            this.englishRadioButton.Size = new System.Drawing.Size(64, 19);
+            this.englishRadioButton.TabIndex = 9;
+            this.englishRadioButton.TabStop = true;
+            this.englishRadioButton.Text = "English";
             this.englishRadioButton.UseVisualStyleBackColor = true;
             // 
             // groupBoxLanguage
             // 
             this.groupBoxLanguage.Controls.Add(this.chineseRadioButton);
             this.groupBoxLanguage.Controls.Add(this.englishRadioButton);
-            this.groupBoxLanguage.Location = new System.Drawing.Point(30, 180);
+            this.groupBoxLanguage.Location = new System.Drawing.Point(10, 130);
             this.groupBoxLanguage.Name = "groupBoxLanguage";
-            this.groupBoxLanguage.Size = new System.Drawing.Size(230, 70);
-            this.groupBoxLanguage.TabIndex = 2;
+            this.groupBoxLanguage.Size = new System.Drawing.Size(360, 70);
+            this.groupBoxLanguage.TabIndex = 10;
             this.groupBoxLanguage.TabStop = false;
+            this.groupBoxLanguage.Text = "语言";
             // 
             // alwaysOnTopCheckBox
             // 
             this.alwaysOnTopCheckBox.AutoSize = true;
-            this.alwaysOnTopCheckBox.Location = new System.Drawing.Point(120, 280);
+            this.alwaysOnTopCheckBox.Checked = true;
+            this.alwaysOnTopCheckBox.Location = new System.Drawing.Point(120, 220);
             this.alwaysOnTopCheckBox.Name = "alwaysOnTopCheckBox";
             this.alwaysOnTopCheckBox.Size = new System.Drawing.Size(15, 14);
             this.alwaysOnTopCheckBox.TabIndex = 3;
             this.alwaysOnTopCheckBox.UseVisualStyleBackColor = true;
-            this.alwaysOnTopCheckBox.Checked = true;
             // 
             // alwaysOnTopLabel
             // 
             this.alwaysOnTopLabel.AutoSize = true;
-            this.alwaysOnTopLabel.Location = new System.Drawing.Point(30, 280);
+            this.alwaysOnTopLabel.Location = new System.Drawing.Point(30, 220);
             this.alwaysOnTopLabel.Name = "alwaysOnTopLabel";
             this.alwaysOnTopLabel.Size = new System.Drawing.Size(70, 15);
             this.alwaysOnTopLabel.TabIndex = 4;
+            this.alwaysOnTopLabel.Text = "总在最前";
             // 
             // SettingsControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.AutoScroll = true; // 启用自动滚动
+            this.AutoScroll = true;
             this.Controls.Add(this.alwaysOnTopLabel);
             this.Controls.Add(this.alwaysOnTopCheckBox);
             this.Controls.Add(this.groupBoxLanguage);
-            this.Controls.Add(this.btnConfirmSettings);
             this.Controls.Add(this.groupBoxPosition);
+            this.Controls.Add(this.btnConfirmSettings);
             this.Name = "SettingsControl";
-            this.Size = new System.Drawing.Size(480, 500);
+            this.Size = new System.Drawing.Size(380, 400);
             this.groupBoxPosition.ResumeLayout(false);
             this.groupBoxPosition.PerformLayout();
             this.groupBoxLanguage.ResumeLayout(false);
