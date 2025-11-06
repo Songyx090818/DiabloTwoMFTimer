@@ -258,43 +258,29 @@ namespace DTwoMFTimerHelper
             this.tabPageHotkeys.Text = "快捷键";
             this.tabPageHotkeys.UseVisualStyleBackColor = true;
             // 
-            // btnSetPauseHotkey
+            // 已移除设置按钮，改为点击标签直接设置快捷键
             // 
-            this.btnSetPauseHotkey.Location = new System.Drawing.Point(205, 70);
-            this.btnSetPauseHotkey.Name = "btnSetPauseHotkey";
-            this.btnSetPauseHotkey.Size = new System.Drawing.Size(70, 23);
-            this.btnSetPauseHotkey.TabIndex = 5;
-            this.btnSetPauseHotkey.Text = "Set"; // 将在UpdateUI中通过LanguageManager更新
-            this.btnSetPauseHotkey.UseVisualStyleBackColor = true;
-            this.btnSetPauseHotkey.Click += new System.EventHandler(this.btnSetPauseHotkey_Click);
-            // 
-            // btnSetStartStopHotkey
-            // 
-            this.btnSetStartStopHotkey.Location = new System.Drawing.Point(205, 30);
-            this.btnSetStartStopHotkey.Name = "btnSetStartStopHotkey";
-            this.btnSetStartStopHotkey.Size = new System.Drawing.Size(70, 23);
-            this.btnSetStartStopHotkey.TabIndex = 4;
-            this.btnSetStartStopHotkey.Text = "Set"; // 将在UpdateUI中通过LanguageManager更新
-            this.btnSetStartStopHotkey.UseVisualStyleBackColor = true;
-            this.btnSetStartStopHotkey.Click += new System.EventHandler(this.btnSetStartStopHotkey_Click);
-            // 
-            // labelPauseHotkey
+            // labelPauseHotkey - 可点击设置快捷键
             // 
             this.labelPauseHotkey.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.labelPauseHotkey.Cursor = System.Windows.Forms.Cursors.Hand;
             this.labelPauseHotkey.Location = new System.Drawing.Point(70, 70);
             this.labelPauseHotkey.Name = "labelPauseHotkey";
-            this.labelPauseHotkey.Size = new System.Drawing.Size(130, 23);
+            this.labelPauseHotkey.Size = new System.Drawing.Size(205, 23);
             this.labelPauseHotkey.TabIndex = 3;
             this.labelPauseHotkey.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.labelPauseHotkey.Click += new System.EventHandler(this.btnSetPauseHotkey_Click);
             // 
-            // labelStartStopHotkey
+            // labelStartStopHotkey - 可点击设置快捷键
             // 
             this.labelStartStopHotkey.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.labelStartStopHotkey.Cursor = System.Windows.Forms.Cursors.Hand;
             this.labelStartStopHotkey.Location = new System.Drawing.Point(70, 30);
             this.labelStartStopHotkey.Name = "labelStartStopHotkey";
-            this.labelStartStopHotkey.Size = new System.Drawing.Size(130, 23);
+            this.labelStartStopHotkey.Size = new System.Drawing.Size(205, 23);
             this.labelStartStopHotkey.TabIndex = 2;
             this.labelStartStopHotkey.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.labelStartStopHotkey.Click += new System.EventHandler(this.btnSetStartStopHotkey_Click);
             // 
             // labelHotkeyPause
             // 
@@ -316,8 +302,6 @@ namespace DTwoMFTimerHelper
             // 
             // groupBoxHotkeys
             // 
-            this.groupBoxHotkeys.Controls.Add(this.btnSetPauseHotkey);
-            this.groupBoxHotkeys.Controls.Add(this.btnSetStartStopHotkey);
             this.groupBoxHotkeys.Controls.Add(this.labelPauseHotkey);
             this.groupBoxHotkeys.Controls.Add(this.labelStartStopHotkey);
             this.groupBoxHotkeys.Controls.Add(this.labelHotkeyPause);
