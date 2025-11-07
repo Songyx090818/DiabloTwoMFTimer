@@ -75,5 +75,11 @@
   "InvalidCharacter": "选中的角色数据无效",
   "Warning": "警告",
   "NoCharactersAvailable": "没有可用的角色档案，请先创建角色。",
-  "Information": "提示"
+  "Information": "提示",
+  "RunCount": "运行次数 {{0}} ({{1}})",
+  "FastestTime": "最快时间: {{0}}",
+  "FastestTimePlaceholder": "最快时间: --:--:--.-",
+  "AverageTime": "平均时间: {{0}}",
+  "AverageTimePlaceholder": "平均时间: --:--:--.-",
+  "RunNumber": "第{{0}}次: {{1}}"
 }

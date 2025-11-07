@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using DTwoMFTimerHelper.Data;
+using DTwoMFTimerHelper.Resources;
 
 namespace DTwoMFTimerHelper
 {
@@ -30,7 +31,26 @@ namespace DTwoMFTimerHelper
         {
             InitializeComponent();
             InitializeTimer();
+            
+            // 注册语言变更事件
+            LanguageManager.OnLanguageChanged += LanguageManager_OnLanguageChanged;
+            
             UpdateUI();
+        }
+        
+        private void LanguageManager_OnLanguageChanged(object? sender, EventArgs e)
+        {
+            UpdateUI();
+        }
+        
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                // 取消注册语言变更事件
+                LanguageManager.OnLanguageChanged -= LanguageManager_OnLanguageChanged;
+            }
+            base.Dispose(disposing);
         }
 
         private void InitializeComponent()
@@ -40,6 +60,8 @@ namespace DTwoMFTimerHelper
             
             // 主要计时显示标签
             lblTimeDisplay = new Label();
+            lblTimeDisplay.AutoSize = false; // 设置为手动调整大小
+            lblTimeDisplay.TextAlign = ContentAlignment.MiddleCenter; // 居中对齐
             
             // 运行统计信息
             lblRunCount = new Label();
@@ -66,22 +88,24 @@ namespace DTwoMFTimerHelper
             // 
             // lblTimeDisplay - 计时显示
             // 
-            lblTimeDisplay.AutoSize = true;
+            lblTimeDisplay.AutoSize = false;
             lblTimeDisplay.Font = new Font("Microsoft YaHei UI", 36F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(134)));
             lblTimeDisplay.Location = new Point(40, 30);
             lblTimeDisplay.Name = "lblTimeDisplay";
-            lblTimeDisplay.Size = new Size(306, 64);
+            lblTimeDisplay.Size = new Size(260, 64); // 设置合适的宽度以显示完整时间
+            lblTimeDisplay.TextAlign = ContentAlignment.MiddleCenter; // 居中对齐
             lblTimeDisplay.TabIndex = 1;
             lblTimeDisplay.Text = "00:00:00:0";
             
             // 
             // lblRunCount - 运行次数显示
             // 
-            lblRunCount.AutoSize = true;
+            lblRunCount.AutoSize = false;
             lblRunCount.Font = new Font("Microsoft YaHei UI", 12F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(134)));
             lblRunCount.Location = new Point(15, 100);
             lblRunCount.Name = "lblRunCount";
-            lblRunCount.Size = new Size(150, 21);
+            lblRunCount.Size = new Size(290, 21); // 增加宽度确保完整显示
+            lblRunCount.TextAlign = ContentAlignment.MiddleLeft;
             lblRunCount.TabIndex = 2;
             lblRunCount.Text = "--- Run count 0 (0) ---";
             
@@ -173,14 +197,21 @@ namespace DTwoMFTimerHelper
                 if (lblTimeDisplay != null) 
                 {
                     // 根据时间长度调整字体大小确保显示完整
-                    if (elapsed.Hours > 9)
-                    {
-                        lblTimeDisplay.Font = new Font("Microsoft YaHei UI", 30F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(134)));
-                    }
-                    else
-                    {
-                        lblTimeDisplay.Font = new Font("Microsoft YaHei UI", 36F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(134)));
-                    }
+                if (elapsed.Hours > 9)
+                {
+                    // 小时数超过9时使用更小的字体
+                    lblTimeDisplay.Font = new Font("Microsoft YaHei UI", 28F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(134)));
+                }
+                else if (elapsed.Hours > 0)
+                {
+                    // 有小时数但不超过9时使用中等字体
+                    lblTimeDisplay.Font = new Font("Microsoft YaHei UI", 32F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(134)));
+                }
+                else
+                {
+                    // 没有小时数时可以使用较大字体
+                    lblTimeDisplay.Font = new Font("Microsoft YaHei UI", 36F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(134)));
+                }
                     
                     // 暂停时显示不同的样式
                     if (isPaused)
@@ -205,7 +236,18 @@ namespace DTwoMFTimerHelper
             // 更新统计信息
             if (lblRunCount != null)
             {
-                lblRunCount.Text = $"--- Run count {runCount} ({runCount}) ---";
+                // 使用多语言显示运行次数
+                string runCountText = LanguageManager.GetString("RunCount", runCount, runCount);
+                if (string.IsNullOrEmpty(runCountText) || runCountText == "RunCount")
+                {
+                    // 如果未找到翻译，使用默认格式
+                    runCountText = $"--- Run count {runCount} ({runCount}) ---";
+                }
+                else
+                {
+                    runCountText = $"--- {runCountText} ---";
+                }
+                lblRunCount.Text = runCountText;
             }
             
             if (lblFastestTime != null)
@@ -215,11 +257,24 @@ namespace DTwoMFTimerHelper
                     string fastestFormatted = string.Format("{0:00}:{1:00}:{2:00}.{3}", 
                         fastestTime.Hours, fastestTime.Minutes, fastestTime.Seconds, 
                         (int)(fastestTime.Milliseconds / 100));
-                    lblFastestTime.Text = $"Fastest time: {fastestFormatted}";
+                    
+                    string fastestTimeText = LanguageManager.GetString("FastestTime", fastestFormatted);
+                    if (string.IsNullOrEmpty(fastestTimeText) || fastestTimeText == "FastestTime")
+                    {
+                        fastestTimeText = $"Fastest time: {fastestFormatted}";
+                    }
+                    
+                    lblFastestTime.Text = fastestTimeText;
                 }
                 else
                 {
-                    lblFastestTime.Text = "Fastest time: --:--:--.-";
+                    string fastestTimeText = LanguageManager.GetString("FastestTimePlaceholder");
+                    if (string.IsNullOrEmpty(fastestTimeText) || fastestTimeText == "FastestTimePlaceholder")
+                    {
+                        fastestTimeText = "Fastest time: --:--:--.-";
+                    }
+                    
+                    lblFastestTime.Text = fastestTimeText;
                 }
             }
             
@@ -237,11 +292,24 @@ namespace DTwoMFTimerHelper
                     string averageFormatted = string.Format("{0:00}:{1:00}:{2:00}.{3}", 
                         averageTime.Hours, averageTime.Minutes, averageTime.Seconds, 
                         (int)(averageTime.Milliseconds / 100));
-                    lblAverageTime.Text = $"Average time: {averageFormatted}";
+                    
+                    string averageTimeText = LanguageManager.GetString("AverageTime", averageFormatted);
+                    if (string.IsNullOrEmpty(averageTimeText) || averageTimeText == "AverageTime")
+                    {
+                        averageTimeText = $"Average time: {averageFormatted}";
+                    }
+                    
+                    lblAverageTime.Text = averageTimeText;
                 }
                 else
                 {
-                    lblAverageTime.Text = "Average time: --:--:--.-";
+                    string averageTimeText = LanguageManager.GetString("AverageTimePlaceholder");
+                    if (string.IsNullOrEmpty(averageTimeText) || averageTimeText == "AverageTimePlaceholder")
+                    {
+                        averageTimeText = "Average time: --:--:--.-";
+                    }
+                    
+                    lblAverageTime.Text = averageTimeText;
                 }
             }
             
@@ -255,7 +323,12 @@ namespace DTwoMFTimerHelper
                     string timeFormatted = string.Format("{0:00}:{1:00}:{2:00}.{3}", 
                         time.Hours, time.Minutes, time.Seconds, 
                         (int)(time.Milliseconds / 100));
-                    lstRunHistory.Items.Add($"Run {i + 1}: {timeFormatted}");
+                    string runText = LanguageManager.GetString("RunNumber", i + 1, timeFormatted);
+                    if (string.IsNullOrEmpty(runText) || runText == "RunNumber")
+                    {
+                        runText = $"Run {i + 1}: {timeFormatted}";
+                    }
+                    lstRunHistory.Items.Add(runText);
                 }
                 
                 // 确保最新记录在顶部
