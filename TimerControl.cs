@@ -89,10 +89,10 @@ namespace DTwoMFTimerHelper
             // lblTimeDisplay - 计时显示
             // 
             lblTimeDisplay.AutoSize = false;
-            lblTimeDisplay.Font = new Font("Microsoft YaHei UI", 36F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(134)));
-            lblTimeDisplay.Location = new Point(40, 30);
+            lblTimeDisplay.Font = new Font("Microsoft YaHei UI", 30F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(134))); // 减小默认字体大小
+            lblTimeDisplay.Location = new Point(15, 30); // 调整位置更靠左
             lblTimeDisplay.Name = "lblTimeDisplay";
-            lblTimeDisplay.Size = new Size(260, 64); // 设置合适的宽度以显示完整时间
+            lblTimeDisplay.Size = new Size(290, 64); // 增加宽度以确保显示完整的8位时间
             lblTimeDisplay.TextAlign = ContentAlignment.MiddleCenter; // 居中对齐
             lblTimeDisplay.TabIndex = 1;
             lblTimeDisplay.Text = "00:00:00:0";
@@ -197,21 +197,21 @@ namespace DTwoMFTimerHelper
                 if (lblTimeDisplay != null) 
                 {
                     // 根据时间长度调整字体大小确保显示完整
-                if (elapsed.Hours > 9)
-                {
-                    // 小时数超过9时使用更小的字体
-                    lblTimeDisplay.Font = new Font("Microsoft YaHei UI", 28F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(134)));
-                }
-                else if (elapsed.Hours > 0)
-                {
-                    // 有小时数但不超过9时使用中等字体
-                    lblTimeDisplay.Font = new Font("Microsoft YaHei UI", 32F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(134)));
-                }
-                else
-                {
-                    // 没有小时数时可以使用较大字体
-                    lblTimeDisplay.Font = new Font("Microsoft YaHei UI", 36F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(134)));
-                }
+                    if (elapsed.Hours > 9)
+                    {
+                        // 小时数超过9时使用更小的字体
+                        lblTimeDisplay.Font = new Font("Microsoft YaHei UI", 24F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(134)));
+                    }
+                    else if (elapsed.Hours > 0)
+                    {
+                        // 有小时数但不超过9时使用中等字体
+                        lblTimeDisplay.Font = new Font("Microsoft YaHei UI", 28F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(134)));
+                    }
+                    else
+                    {
+                        // 没有小时数时使用合适的字体大小
+                        lblTimeDisplay.Font = new Font("Microsoft YaHei UI", 30F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(134)));
+                    }
                     
                     // 暂停时显示不同的样式
                     if (isPaused)
@@ -228,7 +228,7 @@ namespace DTwoMFTimerHelper
             {
                 if (lblTimeDisplay != null) 
                 {
-                    lblTimeDisplay.Font = new Font("Microsoft YaHei UI", 36F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(134)));
+                    lblTimeDisplay.Font = new Font("Microsoft YaHei UI", 30F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(134)));
                     lblTimeDisplay.Text = "00:00:00:0";
                 }
             }
