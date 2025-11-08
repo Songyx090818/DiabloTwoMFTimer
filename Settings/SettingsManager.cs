@@ -15,6 +15,8 @@ namespace DTwoMFTimerHelper.Settings
         
         // 角色档案设置
         public string LastUsedProfile { get; set; } = "";
+        public string LastUsedScene { get; set; } = "";
+        public string LastUsedDifficulty { get; set; } = "";
         
         // 番茄时钟设置
         public int WorkTimeMinutes { get; set; } = 25;
@@ -23,6 +25,15 @@ namespace DTwoMFTimerHelper.Settings
         public int ShortBreakSeconds { get; set; } = 0;
         public int LongBreakMinutes { get; set; } = 15;
         public int LongBreakSeconds { get; set; } = 0;
+        
+        // 未完成计时状态
+        public bool IsTimerInProgress { get; set; } = false;
+        public DateTime TimerStartTime { get; set; } = DateTime.MinValue;
+        public double TimerPausedDuration { get; set; } = 0;
+        public bool IsTimerPaused { get; set; } = false;
+        public DateTime TimerPauseStartTime { get; set; } = DateTime.MinValue;
+        public string InProgressCharacter { get; set; } = "";
+        public string InProgressScene { get; set; } = "";
     }
 
     public static class SettingsManager

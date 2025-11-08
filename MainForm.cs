@@ -17,6 +17,18 @@ namespace DTwoMFTimerHelper
         private TimerControl? timerControl;
         private SettingsControl? settingsControl;
         private AppSettings? appSettings;
+        
+        // 公共属性，用于在ProfileManager中访问
+        public TabControl? TabControl => tabControl;
+        private TimerControl? _timerControl;
+        public TimerControl? TimerControl {
+            get {
+                if (_timerControl == null)
+                    _timerControl = timerControl;
+                return _timerControl;
+            }
+        }
+        public ProfileManager? ProfileManager => profileManager;
 
         public MainForm()
         {
@@ -194,6 +206,9 @@ namespace DTwoMFTimerHelper
             timerControl = new TimerControl();
             pomodoroControl = new PomodoroControl();
             settingsControl = new SettingsControl();
+            
+            // 尝试加载未完成的计时状态
+            timerControl.TryLoadPendingTimerState();
 
             // 设置控件的Dock属性
             profileManager.Dock = DockStyle.Fill;
@@ -299,6 +314,12 @@ namespace DTwoMFTimerHelper
             // 当标签页切换时，可以在这里添加额外的逻辑
             // 根据当前选中的选项卡更新UI
             UpdateUI();
+            
+            // 当切换到计时器标签页时，调用OnTabSelected方法以加载角色档案数据
+            if (tabControl != null && tabControl.SelectedIndex == 1 && timerControl != null)
+            {
+                timerControl.OnTabSelected();
+            }
         }
 
         private void InitializeLanguageSupport()
@@ -434,6 +455,8 @@ namespace DTwoMFTimerHelper
         
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
+            // 程序关闭时保存计时器状态
+            timerControl?.OnApplicationClosing();
             // 程序关闭时注销热键
             UnregisterHotKeys();
             base.OnFormClosing(e);

@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Text;
 using System.Windows.Forms;
 using System.Linq;
+using System.IO;
 using DTwoMFTimerHelper.Data;
 using DTwoMFTimerHelper.Settings;
+using DTwoMFTimerHelper.Utils;
 
 namespace DTwoMFTimerHelper
 {
@@ -25,6 +27,22 @@ namespace DTwoMFTimerHelper
         public bool IsTimerRunning => isTimerRunning;
         public Data.CharacterProfile? CurrentProfile => currentProfile;
         public Data.MFRecord? CurrentRecord => currentRecord;
+        
+        // 当前选中的场景
+        public string CurrentScene {
+            get {
+                if (cmbScene != null)
+                    return cmbScene.Text;
+                return string.Empty;
+            }
+        }
+        
+        // 当前选中的难度
+        public Data.GameDifficulty CurrentDifficulty {
+            get {
+                return GetSelectedDifficulty();
+            }
+        }
 
         public ProfileManager()
         {
@@ -47,10 +65,8 @@ namespace DTwoMFTimerHelper
             lblDifficulty = new Label();
             cmbDifficulty = new ComboBox();
             
-            // 计时控制按钮
+            // 计时控制按钮 - 只保留开始按钮
             btnStartStop = new Button();
-            btnComplete = new Button();
-            btnReset = new Button();
             
             // 状态显示标签
             lblCurrentProfile = new Label();
@@ -107,6 +123,7 @@ namespace DTwoMFTimerHelper
             cmbScene.Size = new System.Drawing.Size(250, 34);
             cmbScene.TabIndex = 4;
             cmbScene.DropDownStyle = ComboBoxStyle.DropDownList;
+            cmbScene.SelectedIndexChanged += cmbScene_SelectedIndexChanged;
             // 
             // lblDifficulty
             // 
@@ -143,27 +160,6 @@ namespace DTwoMFTimerHelper
             btnStartStop.UseVisualStyleBackColor = true;
             btnStartStop.Click += btnStartStop_Click;
             btnStartStop.Enabled = false;
-            // 
-            // btnComplete
-            // 
-            btnComplete.Location = new System.Drawing.Point(180, 220);
-            btnComplete.Margin = new Padding(6);
-            btnComplete.Name = "btnComplete";
-            btnComplete.Size = new System.Drawing.Size(130, 50);
-            btnComplete.TabIndex = 8;
-            btnComplete.UseVisualStyleBackColor = true;
-            btnComplete.Click += btnComplete_Click;
-            btnComplete.Enabled = false;
-            // 
-            // btnReset
-            // 
-            btnReset.Location = new System.Drawing.Point(330, 220);
-            btnReset.Margin = new Padding(6);
-            btnReset.Name = "btnReset";
-            btnReset.Size = new System.Drawing.Size(130, 50);
-            btnReset.TabIndex = 9;
-            btnReset.UseVisualStyleBackColor = true;
-            btnReset.Click += btnReset_Click;
             // 
             // lblCurrentProfile
             // 
@@ -204,8 +200,6 @@ namespace DTwoMFTimerHelper
             Controls.Add(lblDifficulty);
             Controls.Add(cmbDifficulty);
             Controls.Add(btnStartStop);
-            Controls.Add(btnComplete);
-            Controls.Add(btnReset);
             Controls.Add(lblCurrentProfile);
             Controls.Add(lblTime);
             Controls.Add(lblStats);
@@ -273,6 +267,68 @@ namespace DTwoMFTimerHelper
                 Console.WriteLine(summary);
             }
             
+            // 尝试加载上次使用的场景、难度和角色档案
+            try
+            {
+                var settings = DTwoMFTimerHelper.Settings.SettingsManager.LoadSettings();
+                
+                // 加载上次使用的场景
+                if (!string.IsNullOrEmpty(settings.LastUsedScene) && cmbScene != null)
+                {
+                    for (int i = 0; i < cmbScene.Items.Count; i++)
+                    {
+                        var itemText = cmbScene.Items[i]?.ToString();
+                        if (itemText != null && itemText == settings.LastUsedScene)
+                        {
+                            cmbScene.SelectedIndex = i;
+                            debugInfo.AppendLine($"已恢复上次使用的场景: {settings.LastUsedScene}");
+                            break;
+                        }
+                    }
+                }
+                
+                // 尝试加载上次使用的难度
+                if (!string.IsNullOrEmpty(settings.LastUsedDifficulty) && cmbDifficulty != null)
+                {
+                    if (Enum.TryParse<DTwoMFTimerHelper.Data.GameDifficulty>(settings.LastUsedDifficulty, out var difficulty))
+                    {
+                        // 根据难度值设置下拉框索引
+                        switch (difficulty)
+                        {
+                            case DTwoMFTimerHelper.Data.GameDifficulty.Normal:
+                                cmbDifficulty.SelectedIndex = 0;
+                                break;
+                            case DTwoMFTimerHelper.Data.GameDifficulty.Nightmare:
+                                cmbDifficulty.SelectedIndex = 1;
+                                break;
+                            case DTwoMFTimerHelper.Data.GameDifficulty.Hell:
+                                cmbDifficulty.SelectedIndex = 2;
+                                break;
+                        }
+                        debugInfo.AppendLine($"已恢复上次使用的难度: {settings.LastUsedDifficulty}");
+                    }
+                }
+                
+                // 尝试加载上次使用的角色档案
+                if (!string.IsNullOrEmpty(settings.LastUsedProfile))
+                {
+                    var profile = DataManager.FindProfileByName(settings.LastUsedProfile);
+                    if (profile != null)
+                    {
+                        currentProfile = profile;
+                        if (btnDeleteCharacter != null) btnDeleteCharacter.Enabled = true;
+                        if (btnStartStop != null) btnStartStop.Enabled = true;
+                        debugInfo.AppendLine($"已恢复上次使用的角色档案: {settings.LastUsedProfile}");
+                        // 更新界面显示
+                        UpdateUI();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                debugInfo.AppendLine($"加载上次设置失败: {ex.Message}");
+            }
+            
             debugInfo.AppendLine("===== 场景列表加载到下拉框完成 =====");
         }
 
@@ -318,17 +374,35 @@ namespace DTwoMFTimerHelper
             return null;
         }
 
+        private string GetCurrentCharacterName()
+        {
+            if (currentProfile != null)
+            {
+                string className = GetLocalizedClassName(currentProfile.Class);
+                return $"{currentProfile.Name} ({className})";
+            }
+            return "未选择";
+        }
+        
+        private string GetCurrentSceneName()
+        {
+            var selectedScene = GetSelectedScene();
+            if (selectedScene != null)
+            {
+                return GetSceneDisplayName(selectedScene);
+            }
+            return "未选择";
+        }
+        
         public void UpdateUI()
         {
             // 更新按钮文本
             if (btnCreateCharacter != null) btnCreateCharacter.Text = DTwoMFTimerHelper.Resources.LanguageManager.GetString("CreateCharacter");
-        if (btnSwitchCharacter != null) btnSwitchCharacter.Text = DTwoMFTimerHelper.Resources.LanguageManager.GetString("SwitchCharacter");
-        if (btnDeleteCharacter != null) btnDeleteCharacter.Text = DTwoMFTimerHelper.Resources.LanguageManager.GetString("DeleteCharacter");
-        if (btnStartStop != null) btnStartStop.Text = isTimerRunning ? DTwoMFTimerHelper.Resources.LanguageManager.GetString("StopTimer") : DTwoMFTimerHelper.Resources.LanguageManager.GetString("StartTimer");
-        if (btnComplete != null) btnComplete.Text = DTwoMFTimerHelper.Resources.LanguageManager.GetString("Complete");
-        if (btnReset != null) btnReset.Text = DTwoMFTimerHelper.Resources.LanguageManager.GetString("Reset");
-        if (lblScene != null) lblScene.Text = DTwoMFTimerHelper.Resources.LanguageManager.GetString("SelectScene");
-        if (lblDifficulty != null) lblDifficulty.Text = DTwoMFTimerHelper.Resources.LanguageManager.GetString("DifficultyLabel");
+            if (btnSwitchCharacter != null) btnSwitchCharacter.Text = DTwoMFTimerHelper.Resources.LanguageManager.GetString("SwitchCharacter");
+            if (btnDeleteCharacter != null) btnDeleteCharacter.Text = DTwoMFTimerHelper.Resources.LanguageManager.GetString("DeleteCharacter");
+            if (btnStartStop != null) btnStartStop.Text = DTwoMFTimerHelper.Resources.LanguageManager.GetString("StartTimer");
+            if (lblScene != null) lblScene.Text = DTwoMFTimerHelper.Resources.LanguageManager.GetString("SelectScene");
+            if (lblDifficulty != null) lblDifficulty.Text = DTwoMFTimerHelper.Resources.LanguageManager.GetString("DifficultyLabel");
             
             // 更新当前角色显示
             if (currentProfile != null)
@@ -341,39 +415,19 @@ namespace DTwoMFTimerHelper
                 if (lblCurrentProfile != null) lblCurrentProfile.Text = "当前角色: 未选择";
             }
             
-            // 更新统计信息
-            if (currentProfile != null)
+            // 隐藏时间和统计信息标签，去掉红色标注
+            if (lblTime != null) 
             {
-                double avgTime = currentProfile.AverageGameTimeSeconds;
-                string avgTimeStr = FormatTime(avgTime);
-                string totalTimeStr = FormatTime(currentProfile.TotalPlayTimeSeconds);
-                
-                if (lblStats != null) lblStats.Text = $"统计: 游戏局数: {currentProfile.CompletedGamesCount}, "+
-                               $"平均时长: {avgTimeStr}, " +
-                               $"总时间: {totalTimeStr}";
+                lblTime.Visible = false;
             }
-            else
+            if (lblStats != null) 
             {
-                if (lblStats != null) lblStats.Text = "统计: 暂无数据";
-            }
-            
-            // 更新时间标签
-            if (isTimerRunning && startTime != DateTime.MinValue)
-            {
-                TimeSpan elapsed = DateTime.Now - startTime;
-                // 格式化为 时:分:秒
-                string formattedTime = string.Format("{0:00}:{1:00}:{2:00}", elapsed.Hours, elapsed.Minutes, elapsed.Seconds);
-                if (lblTime != null) lblTime.Text = $"时间: {formattedTime}";
-            }
-            else
-            {
-                if (lblTime != null) lblTime.Text = "时间: 00:00:00";
+                lblStats.Visible = false;
             }
             
             // 更新按钮状态
             if (btnDeleteCharacter != null) btnDeleteCharacter.Enabled = currentProfile != null;
-            if (btnStartStop != null) btnStartStop.Enabled = currentProfile != null && !isTimerRunning;
-            if (btnComplete != null) btnComplete.Enabled = currentProfile != null && isTimerRunning;
+            if (btnStartStop != null) btnStartStop.Enabled = currentProfile != null;
         }
         
         private string GetLocalizedClassName(Data.CharacterClass charClass)
@@ -474,9 +528,9 @@ namespace DTwoMFTimerHelper
         }
 
         private void btnSwitchCharacter_Click(object? sender, EventArgs e)
-        {
+        {            
             using (var form = new SwitchCharacterForm())
-            {
+            {                
                 if (form.ShowDialog() == DialogResult.OK && form.SelectedProfile != null)
                 {
                     try
@@ -510,6 +564,9 @@ namespace DTwoMFTimerHelper
                         // 更新UI显示新角色信息
                         UpdateUI();
                         
+                        // 同步更新TimerControl
+                        SyncTimerControl();
+                        
                         // 显示成功消息
                         MessageBox.Show($"已成功切换到角色 '{currentProfile.Name}'", "切换成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
@@ -541,39 +598,81 @@ namespace DTwoMFTimerHelper
             }
         }
 
+        // 使用LogManager类记录日志
+        private void WriteDebugLog(string message)
+        {
+            LogManager.WriteDebugLog("ProfileManager", message);
+        }
+        
         private void btnStartStop_Click(object? sender, EventArgs e)
-        {
-            if (!isTimerRunning && currentProfile != null)
+        {            // 获取当前选择的场景和角色信息
+            string selectedScene = cmbScene?.Text ?? "";
+            string characterName = currentProfile != null ? GetCurrentCharacterName() : "";
+            
+            // 记录点击开始计时时的角色档案信息
+            WriteDebugLog($"btnStartStop_Click 调用（点击开始计时按钮），默认用户档案名称: {characterName}, 当前选择的场景: {selectedScene}");
+            WriteDebugLog($"当前CurrentProfile: {(currentProfile != null ? currentProfile.Name : "null")}");
+            
+            // 跳转到计时器页面
+            TabControl? tabControl = ParentForm?.Controls.Find("tabControl", true).FirstOrDefault() as TabControl;
+            if (tabControl != null)
             {
-                StartTimer();
+                tabControl.SelectedIndex = 1;
+                WriteDebugLog("已切换到计时器页面");
+            }
+            else
+            {
+                WriteDebugLog("未找到tabControl");
+            }
+            
+            // 查找TimerControl并设置角色和场景信息，然后启动计时器
+            TimerControl? timerControl = ParentForm?.Controls.Find("timerControl", true).FirstOrDefault() as TimerControl;
+            if (timerControl != null)
+            {
+                WriteDebugLog($"已找到TimerControl，准备设置角色和场景: {characterName}, {selectedScene}");
+                timerControl.SetCharacterAndScene(characterName, selectedScene);
+                timerControl.StartTimer();
+            }
+            else
+            {
+                WriteDebugLog("未找到timerControl");
             }
         }
-
-        private void btnComplete_Click(object? sender, EventArgs e)
-        {
-            if (isTimerRunning && currentProfile != null && currentRecord != null)
+        
+        // 场景选择变更事件处理
+        private void cmbScene_SelectedIndexChanged(object? sender, EventArgs e)
+        {            
+            // 当场景改变时，同步更新TimerControl
+            if (cmbScene != null)
             {
-                // 停止计时
-                StopTimer();
-                
-                // 保存当前记录
-                currentRecord.EndTime = DateTime.Now;
-                DataManager.AddMFRecord(currentProfile, currentRecord);
-                
-                // 重置当前记录
-                currentRecord = null;
-                
-                // 提示完成
-                MessageBox.Show("记录已保存", "提示");
-                UpdateUI();
+                Console.WriteLine($"场景已变更为: {cmbScene.Text}");
+                SyncTimerControl();
             }
         }
-
-        private void btnReset_Click(object? sender, EventArgs e)
-        {
-            ResetTimer();
+        
+        /// <summary>
+        /// 同步更新TimerControl的角色和场景信息
+        /// </summary>
+        private void SyncTimerControl()
+        {            
+            try
+            {                
+                // 获取主窗口
+                var mainForm = this.FindForm() as MainForm;
+                if (mainForm != null && mainForm.TimerControl != null)
+                {                    
+                    // 调用TimerControl的同步方法
+                    mainForm.TimerControl.SyncWithProfileManager();
+                    Console.WriteLine($"已同步TimerControl的角色和场景信息");
+                }
+            }
+            catch (Exception ex)
+            {                
+                Console.WriteLine($"同步TimerControl失败: {ex.Message}");
+                Console.WriteLine($"异常堆栈: {ex.StackTrace}");
+            }
         }
-
+        
         private void StartTimer()
         {
             if (!isTimerRunning && currentProfile != null)
@@ -604,7 +703,7 @@ namespace DTwoMFTimerHelper
                 }
             }
         }
-
+        
         private void StopTimer()
         {
             if (isTimerRunning)
@@ -617,56 +716,51 @@ namespace DTwoMFTimerHelper
                 TimerStateChanged?.Invoke(this, EventArgs.Empty);
             }
         }
-
-        private void ResetTimer()
-        {            StopTimer();
-            currentRecord = null;
-            UpdateUI();
-        }
-
+        
         /// <summary>
         /// 加载上次使用的角色档案
         /// </summary>
         public void LoadLastUsedProfile()
-        {
+        {            WriteDebugLog("LoadLastUsedProfile 开始执行");
             try
-            {
-                // 加载设置并获取上次使用的角色档案名称
+            {                // 加载设置并获取上次使用的角色档案名称
                 var settings = SettingsManager.LoadSettings();
                 string lastUsedProfileName = settings.LastUsedProfile;
+                WriteDebugLog($"从配置文件加载设置: LastUsedProfile={lastUsedProfileName}");
                 
                 if (!string.IsNullOrWhiteSpace(lastUsedProfileName))
-                {
+                {                    WriteDebugLog($"尝试加载上次使用的角色档案: {lastUsedProfileName}");
                     Console.WriteLine($"尝试加载上次使用的角色档案: {lastUsedProfileName}");
                     
                     // 加载所有角色档案
                     var allProfiles = DataManager.LoadAllProfiles(false);
+                    WriteDebugLog($"已加载所有角色档案，数量: {allProfiles.Count}");
                     
                     // 查找上次使用的角色档案
                     var profile = allProfiles.FirstOrDefault(p => p.Name == lastUsedProfileName);
                     if (profile != null)
-                    {
-                        currentProfile = profile;
+                    {                        currentProfile = profile;
                         currentRecord = null;
                         UpdateUI();
+                        WriteDebugLog($"成功加载上次使用的角色档案: {lastUsedProfileName}, profile.Name={profile.Name}");
                         Console.WriteLine($"成功加载上次使用的角色档案: {lastUsedProfileName}");
                     }
                     else
-                    {
+                    {                        WriteDebugLog($"未找到上次使用的角色档案: {lastUsedProfileName}");
                         Console.WriteLine($"未找到上次使用的角色档案: {lastUsedProfileName}");
                     }
                 }
                 else
-                {
+                {                    WriteDebugLog("没有保存的上次使用角色档案");
                     Console.WriteLine("没有保存的上次使用角色档案");
                 }
             }
             catch (Exception ex)
-            {
+            {                WriteDebugLog($"加载上次使用角色档案失败: {ex.Message}, 堆栈: {ex.StackTrace}");
                 Console.WriteLine($"加载上次使用角色档案失败: {ex.Message}");
             }
         }
-
+        
         // 控件字段 - 标记为可为null以修复CS8618警告
         private Button? btnCreateCharacter;
         private Button? btnSwitchCharacter;
@@ -676,8 +770,6 @@ namespace DTwoMFTimerHelper
         private Label? lblDifficulty;
         private ComboBox? cmbDifficulty;
         private Button? btnStartStop;
-        private Button? btnComplete;
-        private Button? btnReset;
         private Label? lblCurrentProfile;
         private Label? lblTime;
         private Label? lblStats;

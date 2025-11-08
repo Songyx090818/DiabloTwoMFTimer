@@ -7,26 +7,31 @@ using System.Windows.Forms;
 // AppDomain is already in System namespace
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
+using DTwoMFTimerHelper.Utils;
 
 namespace DTwoMFTimerHelper.Data
 {
     public static class DataManager
     {
-        // 直接使用用户提到的目录路径进行测试
-        private static readonly string ProfilesDirectory = "C:\\Users\\lizhi\\AppData\\Roaming\\mf-time-helper\\profiles\\";
+        // 动态获取当前用户的AppData\Roaming路径
+        private static readonly string ProfilesDirectory = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "mf-time-helper",
+            "profiles",
+            "");
         
         // 静态构造函数，用于验证目录路径
         static DataManager()
         {
-            Console.WriteLine($"[目录验证] 角色档案目录路径: {ProfilesDirectory}");
-            Console.WriteLine($"[目录验证] 目录是否存在: {Directory.Exists(ProfilesDirectory)}");
+            LogManager.WriteDebugLog("DataManager", $"[目录验证] 角色档案目录路径: {ProfilesDirectory}");
+            LogManager.WriteDebugLog("DataManager", $"[目录验证] 目录是否存在: {Directory.Exists(ProfilesDirectory)}");
             if (Directory.Exists(ProfilesDirectory))
             {
                 var files = Directory.GetFiles(ProfilesDirectory, "*.yaml");
-                Console.WriteLine($"[目录验证] 目录中找到 {files.Length} 个YAML文件");
+                LogManager.WriteDebugLog("DataManager", $"[目录验证] 目录中找到 {files.Length} 个YAML文件");
                 foreach (var file in files)
                 {
-                    Console.WriteLine($"[目录验证] - {Path.GetFileName(file)}");
+                    LogManager.WriteDebugLog("DataManager", $"[目录验证] - {Path.GetFileName(file)}");
                 }
             }
         }
@@ -54,14 +59,14 @@ namespace DTwoMFTimerHelper.Data
             {
                 if (File.Exists(path))
                 {
-                    Console.WriteLine($"找到FarmingSpots.yaml文件：{path}");
+                    LogManager.WriteDebugLog("DataManager", $"找到FarmingSpots.yaml文件：{path}");
                     return path;
                 }
             }
             
             // 如果都不存在，返回应用程序基目录下的Resources路径（标准位置）
             string defaultPath = possiblePaths[0];
-            Console.WriteLine($"未找到FarmingSpots.yaml文件。尝试使用默认路径：{defaultPath}");
+            LogManager.WriteDebugLog("DataManager", $"未找到FarmingSpots.yaml文件。尝试使用默认路径：{defaultPath}");
             
             // 只在调试模式下显示MessageBox，避免频繁弹窗影响用户体验
 #if DEBUG
@@ -74,42 +79,30 @@ namespace DTwoMFTimerHelper.Data
             return defaultPath;
         }
         
+        // 用于序列化和反序列化角色档案的序列化器和反序列化器（使用CamelCase）
         private static readonly ISerializer serializer = new SerializerBuilder()
             .WithNamingConvention(CamelCaseNamingConvention.Instance)
             .Build();
+            
+        // 用于角色档案的反序列化器（使用CamelCase命名约定以匹配YAML中的小写属性名）
+        private static readonly IDeserializer characterDeserializer = new DeserializerBuilder()
+            .WithNamingConvention(CamelCaseNamingConvention.Instance)
+            .IgnoreUnmatchedProperties()
+            .Build();
         
-        // 使用CamelCase命名约定，这样可以正确映射yaml中的小写属性到C#的PascalCase属性
-        private static readonly IDeserializer deserializer = new DeserializerBuilder()
-            .WithNamingConvention(YamlDotNet.Serialization.NamingConventions.CamelCaseNamingConvention.Instance)
-            .IgnoreUnmatchedProperties() // 忽略不匹配的属性，解决属性名不匹配问题
+        // 用于场景数据的反序列化器（不使用自动命名约定，保持原始字段名）
+        private static readonly IDeserializer sceneDeserializer = new DeserializerBuilder()
+            .IgnoreUnmatchedProperties()
             .Build();
         
         // 加载所有角色档案
         public static List<CharacterProfile> LoadAllProfiles(bool includeHidden = false)
         {
-            // 创建一个简单的文件用于记录调试信息，这样我们可以在文件系统中查看
-            string debugLogPath = Path.Combine(Environment.CurrentDirectory, "debug_log.txt");
+            // 使用LogManager进行日志记录
             
-            // 写入日志的辅助方法
-            void WriteDebugLog(string message)
-            {
-                try
-                {
-                    using (StreamWriter writer = new StreamWriter(debugLogPath, true))
-                    {
-                        writer.WriteLine($"[{DateTime.Now}] {message}");
-                    }
-                }
-                catch (Exception logEx)
-                {
-                    // 避免日志系统本身的异常影响主流程
-                    Console.WriteLine($"写入日志失败: {logEx.Message}");
-                }
-            }
-            
-            WriteDebugLog($"开始加载所有角色档案，includeHidden={includeHidden}");
-            WriteDebugLog($"角色档案目录路径: {ProfilesDirectory}");
-            WriteDebugLog($"目录是否存在: {Directory.Exists(ProfilesDirectory)}");
+            LogManager.WriteDebugLog("DataManager", $"开始加载所有角色档案，includeHidden={includeHidden}");
+            LogManager.WriteDebugLog("DataManager", $"角色档案目录路径: {ProfilesDirectory}");
+            LogManager.WriteDebugLog("DataManager", $"目录是否存在: {Directory.Exists(ProfilesDirectory)}");
             
             var profiles = new List<CharacterProfile>();
             
@@ -117,27 +110,27 @@ namespace DTwoMFTimerHelper.Data
             {
                 if (!Directory.Exists(ProfilesDirectory))
                 {
-                    WriteDebugLog("目录不存在");
+                    LogManager.WriteDebugLog("DataManager", "目录不存在");
                     return profiles;
                 }
                 
                 var files = Directory.GetFiles(ProfilesDirectory, "*.yaml");
-                WriteDebugLog($"找到 {files.Length} 个角色档案文件");
+                LogManager.WriteDebugLog("DataManager", $"找到 {files.Length} 个角色档案文件");
                 foreach (var file in files)
                 {
-                    WriteDebugLog($"找到文件: {Path.GetFileName(file)}");
+                    LogManager.WriteDebugLog("DataManager", $"找到文件: {Path.GetFileName(file)}");
                 }
                 
                 foreach (var file in files)
                 {
                     try
                     {
-                        WriteDebugLog($"正在处理文件: {Path.GetFileName(file)}");
+                        LogManager.WriteDebugLog("DataManager", $"正在处理文件: {Path.GetFileName(file)}");
                         
                         // 检查文件是否存在且可读
                         if (!File.Exists(file))
                         {
-                            WriteDebugLog($"文件不存在: {file}");
+                            LogManager.WriteDebugLog("DataManager", $"文件不存在: {file}");
                             continue;
                         }
                         
@@ -146,80 +139,81 @@ namespace DTwoMFTimerHelper.Data
                         {
                             var yaml = streamReader.ReadToEnd();
                             
-                            WriteDebugLog($"读取文件成功，内容长度: {yaml.Length} 字符");
+                            LogManager.WriteDebugLog("DataManager", $"读取文件成功，内容长度: {yaml.Length} 字符");
                             // 记录文件的前50个字符用于调试
-                            WriteDebugLog($"文件前50字符: {yaml.Substring(0, Math.Min(50, yaml.Length))}");
+                            LogManager.WriteDebugLog("DataManager", $"文件前50字符: {yaml.Substring(0, Math.Min(50, yaml.Length))}");
                             
                             if (string.IsNullOrEmpty(yaml))
                             {
-                                WriteDebugLog($"文件内容为空: {file}");
+                                LogManager.WriteDebugLog("DataManager", $"文件内容为空: {file}");
                                 continue;
                             }
                             
-                            // 反序列化，使用类级别的deserializer（已经配置了IgnoreUnmatchedProperties）
-                            CharacterProfile? profile;
-                            try
+                            // 使用手动解析方法处理角色档案，确保正确解析YAML属性
+                        CharacterProfile? profile;
+                        try
+                        {
+                            LogManager.WriteDebugLog("DataManager", $"使用手动解析方法处理文件: {Path.GetFileName(file)}");
+                            profile = ParseYamlManually(yaml, file);
+                            
+                            // 确保profile不为null
+                            if (profile == null)
                             {
-                                profile = deserializer.Deserialize<CharacterProfile>(yaml);
+                                LogManager.WriteDebugLog("DataManager", $"手动解析文件 {Path.GetFileName(file)} 返回null，创建默认角色");
+                                profile = new CharacterProfile() { Name = Path.GetFileNameWithoutExtension(file) };
                             }
-                            catch (Exception ex)
-                            {
-                                WriteDebugLog($"标准反序列化失败，尝试手动解析: {ex.Message}");
-                                // 如果标准反序列化失败，尝试手动解析YAML内容
-                                profile = ParseYamlManually(yaml, file);
-                                
-                                if (profile == null)
-                                {
-                                    WriteDebugLog($"手动解析也失败了: {file}");
-                                    continue;
-                                }
-                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            LogManager.WriteDebugLog("DataManager", $"处理文件 {Path.GetFileName(file)} 时出错: {ex.Message}");
+                            profile = new CharacterProfile() { Name = Path.GetFileNameWithoutExtension(file) };
+                        }
                             
                             // 验证反序列化结果
                             if (profile == null)
                             {
-                                WriteDebugLog($"反序列化失败，profile为null: {file}");
+                                LogManager.WriteDebugLog("DataManager", $"反序列化失败，profile为null: {file}");
                                 continue;
                             }
                             
-                            WriteDebugLog($"反序列化成功，角色名称: {profile.Name}, IsHidden: {profile.IsHidden}");
+                            LogManager.WriteDebugLog("DataManager", $"反序列化成功，角色名称: {profile.Name}, IsHidden: {profile.IsHidden}");
                             
                             // 确保Records集合已初始化
                             if (profile.Records == null)
                             {
                                 profile.Records = new List<MFRecord>();
-                                WriteDebugLog($"初始化Records集合: {profile.Name}");
+                                LogManager.WriteDebugLog("DataManager", $"初始化Records集合: {profile.Name}");
                             }
                             
                             // 根据条件添加到列表
-                            WriteDebugLog($"过滤检查: includeHidden={includeHidden}, IsHidden={profile.IsHidden}");
+                            LogManager.WriteDebugLog("DataManager", $"过滤检查: includeHidden={includeHidden}, IsHidden={profile.IsHidden}");
                             if (includeHidden || !profile.IsHidden)
                             {
                                 profiles.Add(profile);
-                                WriteDebugLog($"成功加载角色: {profile.Name}, 游戏记录数: {profile.Records.Count}");
+                                LogManager.WriteDebugLog("DataManager", $"成功加载角色: {profile.Name}, 游戏记录数: {profile.Records.Count}");
                             }
                             else
                             {
-                                WriteDebugLog($"角色已隐藏，跳过: {profile.Name}");
+                                LogManager.WriteDebugLog("DataManager", $"角色已隐藏，跳过: {profile.Name}");
                             }
                         }
                     }
                     catch (Exception ex)
-                    {
-                        WriteDebugLog($"加载单个角色档案失败 ({file}): {ex.Message}");
-                        WriteDebugLog($"异常类型: {ex.GetType().Name}");
-                        WriteDebugLog($"异常堆栈: {ex.StackTrace}");
-                        // 继续处理其他文件，不中断整个加载过程
-                    }
+                        {
+                            LogManager.WriteDebugLog("DataManager", $"加载单个角色档案失败 ({file}): {ex.Message}");
+                            LogManager.WriteDebugLog("DataManager", $"异常类型: {ex.GetType().Name}");
+                            LogManager.WriteDebugLog("DataManager", $"异常堆栈: {ex.StackTrace}");
+                            // 继续处理其他文件，不中断整个加载过程
+                        }
                 }
                 
-                WriteDebugLog($"成功加载 {profiles.Count} 个角色档案");
+                LogManager.WriteDebugLog("DataManager", $"成功加载 {profiles.Count} 个角色档案");
             }
             catch (Exception ex)
             {
-                WriteDebugLog($"加载角色档案失败: {ex.Message}");
-                WriteDebugLog($"异常类型: {ex.GetType().Name}");
-                WriteDebugLog($"异常堆栈: {ex.StackTrace}");
+                LogManager.WriteDebugLog("DataManager", $"加载角色档案失败: {ex.Message}");
+                LogManager.WriteDebugLog("DataManager", $"异常类型: {ex.GetType().Name}");
+                LogManager.WriteDebugLog("DataManager", $"异常堆栈: {ex.StackTrace}");
                 
                 // 在调试模式下显示错误信息
 #if DEBUG
@@ -234,75 +228,160 @@ namespace DTwoMFTimerHelper.Data
         private static CharacterProfile? ParseYamlManually(string yamlContent, string filePath)
         {
             var profile = new CharacterProfile();
-            string debugLogPath = Path.Combine(Environment.CurrentDirectory, "debug_log.txt");
-            
-            void WriteDebugLog(string message)
-            {
-                try
-                {
-                    using (StreamWriter writer = new StreamWriter(debugLogPath, true))
-                    {
-                        writer.WriteLine($"[{DateTime.Now}] 手动解析YAML - {message}");
-                    }
-                }
-                catch {}
-            }
             
             try
             {
-                WriteDebugLog($"开始手动解析文件: {Path.GetFileName(filePath)}");
+                LogManager.WriteDebugLog("DataManager", $"开始手动解析文件: {Path.GetFileName(filePath)}");
+                
+                // 初始化Records列表
+                profile.Records = new List<MFRecord>();
+                
+                // 状态变量
+                bool isInRecordsSection = false;
+                MFRecord? currentRecord = null;
                 
                 // 简单的行解析，处理可能的不同属性名
                 foreach (var line in yamlContent.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
                 {
-                    var parts = line.Split(new[] { ':' }, 2);
-                    if (parts.Length < 2)
+                    // 检查是否进入records部分
+                    if (line.Trim().ToLower() == "records:")
+                    {
+                        isInRecordsSection = true;
+                        LogManager.WriteDebugLog("DataManager", "进入records部分");
                         continue;
-                    
-                    var key = parts[0].Trim().ToLower();
-                    var value = parts[1].Trim();
-                    
-                    // 处理不同可能的属性名
-                    if (key == "name" || key == "character")
-                    {
-                        profile.Name = value.Trim('"', '\'');
-                        WriteDebugLog($"解析到Name: {profile.Name}");
                     }
-                    else if (key == "class" || key == "characterclass")
+                    
+                    // 如果不在records部分，处理基本属性
+                    if (!isInRecordsSection)
                     {
-                        // 尝试解析职业枚举
-                        if (Enum.TryParse<CharacterClass>(value, true, out var charClass))
+                        var parts = line.Split(new[] { ':' }, 2);
+                        if (parts.Length < 2)
+                            continue;
+                        
+                        var key = parts[0].Trim().ToLower();
+                        var value = parts[1].Trim();
+                        
+                        // 处理不同可能的属性名
+                        if (key == "name" || key == "character")
                         {
-                            profile.Class = charClass;
-                            WriteDebugLog($"解析到Class: {profile.Class}");
+                            profile.Name = value.Trim('"', '\'');
+                                LogManager.WriteDebugLog("DataManager", $"解析到Name: {profile.Name}");
+                        }
+                        else if (key == "class" || key == "characterclass")
+                        {
+                            // 尝试解析职业枚举
+                            if (Enum.TryParse<CharacterClass>(value, true, out var charClass))
+                            {
+                                profile.Class = charClass;
+                                LogManager.WriteDebugLog("DataManager", $"解析到Class: {profile.Class}");
+                            }
+                        }
+                        else if (key == "ishidden" || key == "hidden")
+                        {
+                            if (bool.TryParse(value, out var isHidden))
+                            {
+                                profile.IsHidden = isHidden;
+                                LogManager.WriteDebugLog("DataManager", $"解析到IsHidden: {profile.IsHidden}");
+                            }
                         }
                     }
-                    else if (key == "ishidden" || key == "hidden")
+                    // 在records部分，处理记录数据
+                    else
                     {
-                        if (bool.TryParse(value, out var isHidden))
+                        // 检查是否是新记录的开始（以'-'开头）
+                        if (line.Trim().StartsWith("-"))
                         {
-                            profile.IsHidden = isHidden;
-                            WriteDebugLog($"解析到IsHidden: {profile.IsHidden}");
+                            // 如果当前有正在构建的记录，先添加到列表
+                            if (currentRecord != null)
+                            {
+                                profile.Records.Add(currentRecord);
+                                LogManager.WriteDebugLog("DataManager", $"添加记录完成，当前记录数: {profile.Records.Count}");
+                            }
+                            
+                            // 开始新记录
+                            currentRecord = new MFRecord();
+                            LogManager.WriteDebugLog("DataManager", "开始新记录");
+                        }
+                        // 处理记录的属性
+                        else if (currentRecord != null && line.Trim().Length > 0)
+                        {
+                            var parts = line.Split(new[] { ':' }, 2);
+                            if (parts.Length < 2)
+                                continue;
+                            
+                            var key = parts[0].Trim().ToLower();
+                            var value = parts[1].Trim();
+                            
+                            // 处理记录的各个属性
+                            switch (key)
+                            {
+                                case "scenename":
+                                    currentRecord.SceneName = value.Trim('"', '\'');
+                                    LogManager.WriteDebugLog("DataManager", $"解析到SceneName: {currentRecord.SceneName}");
+                                    break;
+                                case "sceneenname":
+                                    currentRecord.SceneEnName = value.Trim('"', '\'');
+                                    LogManager.WriteDebugLog("DataManager", $"解析到SceneEnName: {currentRecord.SceneEnName}");
+                                    break;
+                                case "scenezhname":
+                                    currentRecord.SceneZhName = value.Trim('"', '\'');
+                                    LogManager.WriteDebugLog("DataManager", $"解析到SceneZhName: {currentRecord.SceneZhName}");
+                                    break;
+                                case "act":
+                                    if (int.TryParse(value, out var act))
+                                    {
+                                        currentRecord.ACT = act;
+                                        LogManager.WriteDebugLog("DataManager", $"解析到ACT: {currentRecord.ACT}");
+                                    }
+                                    break;
+                                case "difficulty":
+                                    if (Enum.TryParse<GameDifficulty>(value, true, out var difficulty))
+                                    {
+                                        currentRecord.Difficulty = difficulty;
+                                        LogManager.WriteDebugLog("DataManager", $"解析到Difficulty: {currentRecord.Difficulty}");
+                                    }
+                                    break;
+                                case "starttime":
+                                    if (DateTime.TryParse(value, out var startTime))
+                                    {
+                                        currentRecord.StartTime = startTime;
+                                        LogManager.WriteDebugLog("DataManager", $"解析到StartTime: {currentRecord.StartTime}");
+                                    }
+                                    break;
+                                case "endtime":
+                                    if (!string.IsNullOrEmpty(value) && DateTime.TryParse(value, out var endTime))
+                                    {
+                                        currentRecord.EndTime = endTime;
+                                        LogManager.WriteDebugLog("DataManager", $"解析到EndTime: {currentRecord.EndTime}");
+                                    }
+                                    break;
+                            }
                         }
                     }
+                }
+                
+                // 确保最后一条记录被添加
+                if (currentRecord != null)
+                {
+                    profile.Records.Add(currentRecord);
+                    LogManager.WriteDebugLog("DataManager", $"添加最后一条记录，最终记录数: {profile.Records.Count}");
                 }
                 
                 // 确保至少有一个名称
                 if (string.IsNullOrEmpty(profile.Name))
                 {
                     profile.Name = "未命名角色";  
-                    WriteDebugLog($"未找到名称，设置为默认值: {profile.Name}");
+                    LogManager.WriteDebugLog("DataManager", $"未找到名称，设置为默认值: {profile.Name}");
                 }
                 
-                // 初始化Records列表
-                profile.Records = new List<MFRecord>();
-                WriteDebugLog($"手动解析完成，创建了空的Records列表");
+                LogManager.WriteDebugLog("DataManager", $"手动解析完成，成功加载 {profile.Records.Count} 条记录");
                 
                 return profile;
             }
             catch (Exception ex)
             {
-                WriteDebugLog($"手动解析失败: {ex.Message}");
+                LogManager.WriteDebugLog("DataManager", $"手动解析失败: {ex.Message}");
+                LogManager.WriteDebugLog("DataManager", $"异常堆栈: {ex.StackTrace}");
                 return new CharacterProfile() { Name = "解析失败角色" };
             }
         }
@@ -507,7 +586,7 @@ namespace DTwoMFTimerHelper.Data
                     WriteDebugLog($"文件前100字符: {yaml.Substring(0, Math.Min(100, yaml.Length))}");
                     WriteDebugLog("开始反序列化数据...");
                     
-                    var data = deserializer.Deserialize<FarmingSpotsData>(yaml);
+                    var data = sceneDeserializer.Deserialize<FarmingSpotsData>(yaml);
                     WriteDebugLog($"反序列化成功，场景数量: {data.FarmingSpots.Count}");
                     
                     // 只输出到控制台，不再显示弹窗
@@ -645,6 +724,8 @@ namespace DTwoMFTimerHelper.Data
             {
                 existingRecord.EndTime = record.EndTime;
                 existingRecord.Difficulty = record.Difficulty;
+                existingRecord.LatestTime = record.LatestTime;
+                existingRecord.ElapsedTime = record.ElapsedTime;
                 // 更新其他字段
             }
             

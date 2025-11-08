@@ -2,8 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
+using System.Linq;
+using System.IO;
 using DTwoMFTimerHelper.Data;
 using DTwoMFTimerHelper.Resources;
+using DTwoMFTimerHelper.Settings;
+using DTwoMFTimerHelper.Utils;
 
 namespace DTwoMFTimerHelper
 {
@@ -146,28 +150,36 @@ namespace DTwoMFTimerHelper
             lstRunHistory.TabIndex = 7;
             
             // 
+            // lstRunHistory - 历史记录列表
+            // 
+            lstRunHistory.FormattingEnabled = true;
+            lstRunHistory.ItemHeight = 15;
+            lstRunHistory.Location = new Point(15, 170);
+            lstRunHistory.Name = "lstRunHistory";
+            lstRunHistory.Size = new Size(290, 90);
+            lstRunHistory.TabIndex = 7;
+            
+            // 
             // lblCharacterDisplay - 角色显示
             // 
-            lblCharacterDisplay.BorderStyle = BorderStyle.FixedSingle;
+            lblCharacterDisplay.BorderStyle = BorderStyle.None;
             lblCharacterDisplay.Font = new Font("Microsoft YaHei UI", 12F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(134)));
-            lblCharacterDisplay.Location = new Point(15, 165);
+            lblCharacterDisplay.Location = new Point(15, 265);
             lblCharacterDisplay.Name = "lblCharacterDisplay";
-            lblCharacterDisplay.Size = new Size(140, 25);
-            lblCharacterDisplay.TextAlign = ContentAlignment.MiddleCenter;
+            lblCharacterDisplay.Size = new Size(290, 25);
+            lblCharacterDisplay.TextAlign = ContentAlignment.MiddleLeft;
             lblCharacterDisplay.TabIndex = 5;
-            lblCharacterDisplay.Text = LanguageManager.GetString("CharacterLabel") + " ";
             
             // 
             // lblSceneDisplay - 场景显示
             // 
-            lblSceneDisplay.BorderStyle = BorderStyle.FixedSingle;
+            lblSceneDisplay.BorderStyle = BorderStyle.None;
             lblSceneDisplay.Font = new Font("Microsoft YaHei UI", 12F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(134)));
-            lblSceneDisplay.Location = new Point(165, 165);
+            lblSceneDisplay.Location = new Point(15, 290);
             lblSceneDisplay.Name = "lblSceneDisplay";
-            lblSceneDisplay.Size = new Size(140, 25);
-            lblSceneDisplay.TextAlign = ContentAlignment.MiddleCenter;
+            lblSceneDisplay.Size = new Size(290, 25);
+            lblSceneDisplay.TextAlign = ContentAlignment.MiddleLeft;
             lblSceneDisplay.TabIndex = 6;
-            lblSceneDisplay.Text = LanguageManager.GetString("SceneLabel") + " ";
             
             // 
             // TimerControl - 主控件设置
@@ -179,9 +191,9 @@ namespace DTwoMFTimerHelper
             Controls.Add(lblRunCount);
             Controls.Add(lblFastestTime);
             Controls.Add(lblAverageTime);
+            Controls.Add(lstRunHistory);
             Controls.Add(lblCharacterDisplay);
             Controls.Add(lblSceneDisplay);
-            Controls.Add(lstRunHistory);
             Name = "TimerControl";
             Size = new Size(320, 320);
             ResumeLayout(false);
@@ -198,11 +210,59 @@ namespace DTwoMFTimerHelper
         private string currentCharacter = "";
         private string currentScene = "";
         
-        // 设置当前角色和场景的方法
+        // 使用LogManager进行日志记录
+        
+        /// <summary>
+        /// 设置角色和场景信息
+        /// </summary>
+        /// <param name="character">角色名称</param>
+        /// <param name="scene">场景名称</param>
         public void SetCharacterAndScene(string character, string scene)
         {
             currentCharacter = character;
             currentScene = scene;
+            LogManager.WriteDebugLog("TimerControl", $"SetCharacterAndScene 调用: 角色={character}, 场景={scene}");
+            
+            // 尝试根据角色名称查找对应的角色档案
+            if (!string.IsNullOrEmpty(character))
+            {
+                try
+                {
+                    LogManager.WriteDebugLog("TimerControl", $"尝试根据角色名称 '{character}' 查找对应的角色档案");
+                    currentProfile = DTwoMFTimerHelper.Data.DataManager.FindProfileByName(character);
+                    if (currentProfile != null)
+                    {
+                        LogManager.WriteDebugLog("TimerControl", $"已关联角色档案: {character}, 档案名称={currentProfile.Name}");
+                        LogManager.WriteDebugLog("TimerControl", $"已关联角色档案: {character}");
+                        
+                        // 保存当前角色、场景和难度到设置
+                        var settings = DTwoMFTimerHelper.Settings.SettingsManager.LoadSettings();
+                        // 提取纯角色名称，去除可能包含的职业信息 (如 "AAA (刺客)" -> "AAA")
+                        string pureCharacterName = character;
+                        if (character.Contains(" ("))
+                        {
+                            int index = character.IndexOf(" (");
+                            pureCharacterName = character.Substring(0, index);
+                            LogManager.WriteDebugLog("TimerControl", $"已从角色名称中提取纯名称: 原名称='{character}', 提取后='{pureCharacterName}'");
+                        }
+                        settings.LastUsedProfile = pureCharacterName;
+                        settings.LastUsedScene = scene;
+                        settings.LastUsedDifficulty = GetCurrentDifficulty().ToString();
+                        DTwoMFTimerHelper.Settings.SettingsManager.SaveSettings(settings);
+                        LogManager.WriteDebugLog("TimerControl", $"已保存设置到配置文件: LastUsedProfile={pureCharacterName}, LastUsedScene={scene}, LastUsedDifficulty={settings.LastUsedDifficulty}");
+                    }
+                    else
+                    {
+                        LogManager.WriteDebugLog("TimerControl", $"未找到角色档案: {character}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LogManager.WriteDebugLog("TimerControl", $"查找角色档案失败: {ex.Message}");
+                    LogManager.WriteDebugLog("TimerControl", $"查找角色档案失败: {ex.Message}");
+                }
+            }
+            
             UpdateUI();
         }
         
@@ -323,12 +383,18 @@ namespace DTwoMFTimerHelper
             {
                 if (runCount > 0)
                 {
+                    LogManager.WriteDebugLog("TimerControl", "[计算平均时间] 开始计算");
                     TimeSpan averageTime = TimeSpan.Zero;
-                    foreach (var time in runHistory)
+                    double totalSeconds = 0;
+                    for (int i = 0; i < runHistory.Count; i++)
                     {
+                        var time = runHistory[i];
                         averageTime += time;
+                        totalSeconds += time.TotalSeconds;
+                        LogManager.WriteDebugLog("TimerControl", $"[计算平均时间] 记录 #{i + 1}: {time}, 累计: {totalSeconds}秒");
                     }
                     averageTime = new TimeSpan(averageTime.Ticks / runHistory.Count);
+                    LogManager.WriteDebugLog("TimerControl", $"[计算平均时间] 总时间: {totalSeconds}秒, 记录数: {runHistory.Count}, 平均时间: {averageTime}, 平均秒数: {totalSeconds / runHistory.Count}");
                     
                     string averageFormatted = string.Format("{0:00}:{1:00}:{2:00}.{3}", 
                         averageTime.Hours, averageTime.Minutes, averageTime.Seconds, 
@@ -357,6 +423,7 @@ namespace DTwoMFTimerHelper
             // 更新历史记录列表
             if (lstRunHistory != null)
             {
+                LogManager.WriteDebugLog("TimerControl", "[更新历史记录列表] 开始更新UI显示");
                 lstRunHistory.Items.Clear();
                 for (int i = 0; i < runHistory.Count; i++)
                 {
@@ -364,6 +431,7 @@ namespace DTwoMFTimerHelper
                     string timeFormatted = string.Format("{0:00}:{1:00}:{2:00}.{3}", 
                         time.Hours, time.Minutes, time.Seconds, 
                         (int)(time.Milliseconds / 100));
+                    LogManager.WriteDebugLog("TimerControl", $"[更新历史记录列表] 记录 #{i + 1}: {timeFormatted}");
                     string runText = LanguageManager.GetString("RunNumber", i + 1, timeFormatted);
                     if (string.IsNullOrEmpty(runText) || runText == "RunNumber")
                     {
@@ -382,27 +450,71 @@ namespace DTwoMFTimerHelper
             // 更新角色和场景显示
             if (lblCharacterDisplay != null)
             {
-                string characterLabel = LanguageManager.GetString("CharacterLabel");
                 if (string.IsNullOrEmpty(currentCharacter))
                 {
-                    lblCharacterDisplay.Text = characterLabel + " ";
+                    lblCharacterDisplay.Text = "";
                 }
                 else
                 {
-                    lblCharacterDisplay.Text = characterLabel + " " + currentCharacter;
+                    // 获取角色职业信息
+                    string characterClass = "";
+                    if (currentProfile != null)
+                    {
+                        // 将职业枚举转换为中文名称
+                        switch (currentProfile.Class)
+                        {
+                            case Data.CharacterClass.Barbarian: characterClass = "野蛮人";
+                                break;
+                            case Data.CharacterClass.Sorceress: characterClass = "法师";
+                                break;
+                            case Data.CharacterClass.Assassin: characterClass = "刺客";
+                                break;
+                            case Data.CharacterClass.Druid: characterClass = "德鲁伊";
+                                break;
+                            case Data.CharacterClass.Paladin: characterClass = "圣骑士";
+                                break;
+                            case Data.CharacterClass.Amazon: characterClass = "亚马逊";
+                                break;
+                            case Data.CharacterClass.Necromancer: characterClass = "死灵法师";
+                                break;
+                            default: characterClass = "未知";
+                                break;
+                        }
+                    }
+                    
+                    // 检查currentCharacter是否已经包含职业信息格式
+                    if (!string.IsNullOrEmpty(characterClass))
+                    {
+                        // 如果currentCharacter已经包含括号格式，只显示纯角色名称加职业
+                        string displayName = currentCharacter;
+                        if (currentCharacter.Contains(" ("))
+                        {
+                            int index = currentCharacter.IndexOf(" (");
+                            displayName = currentCharacter.Substring(0, index);
+                        }
+                        lblCharacterDisplay.Text = $"{displayName} ({characterClass})";
+                    }
+                    else
+                    {
+                        // 如果没有职业信息，只显示角色名称
+                        lblCharacterDisplay.Text = currentCharacter;
+                    }
                 }
             }
             
             if (lblSceneDisplay != null)
             {
-                string sceneLabel = LanguageManager.GetString("SceneLabel");
                 if (string.IsNullOrEmpty(currentScene))
                 {
-                    lblSceneDisplay.Text = sceneLabel + " ";
+                    lblSceneDisplay.Text = "";
                 }
                 else
                 {
-                    lblSceneDisplay.Text = sceneLabel + " " + currentScene;
+                    // 获取游戏难度
+                    string difficultyText = GetCurrentDifficultyText();
+                    
+                    // 在场景名称前添加难度
+                    lblSceneDisplay.Text = $"{difficultyText} {currentScene}";
                 }
             }
         }
@@ -412,16 +524,23 @@ namespace DTwoMFTimerHelper
             UpdateUI();
         }
 
-        // 提供给外部调用的开始/停止方法，用于快捷键触发
+        /// <summary>
+        /// 通过快捷键触发开始/停止计时
+        /// 当停止时：保存记录到角色档案，并立即开始下一场计时
+        /// </summary>
         public void ToggleTimer()
-        {
+        {   
+            LogManager.WriteDebugLog("TimerControl", $"ToggleTimer 调用（快捷键触发），当前状态: isTimerRunning={isTimerRunning}");
             if (!isTimerRunning)
-            {
+            {   
+                LogManager.WriteDebugLog("TimerControl", $"通过快捷键开始计时，当前角色档案: {(currentProfile != null ? currentProfile.Name : "null")}");
                 StartTimer();
             }
             else
-            {
-                StopTimer();
+            {   
+                // 停止当前计时并保存记录
+                LogManager.WriteDebugLog("TimerControl", $"通过快捷键停止计时");
+                StopTimer(true); // 传入true表示通过快捷键触发，需要保存并自动开始下一场
             }
         }
         
@@ -448,17 +567,42 @@ namespace DTwoMFTimerHelper
                 isPaused = true;
                 pauseStartTime = DateTime.Now;
                 UpdateUI();
+                
+                // 更新未完成记录的LatestTime和ElapsedTime
+                UpdateIncompleteRecord();
+                
+                // 保存暂停状态到设置
+                SaveTimerState();
             }
         }
         
         private void ResumeTimer()
-        {
+        {            
             if (isTimerRunning && isPaused && pauseStartTime != DateTime.MinValue)
             {
+                // 在计算暂停时间之前，先更新记录，使用pauseStartTime作为更新时间点
+                UpdateIncompleteRecord(pauseStartTime);
+                
                 pausedDuration += DateTime.Now - pauseStartTime;
                 isPaused = false;
                 pauseStartTime = DateTime.MinValue;
                 UpdateUI();
+                
+                // 只更新latestTime，不影响elapsedTime计算
+                if (currentProfile != null)
+                {
+                    var record = FindIncompleteRecordForCurrentScene();
+                    if (record != null)
+                    {
+                        // 只更新LatestTime，保持ElapsedTime不变
+                        record.LatestTime = DateTime.Now;
+                        DTwoMFTimerHelper.Data.DataManager.UpdateMFRecord(currentProfile, record);
+                        LogManager.WriteDebugLog("TimerControl", $"已更新未完成记录的LatestTime: 场景={currentScene}, 更新时间点={DateTime.Now}");
+                    }
+                }
+                
+                // 保存恢复状态到设置
+                SaveTimerState();
             }
         }
         
@@ -468,8 +612,24 @@ namespace DTwoMFTimerHelper
             ResetTimer();
         }
 
-        private void StartTimer()
+        /// <summary>
+        /// 开始计时器
+        /// </summary>
+        public void StartTimer()
         {
+            if (isTimerRunning)
+                return;
+            
+            // 如果没有设置角色和场景，尝试从当前打开的ProfileManager获取
+            if (string.IsNullOrEmpty(currentCharacter) || string.IsNullOrEmpty(currentScene))
+            {
+                LogManager.WriteDebugLog("TimerControl", "角色或场景为空，尝试从主窗口获取档案信息");
+                TryGetProfileInfoFromMainForm();
+            }
+            
+            LogManager.WriteDebugLog("TimerControl", $"[快捷键触发] 开始计时前的角色档案信息: currentCharacter={currentCharacter}, currentProfile={(currentProfile != null ? currentProfile.Name : "null")}");
+            LogManager.WriteDebugLog("TimerControl", $"[快捷键触发] 当前场景: {currentScene}, 当前时间: {DateTime.Now}");
+            
             isTimerRunning = true;
             isPaused = false;
             startTime = DateTime.Now;
@@ -477,32 +637,561 @@ namespace DTwoMFTimerHelper
             pauseStartTime = DateTime.MinValue;
             timer?.Start();
             
+            // 在开始计时时创建一条记录
+            CreateStartRecord();
+            
+            // 保存当前角色、场景和难度到设置
+            if (!string.IsNullOrEmpty(currentCharacter) && !string.IsNullOrEmpty(currentScene))
+            {
+                try
+                {
+                    var settings = SettingsManager.LoadSettings();
+                    // 提取纯角色名称，去除可能包含的职业信息 (如 "AAA (刺客)" -> "AAA")
+                    string pureCharacterName = currentCharacter;
+                    if (currentCharacter.Contains(" ("))
+                    {
+                        int index = currentCharacter.IndexOf(" (");
+                        pureCharacterName = currentCharacter.Substring(0, index);
+                        LogManager.WriteDebugLog("TimerControl", $"已从角色名称中提取纯名称: 原名称='{currentCharacter}', 提取后='{pureCharacterName}'");
+                    }
+                    settings.LastUsedProfile = pureCharacterName;
+                    settings.LastUsedScene = currentScene;
+                    settings.LastUsedDifficulty = GetCurrentDifficulty().ToString();
+                    
+                    // 保存计时状态
+                    SaveTimerStateToSettings(settings);
+                    
+                    SettingsManager.SaveSettings(settings);
+                    Console.WriteLine($"已保存设置: 角色={pureCharacterName}, 场景={currentScene}, 难度={settings.LastUsedDifficulty}");
+                    LogManager.WriteDebugLog("TimerControl", $"已保存设置到配置文件: LastUsedProfile={pureCharacterName}, LastUsedScene={currentScene}, LastUsedDifficulty={settings.LastUsedDifficulty}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"保存设置失败: {ex.Message}");
+                }
+            }
+            
             UpdateUI();
             TimerStateChanged?.Invoke(this, EventArgs.Empty);
         }
+        
+        /// <summary>
+        /// 尝试从主窗口获取角色和场景信息
+        /// </summary>
+        private void TryGetProfileInfoFromMainForm()
+        {   
+            LogManager.WriteDebugLog("TimerControl", "TryGetProfileInfoFromMainForm 开始执行");
+            try
+            {   
+                // 获取主窗口
+                var mainForm = this.FindForm() as MainForm;
+                LogManager.WriteDebugLog("TimerControl", $"获取到主窗口: {(mainForm != null ? "是" : "否")}");
+                
+                if (mainForm != null && mainForm.ProfileManager != null)
+                {   
+                    var profileManager = mainForm.ProfileManager;
+                    LogManager.WriteDebugLog("TimerControl", $"获取到ProfileManager: 是, CurrentProfile是否为null: {(profileManager.CurrentProfile == null ? "是" : "否")}");
+                    
+                    if (profileManager.CurrentProfile != null)
+                    {   
+                        currentProfile = profileManager.CurrentProfile;
+                        currentCharacter = profileManager.CurrentProfile.Name;
+                        
+                        // 尝试获取当前选择的场景
+                        if (profileManager is ProfileManager pm)
+                        {
+                            // 假设ProfileManager有获取当前场景的方法或属性
+                            // 这里简化处理，尝试获取场景下拉框的值
+                            try
+                            {
+                                // 使用反射获取场景选择
+                                LogManager.WriteDebugLog("TimerControl", $"尝试通过反射获取场景选择");
+                                var sceneComboBox = pm.GetType().GetProperty("CurrentScene")?.GetValue(pm) as string;
+                                if (!string.IsNullOrEmpty(sceneComboBox))
+                                {
+                                    currentScene = sceneComboBox;
+                                    LogManager.WriteDebugLog("TimerControl", $"已从ProfileManager获取场景信息: {currentScene}");
+                                    Console.WriteLine($"已从ProfileManager获取场景信息: {currentScene}");
+                                }
+                                else
+                                {
+                                    LogManager.WriteDebugLog("TimerControl", $"通过反射获取的场景信息为空");
+                                }
+                            }
+                            catch (Exception ex)
+                            {   
+                                LogManager.WriteDebugLog("TimerControl", $"获取场景信息失败，尝试其他方式: {ex.Message}");
+                                Console.WriteLine($"获取场景信息失败，尝试其他方式");
+                                // 如果反射失败，尝试直接从控件获取（如果可以访问）
+                            }
+                        }
+                        
+                        LogManager.WriteDebugLog("TimerControl", $"已从ProfileManager获取角色信息: currentCharacter={currentCharacter}, currentProfile.Name={currentProfile.Name}");
+                        Console.WriteLine($"已从ProfileManager获取角色信息: {currentCharacter}");
+                    }
+                    else
+                    {
+                        LogManager.WriteDebugLog("TimerControl", "ProfileManager.CurrentProfile 为 null，无法获取角色信息");
+                    }
+                }
+                else
+                {
+                    LogManager.WriteDebugLog("TimerControl", $"mainForm 或 ProfileManager 为 null: mainForm={(mainForm != null ? "非null" : "null")}, ProfileManager={(mainForm != null && mainForm.ProfileManager != null ? "非null" : "null")}");
+                }
+            }
+            catch (Exception ex)
+            {   
+                LogManager.WriteDebugLog("TimerControl", $"获取角色信息失败: {ex.Message}, 堆栈: {ex.StackTrace}");
+                Console.WriteLine($"获取角色信息失败: {ex.Message}");
+                Console.WriteLine($"异常堆栈: {ex.StackTrace}");
+            }
+        }
+        
+        /// <summary>
+        /// 同步更新角色和场景信息
+        /// 当ProfileManager中的角色或场景改变时调用此方法
+        /// </summary>
+        public void SyncWithProfileManager()
+        {   
+            TryGetProfileInfoFromMainForm();
+            LoadProfileHistoryData();
+            UpdateUI();
+            Console.WriteLine($"已同步角色和场景信息: {currentCharacter} - {currentScene}");
+        }
+        
+        /// <summary>
+        /// 当切换到计时器Tab时调用此方法
+        /// 自动加载角色档案中对应的场景数据并显示
+        /// </summary>
+        public void OnTabSelected()
+        {   
+            SyncWithProfileManager();
+            Console.WriteLine("计时器Tab被选中，已自动加载角色档案数据");
+        }
+        
+        /// <summary>
+        /// 从角色档案加载特定场景的历史数据
+        /// </summary>
+        private void LoadProfileHistoryData()
+        {   
+            // 重置当前的统计数据
+            ResetTimerDisplay();
+            runHistory.Clear();
+            runCount = 0;
+            fastestTime = TimeSpan.MaxValue;
+            
+            // 如果有当前角色档案和场景，加载历史数据
+            if (currentProfile != null && !string.IsNullOrEmpty(currentScene))
+            {   
+                try
+                {   
+                    // 获取当前难度
+                    var currentDifficulty = GetCurrentDifficulty();
+                    
+                    // 添加详细调试日志
+                    LogManager.WriteDebugLog("TimerControl", $"调试 - 当前场景名称: '{currentScene}'");
+                    LogManager.WriteDebugLog("TimerControl", $"调试 - 档案总记录数: {currentProfile.Records.Count}");
+                    
+                    // 输出档案中所有记录的场景名称用于调试
+                    for (int i = 0; i < currentProfile.Records.Count; i++)
+                    {
+                        var record = currentProfile.Records[i];
+                        LogManager.WriteDebugLog("TimerControl", $"调试 - 记录[{i}]: SceneName='{record.SceneName}', SceneEnName='{record.SceneEnName}', SceneZhName='{record.SceneZhName}', ACT={record.ACT}, Difficulty={record.Difficulty}, StartTime={record.StartTime}, EndTime={(record.EndTime.HasValue ? record.EndTime.Value.ToString() : "null")}, LatestTime={(record.LatestTime.HasValue ? record.LatestTime.Value.ToString() : "null")}, ElapsedTime={(record.ElapsedTime.HasValue ? record.ElapsedTime.Value.ToString() : "null")}, DurationSeconds={record.DurationSeconds}, IsCompleted={record.IsCompleted}");
+                    }
+                    
+                    // 从角色档案中过滤出同场景记录
+                    // 考虑多语言名称匹配：SceneName、SceneEnName或SceneZhName任一匹配即可
+                    // 暂时移除难度过滤，因为可能存在枚举与字符串转换的问题
+                    var sceneRecords = currentProfile.Records.Where(r => 
+                        (r.SceneName.Equals(currentScene, StringComparison.OrdinalIgnoreCase) || 
+                         r.SceneEnName.Equals(currentScene, StringComparison.OrdinalIgnoreCase) || 
+                         r.SceneZhName.Equals(currentScene, StringComparison.OrdinalIgnoreCase)) && 
+                        r.IsCompleted).ToList();
+                    
+                    LogManager.WriteDebugLog("TimerControl", $"从角色档案中加载了 {sceneRecords.Count} 条记录: {currentCharacter} - {currentScene}, 难度: {currentDifficulty}");
+                    Console.WriteLine($"从角色档案中加载了 {sceneRecords.Count} 条记录: {currentCharacter} - {currentScene}, 难度: {currentDifficulty}");
+                    
+                    // 如果有记录，更新统计数据
+                    if (sceneRecords.Count > 0)
+                    {   
+                        runCount = sceneRecords.Count;
+                        
+                        // 转换为TimeSpan并添加到历史记录
+                        foreach (var record in sceneRecords)
+                        {   
+                            // 添加详细的初始值日志，记录record对象在赋值前的状态
+                            LogManager.WriteDebugLog("TimerControl", $"[加载记录前状态] ID: {record.GetHashCode()}, StartTime: {record.StartTime}, EndTime: {(record.EndTime.HasValue ? record.EndTime.Value.ToString() : "null")}, LatestTime: {(record.LatestTime.HasValue ? record.LatestTime.Value.ToString() : "null")}, ElapsedTime: {(record.ElapsedTime.HasValue ? record.ElapsedTime.Value.ToString() : "null")}, SceneName: {record.SceneName}");
+                            
+                            // 添加详细的调试日志
+                            Console.WriteLine($"[调试] 加载记录 - StartTime: {record.StartTime}, EndTime: {record.EndTime}, LatestTime: {record.LatestTime}, ElapsedTime: {record.ElapsedTime}");
+                            
+                            // 手动计算正确的持续时间
+                            double correctDuration;
+                            int recordIndex = sceneRecords.IndexOf(record);
+                            LogManager.WriteDebugLog("TimerControl", $"[加载记录 #{recordIndex + 1}] 开始计算持续时间");
+                            LogManager.WriteDebugLog("TimerControl", $"[加载记录 #{recordIndex + 1}] StartTime: {record.StartTime}, EndTime: {record.EndTime}, LatestTime: {record.LatestTime}, ElapsedTime: {record.ElapsedTime}");
+                            
+                            if (record.ElapsedTime.HasValue && record.ElapsedTime.Value > 0 && record.LatestTime.HasValue && record.EndTime.HasValue)
+                            {
+                                double latestToEnd = (record.EndTime.Value - record.LatestTime.Value).TotalSeconds;
+                                correctDuration = record.ElapsedTime.Value + latestToEnd;
+                                LogManager.WriteDebugLog("TimerControl", $"[加载记录 #{recordIndex + 1}] 计算路径: ElapsedTime + (EndTime - LatestTime) = {record.ElapsedTime.Value} + {latestToEnd} = {correctDuration}秒");
+                            }
+                            else if (record.EndTime.HasValue)
+                            {
+                                correctDuration = (record.EndTime.Value - record.StartTime).TotalSeconds;
+                                LogManager.WriteDebugLog("TimerControl", $"[加载记录 #{recordIndex + 1}] 计算路径: EndTime - StartTime = {correctDuration}秒");
+                            }
+                            else
+                            {
+                                correctDuration = 0;
+                                LogManager.WriteDebugLog("TimerControl", $"[加载记录 #{recordIndex + 1}] 计算路径: 持续时间为0");
+                            }
+                            
+                            TimeSpan duration = TimeSpan.FromSeconds(correctDuration);
+                            runHistory.Add(duration);
+                            LogManager.WriteDebugLog("TimerControl", $"[加载记录 #{recordIndex + 1}] 成功添加到runHistory: {duration}");
+                            
+                            // 更新最快时间
+                            if (duration < fastestTime)
+                            {   
+                                fastestTime = duration;
+                                LogManager.WriteDebugLog("TimerControl", $"[加载记录 #{recordIndex + 1}] 更新最快时间为: {fastestTime}");
+                            }
+                        }
+                        
+                        // 按时间从旧到新排序，让时间靠前的记录排在前面
+                        runHistory.Sort((a, b) => a.CompareTo(b));
+                        
+                        LogManager.WriteDebugLog("TimerControl", "[加载完成] runHistory排序后内容:");
+                        for (int i = 0; i < runHistory.Count; i++)
+                        {
+                            LogManager.WriteDebugLog("TimerControl", $"[加载完成] 记录 #{i + 1}: {runHistory[i]}");
+                        }
+                        LogManager.WriteDebugLog("TimerControl", $"[加载完成] 运行次数: {runCount}, 最快时间: {fastestTime}");
+                        Console.WriteLine($"加载完成，运行次数: {runCount}, 最快时间: {fastestTime}");
+                    }
+                }
+                catch (Exception ex)
+                {   
+                    Console.WriteLine($"加载历史数据失败: {ex.Message}");
+                }
+            }
+        }
 
-        private void StopTimer()
+        /// <summary>
+        /// 将当前计时记录保存到角色档案
+        /// </summary>
+        private void SaveToProfile()
+        {   
+            // 如果没有设置当前角色档案，尝试从主窗口获取
+            if (currentProfile == null)
+            {
+                TryGetProfileInfoFromMainForm();
+                // 如果仍然获取不到，记录日志并返回
+                if (currentProfile == null)
+                {
+                    Console.WriteLine("无法保存记录：未找到当前角色档案");
+                    return;
+                }
+            }
+            
+            if (string.IsNullOrEmpty(currentCharacter) || string.IsNullOrEmpty(currentScene) || startTime == DateTime.MinValue)
+                return;
+
+            try
+            {
+                // 从场景名称中提取ACT值
+                int actValue = ExtractActFromSceneName(currentScene);
+                
+                // 获取难度信息
+                var difficulty = GetCurrentDifficulty();
+                
+                // 根据当前语言设置正确的场景中英文名称
+                string sceneEnName = currentScene; // 默认值
+                string sceneZhName = currentScene; // 默认值
+                
+                // 通过场景名称判断是否为中文
+                bool isChineseScene = currentScene.Contains("混沌避难所") || 
+                                    currentScene.Contains("女伯爵") || 
+                                    currentScene.Contains("古代通道") || 
+                                    currentScene.Contains("巴尔") || 
+                                    currentScene.Contains("迪亚波罗") || 
+                                    currentScene.Contains("墨菲斯托") || 
+                                    currentScene.Contains("都瑞尔");
+                
+                // 如果是中文场景，需要区分中英文
+                if (isChineseScene || currentScene.StartsWith("ACT ") || currentScene.StartsWith("Act ") || currentScene.StartsWith("act "))
+                {
+                    // 当前显示的是中文，所以SceneZhName就是currentScene
+                    sceneZhName = currentScene;
+                    
+                    // 尝试获取对应的英文名称
+                    sceneEnName = GetSceneEnglishName(currentScene);
+                    LogManager.WriteDebugLog("TimerControl", $"场景中英文映射: 中文='{sceneZhName}', 英文='{sceneEnName}'");
+                }
+                else
+                {
+                    // 当前显示的是英文，所以SceneEnName就是currentScene
+                    sceneEnName = currentScene;
+                    sceneZhName = currentScene; // 如果无法获取中文，保持一致
+                }
+                
+                // 计算实际持续时间
+                TimeSpan actualDuration = DateTime.Now - startTime - pausedDuration;
+                double durationSeconds = actualDuration.TotalSeconds;
+                
+                // 创建新的MF记录，确保设置正确的LatestTime和ElapsedTime
+                var newRecord = new DTwoMFTimerHelper.Data.MFRecord
+                {
+                    SceneName = currentScene,
+                    SceneEnName = sceneEnName,
+                    SceneZhName = sceneZhName,
+                    ACT = actValue,
+                    Difficulty = difficulty,
+                    StartTime = startTime,
+                    EndTime = DateTime.Now,
+                    LatestTime = DateTime.Now, // 设置LatestTime为结束时间
+                    ElapsedTime = durationSeconds // 设置ElapsedTime为实际计算的持续时间
+                    // IsCompleted是只读属性，通过设置EndTime来自动计算
+                };
+
+                // 查找同场景同难度的未完成记录（不严格要求开始时间完全匹配）
+                var existingRecord = currentProfile.Records.FirstOrDefault(r => 
+                    r.SceneName == currentScene && 
+                    r.Difficulty == difficulty && 
+                    !r.IsCompleted);
+                
+                if (existingRecord != null)
+                {
+                    // 计算实际持续时间（使用不同的变量名避免作用域冲突）
+                    TimeSpan existingRecordDuration = DateTime.Now - existingRecord.StartTime - pausedDuration;
+                    double existingRecordSeconds = existingRecordDuration.TotalSeconds;
+                    
+                    // 更新现有记录，确保设置正确的值
+                    existingRecord.EndTime = DateTime.Now;
+                    existingRecord.LatestTime = DateTime.Now; // 设置LatestTime为结束时间
+                    existingRecord.ElapsedTime = existingRecordSeconds; // 设置ElapsedTime为实际计算的持续时间
+                    // IsCompleted是只读属性，通过设置EndTime来自动计算
+                    existingRecord.SceneEnName = sceneEnName;
+                    existingRecord.SceneZhName = sceneZhName;
+                    existingRecord.ACT = actValue;
+                    existingRecord.Difficulty = difficulty;
+                    
+                    // 更新现有记录
+                    DTwoMFTimerHelper.Data.DataManager.UpdateMFRecord(currentProfile, existingRecord);
+                    LogManager.WriteDebugLog("TimerControl", $"[更新现有记录] {currentCharacter} - {currentScene}, ACT: {actValue}, 难度: {difficulty}, 开始时间: {existingRecord.StartTime}, 结束时间: {DateTime.Now}, ElapsedTime: {existingRecord.ElapsedTime}, 计算时间: {existingRecord.DurationSeconds}秒");
+                }
+                else
+                {
+                    // 添加新记录
+                    DTwoMFTimerHelper.Data.DataManager.AddMFRecord(currentProfile, newRecord);
+                    LogManager.WriteDebugLog("TimerControl", $"[添加新记录] {currentCharacter} - {currentScene}, ACT: {actValue}, 难度: {difficulty}, 开始时间: {startTime}, 结束时间: {DateTime.Now}, ElapsedTime: {newRecord.ElapsedTime}, 计算时间: {newRecord.DurationSeconds}秒");
+                }
+
+                // 记录日志
+                Console.WriteLine($"已保存计时记录到角色档案: {currentCharacter} - {currentScene}, ACT: {actValue}, ElapsedTime: {newRecord.ElapsedTime}, 计算时间: {newRecord.DurationSeconds}秒");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"保存计时记录失败: {ex.Message}");
+                Console.WriteLine($"异常堆栈: {ex.StackTrace}");
+            }
+        }
+        
+        /// <summary>
+        /// 从场景名称中提取ACT值
+        /// </summary>
+        private int ExtractActFromSceneName(string sceneName)
         {
+            try
+            {
+                // 首先尝试从"ACT X: 场景名"格式中提取ACT值
+                if (sceneName.StartsWith("ACT ") || sceneName.StartsWith("Act ") || sceneName.StartsWith("act "))
+                {
+                    // 提取ACT后面的数字部分（处理"ACT X:"格式）
+                    int colonIndex = sceneName.IndexOf(':');
+                    if (colonIndex > 0)
+                    {
+                        string actPart = sceneName.Substring(0, colonIndex).Trim();
+                        if (int.TryParse(actPart.Split(' ')[1], out int act))
+                        {
+                            return act;
+                        }
+                    }
+                }
+                // 检查场景名称是否包含"ACT"或"Act"或"act"
+                if (sceneName.Contains("ACT ") || sceneName.Contains("Act ") || sceneName.Contains("act "))
+                {
+                    // 尝试提取数字
+                    foreach (var word in sceneName.Split(' '))
+                    {
+                        if (int.TryParse(word, out int act))
+                        {
+                            return act;
+                        }
+                    }
+                }
+                // 特殊处理女伯爵等常见场景
+                if (sceneName.Contains("女伯爵") || sceneName.Contains("countess"))
+                    return 1;
+                if (sceneName.Contains("古代通道") || sceneName.Contains("ancient tunnels"))
+                    return 2;
+                if (sceneName.Contains("混沌避难所") || sceneName.Contains("chaos sanctuary"))
+                    return 4;
+                if (sceneName.Contains("巴尔") || sceneName.Contains("baal"))
+                    return 5;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"提取ACT值失败: {ex.Message}");
+            }
+            return 0; // 默认返回0
+        }
+        
+        /// <summary>
+        /// 获取当前游戏难度
+        /// </summary>
+        private DTwoMFTimerHelper.Data.GameDifficulty GetCurrentDifficulty()
+        {
+            try
+            {
+                // 尝试从主窗口的ProfileManager获取难度信息
+                var mainForm = this.FindForm() as MainForm;
+                if (mainForm != null && mainForm.ProfileManager != null)
+                {
+                    // 这里简化处理，实际应该调用ProfileManager的相关属性
+                    // 暂时默认返回地狱难度
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"获取难度信息失败: {ex.Message}");
+            }
+            return DTwoMFTimerHelper.Data.GameDifficulty.Hell; // 默认地狱难度
+        }
+        
+        /// <summary>
+        /// 根据中文场景名称获取对应的英文名称
+        /// </summary>
+        private string GetSceneEnglishName(string chineseSceneName)
+        {
+            // 确保输入不为null
+            if (chineseSceneName == null)
+                return string.Empty;
+            // 常见场景的中英文映射
+            Dictionary<string, string> sceneMappings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "ACT 1: 女伯爵", "ACT 1: Countess" },
+                { "ACT 2: 古代通道", "ACT 2: Ancient Tunnels" },
+                { "ACT 2: 虫子/都瑞尔", "ACT 2: Duriel" },
+                { "ACT 3: 墨菲斯托", "ACT 3: Mephisto" },
+                { "ACT 4: 混沌避难所与迪亚波罗", "ACT 4: Chaos Sanctuary & Diablo" },
+                { "ACT 5: 巴尔", "ACT 5: Baal" },
+                { "混沌避难所", "Chaos Sanctuary" },
+                { "女伯爵", "Countess" },
+                { "古代通道", "Ancient Tunnels" },
+                { "巴尔", "Baal" },
+                { "迪亚波罗", "Diablo" },
+                { "墨菲斯托", "Mephisto" },
+                { "都瑞尔", "Duriel" }
+            };
+            
+            // 尝试精确匹配
+            if (!string.IsNullOrEmpty(chineseSceneName) && sceneMappings.TryGetValue(chineseSceneName, out string? englishName))
+            {
+                return englishName ?? "Unknown Scene";
+            }
+            
+            // 尝试模糊匹配，提取ACT和数字部分
+            if (chineseSceneName.StartsWith("ACT ") || chineseSceneName.StartsWith("Act ") || chineseSceneName.StartsWith("act "))
+            {
+                int colonIndex = chineseSceneName.IndexOf(':');
+                if (colonIndex > 0)
+                {
+                    string actPart = chineseSceneName.Substring(0, colonIndex).Trim();
+                    return $"{actPart}: Unknown";
+                }
+            }
+            
+            // 如果没有匹配到，返回默认英文名称
+            return chineseSceneName ?? "Unknown Scene";
+        }
+        
+        /// <summary>
+        /// 获取当前游戏难度的中文显示文本
+        /// </summary>
+        /// <returns>难度的中文文本</returns>
+        private string GetCurrentDifficultyText()
+        {
+            DTwoMFTimerHelper.Data.GameDifficulty difficulty = GetCurrentDifficulty();
+            
+            switch (difficulty)
+            {
+                case DTwoMFTimerHelper.Data.GameDifficulty.Normal:
+                    return DTwoMFTimerHelper.Resources.LanguageManager.GetString("DifficultyNormal");
+                case DTwoMFTimerHelper.Data.GameDifficulty.Nightmare:
+                    return DTwoMFTimerHelper.Resources.LanguageManager.GetString("DifficultyNightmare");
+                case DTwoMFTimerHelper.Data.GameDifficulty.Hell:
+                    return DTwoMFTimerHelper.Resources.LanguageManager.GetString("DifficultyHell");
+                default:
+                    return DTwoMFTimerHelper.Resources.LanguageManager.GetString("DifficultyUnknown");
+            }
+        }
+
+        private void StopTimer(bool autoStartNext = false)
+        {            
             isTimerRunning = false;
             isPaused = false;
             timer?.Stop();
             
+            // 清除计时状态设置
+            ClearTimerState();
+            
             // 记录本次运行时间
             if (startTime != DateTime.MinValue)
-            {
+            {                
                 TimeSpan runTime = DateTime.Now - startTime - pausedDuration;
                 runHistory.Insert(0, runTime); // 新记录插入到开头
                 runCount++;
                 
                 // 更新最快时间
                 if (runTime < fastestTime)
-                {
+                {                    
                     fastestTime = runTime;
                 }
+                
+                // 保存记录到角色档案
+                // 首先尝试获取当前角色档案（如果为null）
+                if (currentProfile == null)
+                {
+                    LogManager.WriteDebugLog("TimerControl", "StopTimer: currentProfile为null，尝试获取角色档案");
+                    TryGetProfileInfoFromMainForm();
+                }
+                
+                // 调用SaveToProfile方法保存记录（SaveToProfile内部也会检查并尝试获取角色档案）
+                SaveToProfile();
             }
             
             UpdateUI();
             TimerStateChanged?.Invoke(this, EventArgs.Empty);
+
+            // 如果是通过快捷键触发，自动开始下一场计时
+            if (autoStartNext)
+            {
+                // 短暂延迟后自动开始下一场
+                System.Threading.Tasks.Task.Delay(100).ContinueWith(_ =>
+                {
+                    if (this.InvokeRequired)
+                    {
+                        this.Invoke((Action)StartTimer);
+                    }
+                    else
+                    {
+                        StartTimer();
+                    }
+                });
+            }
         }
 
         private void ResetTimer()
@@ -512,10 +1201,14 @@ namespace DTwoMFTimerHelper
         }
 
         private void ResetTimerDisplay()
-        {
+        {            
             startTime = DateTime.MinValue;
             pausedDuration = TimeSpan.Zero;
             pauseStartTime = DateTime.MinValue;
+            
+            // 清除计时状态设置
+            ClearTimerState();
+            
             UpdateUI();
         }
 
@@ -539,5 +1232,378 @@ namespace DTwoMFTimerHelper
         private bool isPaused = false;
         private TimeSpan pausedDuration = TimeSpan.Zero;
         private DateTime pauseStartTime = DateTime.MinValue;
+        
+        /// <summary>
+        /// 在开始计时时创建一条记录
+        /// 即使没有完整的角色和场景信息，也会创建一条基本记录
+        /// </summary>
+        private void CreateStartRecord()
+        {
+            // 如果没有角色档案，尝试从主窗口获取
+            if (currentProfile == null)
+            {
+                LogManager.WriteDebugLog("TimerControl", "CreateStartRecord: currentProfile为null，尝试获取角色档案");
+                TryGetProfileInfoFromMainForm();
+                
+                // 如果仍然没有档案，创建一个临时的基本记录
+                if (currentProfile == null)
+                {
+                    LogManager.WriteDebugLog("TimerControl", "仍然没有角色档案，创建临时记录");
+                }
+            }
+
+            // 确保currentCharacter和currentScene有默认值
+            if (string.IsNullOrEmpty(currentCharacter))
+                currentCharacter = "Unknown Character";
+            if (string.IsNullOrEmpty(currentScene))
+                currentScene = "Unknown Scene";
+
+            try
+            {
+                // 从场景名称中提取ACT值
+                int actValue = ExtractActFromSceneName(currentScene);
+                
+                // 获取难度信息
+                var difficulty = GetCurrentDifficulty();
+                
+                // 根据当前语言设置正确的场景中英文名称
+                string sceneEnName = currentScene; // 默认值
+                string sceneZhName = currentScene; // 默认值
+                
+                // 通过场景名称判断是否为中文
+                bool isChineseScene = currentScene.Contains("混沌避难所") || 
+                                    currentScene.Contains("女伯爵") || 
+                                    currentScene.Contains("古代通道") || 
+                                    currentScene.Contains("巴尔") || 
+                                    currentScene.Contains("迪亚波罗") || 
+                                    currentScene.Contains("墨菲斯托") || 
+                                    currentScene.Contains("都瑞尔");
+                
+                // 如果是中文场景，需要区分中英文
+                if (isChineseScene || currentScene.StartsWith("ACT ") || currentScene.StartsWith("Act ") || currentScene.StartsWith("act "))
+                {
+                    // 当前显示的是中文，所以SceneZhName就是currentScene
+                    sceneZhName = currentScene;
+                    
+                    // 尝试获取对应的英文名称
+                    sceneEnName = GetSceneEnglishName(currentScene);
+                    LogManager.WriteDebugLog("TimerControl", $"场景中英文映射: 中文='{sceneZhName}', 英文='{sceneEnName}'");
+                }
+                else
+                {
+                    // 当前显示的是英文，所以SceneEnName就是currentScene
+                    sceneEnName = currentScene;
+                    sceneZhName = currentScene; // 如果无法获取中文，保持一致
+                }
+                
+                // 创建新的MF记录（未完成）
+                var newRecord = new DTwoMFTimerHelper.Data.MFRecord
+                {
+                    SceneName = currentScene,
+                    SceneEnName = sceneEnName,
+                    SceneZhName = sceneZhName,
+                    ACT = actValue,
+                    Difficulty = difficulty,
+                    StartTime = startTime,
+                    EndTime = null, // 未完成，结束时间设为null
+                    LatestTime = startTime, // 初始化LatestTime为开始时间，而不是null
+                    ElapsedTime = 0.0 // 开始时已用时间为0
+                };
+
+                // 只有当有角色档案时才添加记录
+                if (currentProfile != null)
+                {
+                    DTwoMFTimerHelper.Data.DataManager.AddMFRecord(currentProfile, newRecord);
+                    
+                    // 记录日志
+                    Console.WriteLine($"已创建开始记录到角色档案: {currentCharacter} - {currentScene}, ACT: {actValue}");
+                    LogManager.WriteDebugLog("TimerControl", $"已创建开始记录到角色档案: {currentCharacter} - {currentScene}, ACT: {actValue}, 开始时间: {startTime}");
+                }
+                else
+                {
+                    // 记录日志但不添加到档案
+                    LogManager.WriteDebugLog("TimerControl", $"已创建临时记录但未保存到档案: {currentCharacter} - {currentScene}, ACT: {actValue}, 开始时间: {startTime}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"创建开始记录失败: {ex.Message}");
+                LogManager.WriteDebugLog("TimerControl", $"创建开始记录失败: {ex.Message}, 堆栈: {ex.StackTrace}");
+            }
+        }
+        
+        /// <summary>
+        /// 查找用户同场景同难度的最近一条未完成记录
+        /// </summary>
+        private DTwoMFTimerHelper.Data.MFRecord? FindIncompleteRecordForCurrentScene()
+        {
+            if (currentProfile == null || string.IsNullOrEmpty(currentScene))
+                return null;
+                
+            var difficulty = GetCurrentDifficulty();
+            
+            // 查找同场景、同难度、未完成的最近一条记录
+            return currentProfile.Records
+                .Where(r => r.SceneName == currentScene && r.Difficulty == difficulty && !r.IsCompleted)
+                .OrderByDescending(r => r.StartTime)
+                .FirstOrDefault();
+        }
+        
+        /// <summary>
+        /// 更新未完成记录的LatestTime和ElapsedTime
+        /// </summary>
+        /// <param name="updateTime">用于更新的时间点，默认为当前时间</param>
+        private void UpdateIncompleteRecord(DateTime? updateTime = null)
+        {
+            if (!isTimerRunning || currentProfile == null)
+                return;
+                
+            var record = FindIncompleteRecordForCurrentScene();
+            if (record == null)
+                return;
+                
+            try
+            {
+                // 保存更新前的累计时间和上次更新时间
+                double previousElapsedTime = record.ElapsedTime ?? 0;
+                DateTime? previousLatestTime = record.LatestTime;
+                
+                // 使用提供的时间点或当前时间
+                DateTime now = updateTime ?? DateTime.Now;
+                
+                // 计算新的ElapsedTime，确保只增不减
+                double newElapsedTime;
+                
+                // 确保LatestTime始终有值
+                if (!record.LatestTime.HasValue)
+                {
+                    // 如果LatestTime为空，初始化它为StartTime
+                    record.LatestTime = record.StartTime;
+                    previousLatestTime = record.StartTime;
+                    LogManager.WriteDebugLog("TimerControl", $"[更新记录] 初始化LatestTime为StartTime: {record.StartTime}");
+                }
+                
+                // 如果之前有LatestTime，计算新的ElapsedTime
+                if (previousLatestTime.HasValue)
+                {
+                    // 确保updateTime不早于previousLatestTime
+                    DateTime effectiveUpdateTime = now > previousLatestTime.Value ? now : previousLatestTime.Value;
+                    // ElapsedTime = (更新时间 - 上次LatestTime) + 已有的ElapsedTime
+                    double additionalSeconds = (effectiveUpdateTime - previousLatestTime.Value).TotalSeconds;
+                    newElapsedTime = previousElapsedTime + additionalSeconds;
+                    LogManager.WriteDebugLog("TimerControl", $"[更新记录] 基于LatestTime计算: 上次时间={previousLatestTime.Value}, 当前时间={effectiveUpdateTime}, 增加时间={additionalSeconds}, 总计={newElapsedTime}");
+                }
+                else
+                {
+                    // 第一次更新，从StartTime开始计算
+                    newElapsedTime = (now - record.StartTime).TotalSeconds;
+                    LogManager.WriteDebugLog("TimerControl", $"[更新记录] 基于StartTime计算: 开始时间={record.StartTime}, 当前时间={now}, 总计={newElapsedTime}");
+                }
+                
+                // 确保累计时间不会减少并且始终大于0
+                if (newElapsedTime > previousElapsedTime || previousElapsedTime == 0)
+                {
+                    record.ElapsedTime = newElapsedTime;
+                    LogManager.WriteDebugLog("TimerControl", $"[更新记录] ElapsedTime已更新: {previousElapsedTime} -> {newElapsedTime}");
+                }
+                else
+                {
+                    // 如果计算出的时间小于等于之前的时间，保持原值
+                    newElapsedTime = previousElapsedTime;
+                    LogManager.WriteDebugLog("TimerControl", $"[更新记录] 保持原有ElapsedTime: {previousElapsedTime}");
+                }
+                
+                // 更新LatestTime
+                record.LatestTime = now;
+                LogManager.WriteDebugLog("TimerControl", $"[更新记录] LatestTime已更新: {(previousLatestTime.HasValue ? previousLatestTime.Value.ToString() : "null")} -> {now}");
+                
+                // 更新记录
+                DTwoMFTimerHelper.Data.DataManager.UpdateMFRecord(currentProfile, record);
+                
+                // 记录更详细的日志信息，包含上次累计时间和上次更新时间
+                LogManager.WriteDebugLog("TimerControl", $"已更新未完成记录: 场景={currentScene}, 上次累计时间={previousElapsedTime}秒, 当前累计时间={newElapsedTime}秒, 上次更新时间={previousLatestTime}, 更新时间点={now}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"更新未完成记录失败: {ex.Message}");
+                LogManager.WriteDebugLog("TimerControl", $"更新未完成记录失败: {ex.Message}, 堆栈: {ex.StackTrace}");
+            }
+        }
+        
+        /// <summary>
+        /// 保存计时状态到设置
+        /// </summary>
+        private void SaveTimerState()
+        {            
+            try
+            {
+                var settings = SettingsManager.LoadSettings();
+                SaveTimerStateToSettings(settings);
+                SettingsManager.SaveSettings(settings);
+                LogManager.WriteDebugLog("TimerControl", $"已保存计时状态: isTimerRunning={isTimerRunning}, isPaused={isPaused}, character={currentCharacter}, scene={currentScene}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"保存计时状态失败: {ex.Message}");
+                LogManager.WriteDebugLog("TimerControl", $"保存计时状态失败: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// 将计时状态保存到设置对象
+        /// </summary>
+        private void SaveTimerStateToSettings(AppSettings settings)
+        {            
+            settings.IsTimerInProgress = isTimerRunning;
+            settings.TimerStartTime = startTime;
+            settings.TimerPausedDuration = pausedDuration.TotalMilliseconds;
+            settings.IsTimerPaused = isPaused;
+            settings.TimerPauseStartTime = pauseStartTime;
+            settings.InProgressCharacter = currentCharacter;
+            settings.InProgressScene = currentScene;
+        }
+        
+        /// <summary>
+        /// 清除计时状态设置
+        /// </summary>
+        private void ClearTimerState()
+        {            
+            try
+            {
+                var settings = SettingsManager.LoadSettings();
+                settings.IsTimerInProgress = false;
+                settings.TimerStartTime = DateTime.MinValue;
+                settings.TimerPausedDuration = 0;
+                settings.IsTimerPaused = false;
+                settings.TimerPauseStartTime = DateTime.MinValue;
+                settings.InProgressCharacter = "";
+                settings.InProgressScene = "";
+                SettingsManager.SaveSettings(settings);
+                LogManager.WriteDebugLog("TimerControl", "已清除计时状态");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"清除计时状态失败: {ex.Message}");
+                LogManager.WriteDebugLog("TimerControl", $"清除计时状态失败: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// 尝试加载未完成的计时状态
+        /// </summary>
+        public void TryLoadPendingTimerState()
+        {            
+            try
+            {
+                var settings = SettingsManager.LoadSettings();
+                
+                // 如果有未完成的计时，且当前选择的角色和场景匹配
+                if (settings.IsTimerInProgress && 
+                    !string.IsNullOrEmpty(settings.InProgressCharacter) && 
+                    !string.IsNullOrEmpty(settings.InProgressScene) &&
+                    settings.TimerStartTime != DateTime.MinValue)
+                {
+                    LogManager.WriteDebugLog("TimerControl", $"发现未完成的计时状态: character={settings.InProgressCharacter}, scene={settings.InProgressScene}");
+                    
+                    // 检查当前选择的角色和场景是否匹配
+                    if (string.IsNullOrEmpty(currentCharacter) || string.IsNullOrEmpty(currentScene))
+                    {
+                        // 如果当前没有选择角色和场景，尝试使用保存的
+                        TryGetProfileInfoFromMainForm();
+                    }
+                    
+                    // 提取纯角色名称用于比较
+                    string savedPureCharacterName = settings.InProgressCharacter;
+                    if (savedPureCharacterName.Contains(" ("))
+                    {
+                        int index = savedPureCharacterName.IndexOf(" (");
+                        savedPureCharacterName = savedPureCharacterName.Substring(0, index);
+                    }
+                    
+                    string currentPureCharacterName = currentCharacter;
+                    if (!string.IsNullOrEmpty(currentPureCharacterName) && currentPureCharacterName.Contains(" ("))
+                    {
+                        int index = currentPureCharacterName.IndexOf(" (");
+                        currentPureCharacterName = currentPureCharacterName.Substring(0, index);
+                    }
+                    
+                    // 如果角色和场景匹配，恢复计时
+                    if (currentPureCharacterName.Equals(savedPureCharacterName, StringComparison.OrdinalIgnoreCase) && 
+                        currentScene.Equals(settings.InProgressScene, StringComparison.OrdinalIgnoreCase))
+                    {
+                        LogManager.WriteDebugLog("TimerControl", "角色和场景匹配，恢复计时状态");
+                        
+                        // 恢复计时状态
+                        isTimerRunning = true;
+                        startTime = settings.TimerStartTime;
+                        pausedDuration = TimeSpan.FromMilliseconds(settings.TimerPausedDuration);
+                        isPaused = settings.IsTimerPaused;
+                        pauseStartTime = settings.IsTimerPaused ? settings.TimerPauseStartTime : DateTime.MinValue;
+                        
+                        // 查找同场景同难度的未完成记录
+                        var incompleteRecord = FindIncompleteRecordForCurrentScene();
+                        if (incompleteRecord != null && incompleteRecord.ElapsedTime.HasValue && incompleteRecord.ElapsedTime.Value > 0)
+                        {
+                            LogManager.WriteDebugLog("TimerControl", $"发现未完成记录，elapsedTime={incompleteRecord.ElapsedTime}秒，调整计时器显示");
+                            
+                            // 根据elapsedTime调整startTime，以便正确计算当前时间
+                            double elapsedSeconds = incompleteRecord.ElapsedTime.Value;
+                            
+                            // 如果记录有LatestTime，从LatestTime开始计算当前应有的开始时间
+                            if (incompleteRecord.LatestTime.HasValue)
+                            {
+                                TimeSpan timeSinceLatest = DateTime.Now - incompleteRecord.LatestTime.Value;
+                                startTime = DateTime.Now - TimeSpan.FromSeconds(elapsedSeconds) - timeSinceLatest;
+                            }
+                            else
+                            {
+                                // 如果没有LatestTime，直接根据elapsedSeconds调整startTime
+                                startTime = DateTime.Now - TimeSpan.FromSeconds(elapsedSeconds);
+                            }
+                        }
+                        
+                        // 如果不是暂停状态，启动计时器
+                        if (!isPaused)
+                        {
+                            timer?.Start();
+                        }
+                        
+                        UpdateUI();
+                        TimerStateChanged?.Invoke(this, EventArgs.Empty);
+                        
+                        LogManager.WriteDebugLog("TimerControl", "计时状态恢复成功");
+                    }
+                    else
+                    {
+                        LogManager.WriteDebugLog("TimerControl", $"角色或场景不匹配，不恢复计时: current={currentPureCharacterName} - {currentScene}, saved={savedPureCharacterName} - {settings.InProgressScene}");
+                        // 清除不匹配的计时状态
+                        ClearTimerState();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"加载未完成计时状态失败: {ex.Message}");
+                LogManager.WriteDebugLog("TimerControl", $"加载未完成计时状态失败: {ex.Message}, 堆栈: {ex.StackTrace}");
+            }
+        }
+        
+        /// <summary>
+        /// 在应用程序关闭时调用，保存计时状态
+        /// </summary>
+        public void OnApplicationClosing()
+        {            
+            if (isTimerRunning)
+            {
+                // 如果计时器正在运行，更新未完成记录
+                if (!isPaused)
+                {
+                    UpdateIncompleteRecord();
+                }
+                
+                SaveTimerState();
+                LogManager.WriteDebugLog("TimerControl", "应用程序关闭时保存了计时状态和未完成记录");
+            }
+        }
     }
 }
