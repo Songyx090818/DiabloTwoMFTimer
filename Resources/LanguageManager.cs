@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -123,27 +124,153 @@ namespace DTwoMFTimerHelper.Resources
         {
             if (key == null) return string.Empty;
             string value = string.Empty;
+            
+            // 首先尝试直接从翻译字典中获取
             if (translations != null && translations.TryGetValue(key, out string? tempValue) && tempValue != null)
             {
                 value = tempValue;
-                if (args != null && args.Length > 0)
-                {
-                    // 使用正则表达式替换{{0}}, {{1}}等占位符
-                    string formattedValue = value;
-                    for (int i = 0; i < args.Length; i++)
-                    {
-                        string replacement = args[i]?.ToString() ?? string.Empty;
-                        formattedValue = Regex.Replace(
-                            formattedValue,
-                            $"\\{{\\{{{i}\\}}\\}}",
-                            replacement
-                        );
-                    }
-                    return formattedValue;
-                }
-                return value;
             }
-            return key; // 如果找不到翻译，返回键本身
+            else
+            {
+                // 场景名称特殊处理：根据当前语言进行自动翻译
+                string translatedScene = TranslateSceneName(key);
+                if (!string.IsNullOrEmpty(translatedScene) && translatedScene != key)
+                {
+                    value = translatedScene;
+                }
+                else
+                {
+                    // 如果找不到翻译，返回键本身
+                    return key;
+                }
+            }
+            
+            // 处理格式化参数
+            if (args != null && args.Length > 0)
+            {
+                // 使用正则表达式替换{{0}}, {{1}}等占位符
+                string formattedValue = value;
+                for (int i = 0; i < args.Length; i++)
+                {
+                    string replacement = args[i]?.ToString() ?? string.Empty;
+                    formattedValue = Regex.Replace(
+                        formattedValue,
+                        $"\\{{\\{{{i}\\}}\\}}",
+                        replacement
+                    );
+                }
+                return formattedValue;
+            }
+            return value;
+        }
+        
+        /// <summary>
+        /// 根据当前语言自动翻译场景名称
+        /// </summary>
+        /// <param name="sceneName">场景名称</param>
+        /// <returns>翻译后的场景名称</returns>
+        private static string TranslateSceneName(string sceneName)
+        {
+            // 检查是否是中文环境
+            bool isChinese = currentCulture.Name.StartsWith("zh");
+            
+            // 移除现有的ACT前缀（如果有）
+            string pureSceneName = sceneName;
+            if (sceneName.StartsWith("ACT ") || sceneName.StartsWith("Act ") || sceneName.StartsWith("act "))
+            {
+                int colonIndex = sceneName.IndexOf(':');
+                if (colonIndex > 0)
+                {
+                    pureSceneName = sceneName.Substring(colonIndex + 1).Trim();
+                }
+            }
+            
+            // 使用DataManager获取动态的场景映射
+            string translatedSceneName = pureSceneName;
+            var sceneMappings = DTwoMFTimerHelper.Data.DataManager.GetSceneMappings();
+            
+            if (sceneMappings.TryGetValue(pureSceneName, out string? translated))
+            {
+                // 根据当前语言环境选择正确的翻译
+                if (isChinese)
+                {
+                    // 中文环境下，确保返回中文名称
+                    if (translated.Any(c => c >= '\u4e00' && c <= '\u9fff'))
+                    {
+                        translatedSceneName = translated;
+                    }
+                    else
+                    {
+                        // 如果当前翻译不是中文，尝试获取中文名称
+                        foreach (var kvp in sceneMappings)
+                        {
+                            if (kvp.Value.Equals(translated, StringComparison.OrdinalIgnoreCase) && 
+                                kvp.Key.Any(c => c >= '\u4e00' && c <= '\u9fff'))
+                            {
+                                translatedSceneName = kvp.Key;
+                                break;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    // 英文环境下，确保返回英文名称
+                    if (!translated.Any(c => c >= '\u4e00' && c <= '\u9fff'))
+                    {
+                        translatedSceneName = translated;
+                    }
+                    else
+                    {
+                        // 如果当前翻译不是英文，尝试获取英文名称
+                        foreach (var kvp in sceneMappings)
+                        {
+                            if (kvp.Value.Equals(translated, StringComparison.OrdinalIgnoreCase) && 
+                                !kvp.Key.Any(c => c >= '\u4e00' && c <= '\u9fff'))
+                            {
+                                translatedSceneName = kvp.Key;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // 使用DataManager获取场景对应的ACT值
+            int actValue = DTwoMFTimerHelper.Data.DataManager.GetSceneActValue(pureSceneName);
+            
+            // 如果有ACT值，在显示时添加ACT前缀
+            if (actValue > 0)
+            {
+                return $"ACT {actValue}: {translatedSceneName}";
+            }
+            
+            return sceneName;
+        }
+        
+        /// <summary>
+        /// 获取纯英文的场景名称（移除ACT前缀和语言信息）
+        /// </summary>
+        /// <param name="sceneName">场景名称（可以是带ACT前缀的中文或英文名称）</param>
+        /// <returns>纯英文的场景名称</returns>
+        public static string GetPureEnglishSceneName(string sceneName)
+        {
+            if (string.IsNullOrEmpty(sceneName))
+                return sceneName;
+            
+            // 移除ACT前缀（如果有）
+            string pureSceneName = sceneName;
+            if (sceneName.StartsWith("ACT ") || sceneName.StartsWith("Act ") || sceneName.StartsWith("act "))
+            {
+                int colonIndex = sceneName.IndexOf(':');
+                if (colonIndex > 0)
+                {
+                    pureSceneName = sceneName.Substring(colonIndex + 1).Trim();
+                }
+            }
+            
+            // 使用DataManager获取对应的英文场景名称
+            return DTwoMFTimerHelper.Data.DataManager.GetEnglishSceneName(pureSceneName);
         }
     }
 }

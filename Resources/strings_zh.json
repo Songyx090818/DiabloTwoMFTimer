@@ -3,7 +3,7 @@
   "CountButton": "点击计数",
   "CountLabel": "点击次数: {{0}}",
   "TimeLabel": "计时器: {{0}}",
-  "StartButton": "开始计时",
+  "StartButton": "开始 Farm",
   "StopButton": "停止计时",
   "LanguageMenu": "语言",
   "ChineseOption": "中文",
@@ -44,7 +44,7 @@
   "SwitchCharacter": "切换角色档案",
   "DeleteCharacter": "删除角色档案",
   "StopTimer": "停止",
-  "StartTimer": "开始计时",
+  "StartTimer": "开始 Farm",
   "Complete": "完成",
   "Reset": "重置",
   "SelectScene": "选择场景:",
@@ -77,5 +77,6 @@
   "FastestTimePlaceholder": "最快时间: --:--:--.-",
   "AverageTime": "平均时间: {{0}}",
   "AverageTimePlaceholder": "平均时间: --:--:--.-",
-  "RunNumber": "第{{0}}次: {{1}}"
+  "RunNumber": "第{{0}}次: {{1}}",
+  "ContinueFarm": "继续 Farm"
 }

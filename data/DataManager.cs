@@ -227,20 +227,71 @@ namespace DTwoMFTimerHelper.Data
         // 手动解析YAML内容，处理不同的属性名格式
         private static CharacterProfile? ParseYamlManually(string yamlContent, string filePath)
         {
-            var profile = new CharacterProfile();
+            var profile = new CharacterProfile { Records = new List<MFRecord>() };
             
             try
             {
                 LogManager.WriteDebugLog("DataManager", $"开始手动解析文件: {Path.GetFileName(filePath)}");
                 
-                // 初始化Records列表
-                profile.Records = new List<MFRecord>();
-                
-                // 状态变量
                 bool isInRecordsSection = false;
                 MFRecord? currentRecord = null;
                 
-                // 简单的行解析，处理可能的不同属性名
+                // 辅助方法：处理记录属性
+                void ProcessRecordProperty(MFRecord record, string key, string value, string logPrefix = "")
+                {
+                    LogManager.WriteDebugLog("DataManager", $"{logPrefix}key: {key}, value: {value}");
+
+                    switch (key)
+                    {
+                        case "scenename":
+                            record.SceneName = value.Trim('"', '\'');
+                            LogManager.WriteDebugLog("DataManager", $"解析到SceneName: {record.SceneName}");
+                            break;
+                        case "act":
+                            if (int.TryParse(value, out var act))
+                            {
+                                record.ACT = act;
+                                LogManager.WriteDebugLog("DataManager", $"解析到ACT: {record.ACT}");
+                            }
+                            break;
+                        case "difficulty":
+                            if (Enum.TryParse<GameDifficulty>(value, true, out var difficulty))
+                            {
+                                record.Difficulty = difficulty;
+                                LogManager.WriteDebugLog("DataManager", $"解析到Difficulty: {record.Difficulty}");
+                            }
+                            break;
+                        case "starttime":
+                            if (DateTime.TryParse(value, out var startTime))
+                            {
+                                record.StartTime = startTime;
+                                LogManager.WriteDebugLog("DataManager", $"解析到StartTime: {record.StartTime}");
+                            }
+                            break;
+                        case "endtime":
+                            if (!string.IsNullOrEmpty(value) && DateTime.TryParse(value, out var endTime))
+                            {
+                                record.EndTime = endTime;
+                                LogManager.WriteDebugLog("DataManager", $"解析到EndTime: {record.EndTime}");
+                            }
+                            break;
+                        case "latesttime":
+                            if (!string.IsNullOrEmpty(value) && DateTime.TryParse(value, out var latestTime))
+                            {
+                                record.LatestTime = latestTime;
+                                LogManager.WriteDebugLog("DataManager", $"解析到LatestTime: {record.LatestTime}");
+                            }
+                            break;
+                        case "elapsedtime":
+                            if (!string.IsNullOrEmpty(value) && double.TryParse(value, out var elapsedTime))
+                            {
+                                record.ElapsedTime = elapsedTime;
+                                LogManager.WriteDebugLog("DataManager", $"解析到ElapsedTime: {record.ElapsedTime}");
+                            }
+                            break;
+                    }
+                }
+                
                 foreach (var line in yamlContent.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
                 {
                     // 检查是否进入records部分
@@ -251,9 +302,9 @@ namespace DTwoMFTimerHelper.Data
                         continue;
                     }
                     
-                    // 如果不在records部分，处理基本属性
                     if (!isInRecordsSection)
                     {
+                        // 处理基本属性
                         var parts = line.Split(new[] { ':' }, 2);
                         if (parts.Length < 2)
                             continue;
@@ -261,15 +312,13 @@ namespace DTwoMFTimerHelper.Data
                         var key = parts[0].Trim().ToLower();
                         var value = parts[1].Trim();
                         
-                        // 处理不同可能的属性名
                         if (key == "name" || key == "character")
                         {
                             profile.Name = value.Trim('"', '\'');
-                                LogManager.WriteDebugLog("DataManager", $"解析到Name: {profile.Name}");
+                            LogManager.WriteDebugLog("DataManager", $"解析到Name: {profile.Name}");
                         }
                         else if (key == "class" || key == "characterclass")
                         {
-                            // 尝试解析职业枚举
                             if (Enum.TryParse<CharacterClass>(value, true, out var charClass))
                             {
                                 profile.Class = charClass;
@@ -285,13 +334,12 @@ namespace DTwoMFTimerHelper.Data
                             }
                         }
                     }
-                    // 在records部分，处理记录数据
                     else
                     {
-                        // 检查是否是新记录的开始（以'-'开头）
+                        // 处理记录数据
                         if (line.Trim().StartsWith("-"))
                         {
-                            // 如果当前有正在构建的记录，先添加到列表
+                            // 添加当前记录
                             if (currentRecord != null)
                             {
                                 profile.Records.Add(currentRecord);
@@ -301,87 +349,39 @@ namespace DTwoMFTimerHelper.Data
                             // 开始新记录
                             currentRecord = new MFRecord();
                             LogManager.WriteDebugLog("DataManager", "开始新记录");
+                            
+                            // 检查同一行是否有属性
+                            string trimmedLine = line.TrimStart('-').Trim();
+                            if (!string.IsNullOrEmpty(trimmedLine) && trimmedLine.Contains(":"))
+                            {
+                                LogManager.WriteDebugLog("DataManager", $"处理行中属性: {trimmedLine}");
+                                var parts = trimmedLine.Split(new[] { ':' }, 2);
+                                if (parts.Length >= 2)
+                                {
+                                    ProcessRecordProperty(currentRecord, parts[0].Trim().ToLower(), parts[1].Trim(), "解析行中属性 - ");
+                                }
+                            }
                         }
-                        // 处理记录的属性
+                        // 处理记录的常规属性
                         else if (currentRecord != null && line.Trim().Length > 0)
                         {
                             var parts = line.Split(new[] { ':' }, 2);
-                            if (parts.Length < 2)
-                                continue;
-                            
-                            var key = parts[0].Trim().ToLower();
-                            var value = parts[1].Trim();
-                            
-                            // 处理记录的各个属性
-                            switch (key)
+                            if (parts.Length >= 2)
                             {
-                                case "scenename":
-                                    currentRecord.SceneName = value.Trim('"', '\'');
-                                    LogManager.WriteDebugLog("DataManager", $"解析到SceneName: {currentRecord.SceneName}");
-                                    break;
-                                case "sceneenname":
-                                    currentRecord.SceneEnName = value.Trim('"', '\'');
-                                    LogManager.WriteDebugLog("DataManager", $"解析到SceneEnName: {currentRecord.SceneEnName}");
-                                    break;
-                                case "scenezhname":
-                                    currentRecord.SceneZhName = value.Trim('"', '\'');
-                                    LogManager.WriteDebugLog("DataManager", $"解析到SceneZhName: {currentRecord.SceneZhName}");
-                                    break;
-                                case "act":
-                                    if (int.TryParse(value, out var act))
-                                    {
-                                        currentRecord.ACT = act;
-                                        LogManager.WriteDebugLog("DataManager", $"解析到ACT: {currentRecord.ACT}");
-                                    }
-                                    break;
-                                case "difficulty":
-                                    if (Enum.TryParse<GameDifficulty>(value, true, out var difficulty))
-                                    {
-                                        currentRecord.Difficulty = difficulty;
-                                        LogManager.WriteDebugLog("DataManager", $"解析到Difficulty: {currentRecord.Difficulty}");
-                                    }
-                                    break;
-                                case "starttime":
-                                    if (DateTime.TryParse(value, out var startTime))
-                                    {
-                                        currentRecord.StartTime = startTime;
-                                        LogManager.WriteDebugLog("DataManager", $"解析到StartTime: {currentRecord.StartTime}");
-                                    }
-                                    break;
-                                case "endtime":
-                                    if (!string.IsNullOrEmpty(value) && DateTime.TryParse(value, out var endTime))
-                                    {
-                                        currentRecord.EndTime = endTime;
-                                        LogManager.WriteDebugLog("DataManager", $"解析到EndTime: {currentRecord.EndTime}");
-                                    }
-                                    break;
-                                case "latesttime":
-                                    if (!string.IsNullOrEmpty(value) && DateTime.TryParse(value, out var latestTime))
-                                    {
-                                        currentRecord.LatestTime = latestTime;
-                                        LogManager.WriteDebugLog("DataManager", $"解析到LatestTime: {currentRecord.LatestTime}");
-                                    }
-                                    break;
-                                case "elapsedtime":
-                                    if (!string.IsNullOrEmpty(value) && double.TryParse(value, out var elapsedTime))
-                                    {
-                                        currentRecord.ElapsedTime = elapsedTime;
-                                        LogManager.WriteDebugLog("DataManager", $"解析到ElapsedTime: {currentRecord.ElapsedTime}");
-                                    }
-                                    break;
+                                ProcessRecordProperty(currentRecord, parts[0].Trim().ToLower(), parts[1].Trim());
                             }
                         }
                     }
                 }
                 
-                // 确保最后一条记录被添加
+                // 添加最后一条记录
                 if (currentRecord != null)
                 {
                     profile.Records.Add(currentRecord);
                     LogManager.WriteDebugLog("DataManager", $"添加最后一条记录，最终记录数: {profile.Records.Count}");
                 }
                 
-                // 确保至少有一个名称
+                // 设置默认名称
                 if (string.IsNullOrEmpty(profile.Name))
                 {
                     profile.Name = "未命名角色";  
@@ -389,7 +389,6 @@ namespace DTwoMFTimerHelper.Data
                 }
                 
                 LogManager.WriteDebugLog("DataManager", $"手动解析完成，成功加载 {profile.Records.Count} 条记录");
-                
                 return profile;
             }
             catch (Exception ex)
@@ -563,8 +562,17 @@ namespace DTwoMFTimerHelper.Data
         }
         
         // 加载场景数据
+        // 缓存加载的场景数据
+        private static List<FarmingScene>? _cachedFarmingSpots = null;
+        
         public static List<FarmingScene> LoadFarmingSpots()
         {
+            // 检查缓存是否存在
+            if (_cachedFarmingSpots != null)
+            {
+                return _cachedFarmingSpots;
+            }
+            
             // 确保日志写入到debug_log.txt
             string debugLogPath = Path.Combine(Environment.CurrentDirectory, "debug_log.txt");
             void WriteDebugLog(string message)
@@ -607,6 +615,8 @@ namespace DTwoMFTimerHelper.Data
                     string keyInfo = $"文件路径: {FarmingSpotsPath}\n文件存在: {fileExists}\n场景数量: {data.FarmingSpots.Count}";
                     Console.WriteLine(keyInfo);
                     
+                    // 更新缓存
+                    _cachedFarmingSpots = data.FarmingSpots;
                     return data.FarmingSpots;
                 }
                 else
@@ -656,6 +666,96 @@ namespace DTwoMFTimerHelper.Data
             }
             
             return new List<FarmingScene>();
+        }
+        
+        /// <summary>
+        /// 获取场景的中英文映射字典
+        /// </summary>
+        public static Dictionary<string, string> GetSceneMappings()
+        {
+            var mapping = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var farmingSpots = LoadFarmingSpots();
+            
+            foreach (var spot in farmingSpots)
+            {
+                // 添加英文到中文的映射
+                mapping[spot.enUS] = spot.zhCN;
+                // 添加中文到英文的映射
+                mapping[spot.zhCN] = spot.enUS;
+            }
+            
+            return mapping;
+        }
+        
+        /// <summary>
+        /// 获取场景的ACT值映射字典
+        /// </summary>
+        public static Dictionary<string, int> GetSceneActMappings()
+        {
+            var mapping = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            var farmingSpots = LoadFarmingSpots();
+            
+            foreach (var spot in farmingSpots)
+            {
+                // 添加英文和中文场景名称对应的ACT值
+                mapping[spot.enUS] = spot.ACT;
+                mapping[spot.zhCN] = spot.ACT;
+            }
+            
+            return mapping;
+        }
+        
+        /// <summary>
+        /// 根据场景名称获取对应的英文名称
+        /// </summary>
+        public static string GetEnglishSceneName(string sceneName)
+        {
+            if (string.IsNullOrEmpty(sceneName))
+                return sceneName;
+            
+            // 移除可能的引号（单引号或双引号）
+            string cleanSceneName = sceneName.Trim('"', '\'');
+            
+            // 如果已经是英文，直接返回
+            if (!cleanSceneName.Any(c => c >= '\u4e00' && c <= '\u9fff'))
+                return cleanSceneName;
+            
+            // 查找对应的英文名称
+            var mappings = GetSceneMappings();
+            if (mappings.ContainsKey(cleanSceneName))
+            {
+                string tempName = mappings[cleanSceneName];
+                if (!string.IsNullOrEmpty(tempName))
+                    return tempName;
+            }
+            
+            return cleanSceneName;
+        }
+        
+        /// <summary>
+        /// 根据场景名称获取ACT值
+        /// </summary>
+        public static int GetSceneActValue(string sceneName)
+        {
+            if (string.IsNullOrEmpty(sceneName))
+                return 0;
+            
+            // 先尝试从纯场景名称获取
+            string pureSceneName = sceneName;
+            if (sceneName.StartsWith("ACT ") || sceneName.StartsWith("Act ") || sceneName.StartsWith("act "))
+            {
+                int colonIndex = sceneName.IndexOf(':');
+                if (colonIndex > 0)
+                {
+                    pureSceneName = sceneName.Substring(colonIndex + 1).Trim();
+                }
+            }
+            
+            var mappings = GetSceneActMappings();
+            if (mappings.TryGetValue(pureSceneName, out int actValue))
+                return actValue;
+            
+            return 0;
         }
         
         // 根据名称查找角色档案

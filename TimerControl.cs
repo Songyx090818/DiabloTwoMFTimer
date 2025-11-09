@@ -18,6 +18,7 @@ namespace DTwoMFTimerHelper
         private DateTime startTime = DateTime.MinValue;
         private System.Windows.Forms.Timer? timer;
         private Data.CharacterProfile? currentProfile = null;
+        private Data.MFRecord? inProgressRecord = null;
 
         // 运行统计数据
         private int runCount = 0;
@@ -30,6 +31,7 @@ namespace DTwoMFTimerHelper
         // 公共属性
         public bool IsTimerRunning => isTimerRunning;
         public Data.CharacterProfile? CurrentProfile => currentProfile;
+        public Data.MFRecord? InProgressRecord => inProgressRecord;
 
         public TimerControl()
         {
@@ -39,7 +41,59 @@ namespace DTwoMFTimerHelper
             // 注册语言变更事件
             LanguageManager.OnLanguageChanged += LanguageManager_OnLanguageChanged;
             
+            // 在界面初始化时，绑定最近一条未完成的记录到对应属性
+            BindLatestIncompleteRecord();
+            
             UpdateUI();
+        }
+        
+        /// <summary>
+        /// 绑定最近一条未完成的记录到对应属性
+        /// </summary>
+        private void BindLatestIncompleteRecord()
+        {
+            LogManager.WriteDebugLog("TimerControl", $"触发函数 BindLatestIncompleteRecord");
+
+            try
+            {
+                // 获取当前难度信息
+                var currentDifficulty = GetCurrentDifficulty();
+                
+                // 查找最近一条未完成的记录
+                var incompleteRecord = FindIncompleteRecordForCurrentScene();
+                
+                if (incompleteRecord != null)
+                {
+                    LogManager.WriteDebugLog("TimerControl", $"绑定最近未完成记录到属性: Scene={incompleteRecord.SceneName}, Difficulty={incompleteRecord.Difficulty}, ElapsedTime={incompleteRecord.ElapsedTime}秒");
+                    
+                    // 将记录信息绑定到对应的属性
+                    this.inProgressRecord = incompleteRecord;
+                    
+                    // 如果有elapsedTime值，调整startTime以便正确显示
+                    if (incompleteRecord.ElapsedTime.HasValue && incompleteRecord.ElapsedTime.Value > 0)
+                    {
+                        LogManager.WriteDebugLog("TimerControl", $"从yaml文件加载elapsedTime: {incompleteRecord.ElapsedTime}秒，调整startTime");
+                        // 调整startTime，使得计算出的elapsed等于yaml中的elapsedTime
+                        if (isPaused && pauseStartTime != DateTime.MinValue)
+                        {
+                            startTime = pauseStartTime - TimeSpan.FromSeconds(incompleteRecord.ElapsedTime.Value) - pausedDuration;
+                        }
+                        else
+                        {
+                            startTime = DateTime.Now - TimeSpan.FromSeconds(incompleteRecord.ElapsedTime.Value) - pausedDuration;
+                        }
+                    }
+                }
+                else
+                {
+                    LogManager.WriteDebugLog("TimerControl", "没有找到未完成的记录");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"绑定未完成记录失败: {ex.Message}");
+                LogManager.WriteDebugLog("TimerControl", $"绑定未完成记录失败: {ex.Message}, 堆栈: {ex.StackTrace}");
+            }
         }
         
         private void LanguageManager_OnLanguageChanged(object? sender, EventArgs e)
@@ -220,8 +274,20 @@ namespace DTwoMFTimerHelper
         public void SetCharacterAndScene(string character, string scene)
         {
             currentCharacter = character;
-            currentScene = scene;
-            LogManager.WriteDebugLog("TimerControl", $"SetCharacterAndScene 调用: 角色={character}, 场景={scene}");
+            
+            // 使用DataManager获取对应的英文场景名称
+            string englishSceneName = DTwoMFTimerHelper.Data.DataManager.GetEnglishSceneName(scene);
+            
+            // 确保场景名称不为空
+            if (string.IsNullOrEmpty(englishSceneName))
+            {
+                englishSceneName = "UnknownScene"; // 设置默认值
+                LogManager.WriteDebugLog("TimerControl", $"警告: 获取英文场景名称失败，原始场景: '{scene}'，使用默认值 '{englishSceneName}'");
+            }
+            
+            currentScene = englishSceneName;
+            
+            LogManager.WriteDebugLog("TimerControl", $"SetCharacterAndScene 调用: 角色={character}, 原始场景={scene}, 英文场景={englishSceneName}");
             
             // 尝试根据角色名称查找对应的角色档案
             if (!string.IsNullOrEmpty(character))
@@ -279,7 +345,20 @@ namespace DTwoMFTimerHelper
             {
                 TimeSpan elapsed;
                 
-                if (isPaused && pauseStartTime != DateTime.MinValue)
+                // 优先使用inProgressRecord中的elapsedTime值（来自yaml文件）
+                if (inProgressRecord != null && inProgressRecord.ElapsedTime.HasValue && inProgressRecord.ElapsedTime.Value > 0)
+                {
+                    LogManager.WriteDebugLog("TimerControl", $"使用inProgressRecord中的elapsedTime值: {inProgressRecord.ElapsedTime}秒");
+                    elapsed = TimeSpan.FromSeconds(inProgressRecord.ElapsedTime.Value);
+                    
+                    // 如果不是暂停状态，需要加上从LatestTime到现在的时间
+                    if (!isPaused && inProgressRecord.LatestTime.HasValue)
+                    {
+                        double timeSinceLatest = (DateTime.Now - inProgressRecord.LatestTime.Value).TotalSeconds;
+                        elapsed = elapsed.Add(TimeSpan.FromSeconds(timeSinceLatest));
+                    }
+                }
+                else if (isPaused && pauseStartTime != DateTime.MinValue)
                 {
                     // 暂停状态，计算到暂停开始时的时间
                     elapsed = pauseStartTime - startTime - pausedDuration;
@@ -513,8 +592,12 @@ namespace DTwoMFTimerHelper
                     // 获取游戏难度
                     string difficultyText = GetCurrentDifficultyText();
                     
+                    // 直接使用LanguageManager.GetString获取本地化的场景名称
+                    // LanguageManager.cs中已增强了场景名称的自动翻译功能
+                    string localizedSceneName = Resources.LanguageManager.GetString(currentScene);
+                    
                     // 在场景名称前添加难度
-                    lblSceneDisplay.Text = $"{difficultyText} {currentScene}";
+                    lblSceneDisplay.Text = $"{difficultyText} {localizedSceneName}";
                 }
             }
         }
@@ -796,20 +879,25 @@ namespace DTwoMFTimerHelper
                     for (int i = 0; i < currentProfile.Records.Count; i++)
                     {
                         var record = currentProfile.Records[i];
-                        LogManager.WriteDebugLog("TimerControl", $"调试 - 记录[{i}]: SceneName='{record.SceneName}', SceneEnName='{record.SceneEnName}', SceneZhName='{record.SceneZhName}', ACT={record.ACT}, Difficulty={record.Difficulty}, StartTime={record.StartTime}, EndTime={(record.EndTime.HasValue ? record.EndTime.Value.ToString() : "null")}, LatestTime={(record.LatestTime.HasValue ? record.LatestTime.Value.ToString() : "null")}, ElapsedTime={(record.ElapsedTime.HasValue ? record.ElapsedTime.Value.ToString() : "null")}, DurationSeconds={record.DurationSeconds}, IsCompleted={record.IsCompleted}");
+                        LogManager.WriteDebugLog("TimerControl", $"调试 - 档案记录 {i}: {record.SceneName}, 难度: {record.Difficulty}, 完成: {record.IsCompleted}");
                     }
                     
                     // 从角色档案中过滤出同场景记录
-                    // 考虑多语言名称匹配：SceneName、SceneEnName或SceneZhName任一匹配即可
-                    // 暂时移除难度过滤，因为可能存在枚举与字符串转换的问题
+                    // 使用LanguageManager获取纯英文场景名称进行匹配
+                    string pureEnglishSceneName = DTwoMFTimerHelper.Resources.LanguageManager.GetPureEnglishSceneName(currentScene);
+                    
+                    // 日志记录当前匹配的场景名称
+                    LogManager.WriteDebugLog("TimerControl", $"匹配场景名称: '{pureEnglishSceneName}'");
+                    
+                    // 修改过滤条件，处理记录场景名称可能为空的情况，或使用配置中的sceneName
                     var sceneRecords = currentProfile.Records.Where(r => 
-                        (r.SceneName.Equals(currentScene, StringComparison.OrdinalIgnoreCase) || 
-                         r.SceneEnName.Equals(currentScene, StringComparison.OrdinalIgnoreCase) || 
-                         r.SceneZhName.Equals(currentScene, StringComparison.OrdinalIgnoreCase)) && 
+                        (string.IsNullOrEmpty(r.SceneName) || 
+                         r.SceneName.Equals(pureEnglishSceneName, StringComparison.OrdinalIgnoreCase) ||
+                         r.SceneName.Trim('"', '\'').Equals(pureEnglishSceneName, StringComparison.OrdinalIgnoreCase)) && 
                         r.IsCompleted).ToList();
                     
-                    LogManager.WriteDebugLog("TimerControl", $"从角色档案中加载了 {sceneRecords.Count} 条记录: {currentCharacter} - {currentScene}, 难度: {currentDifficulty}");
-                    Console.WriteLine($"从角色档案中加载了 {sceneRecords.Count} 条记录: {currentCharacter} - {currentScene}, 难度: {currentDifficulty}");
+                    LogManager.WriteDebugLog("TimerControl", $"从角色档案中加载了 {sceneRecords.Count} 条记录: {currentCharacter} - {pureEnglishSceneName}, 难度: {currentDifficulty}");
+                    Console.WriteLine($"从角色档案中加载了 {sceneRecords.Count} 条记录: {currentCharacter} - {pureEnglishSceneName}, 难度: {currentDifficulty}");
                     
                     // 如果有记录，更新统计数据
                     if (sceneRecords.Count > 0)
@@ -921,7 +1009,7 @@ namespace DTwoMFTimerHelper
                     sceneZhName = currentScene;
                     
                     // 尝试获取对应的英文名称
-                    sceneEnName = GetSceneEnglishName(currentScene);
+                    sceneEnName = DTwoMFTimerHelper.Data.DataManager.GetEnglishSceneName(currentScene);
                     LogManager.WriteDebugLog("TimerControl", $"场景中英文映射: 中文='{sceneZhName}', 英文='{sceneEnName}'");
                 }
                 else
@@ -935,12 +1023,17 @@ namespace DTwoMFTimerHelper
                 TimeSpan actualDuration = DateTime.Now - startTime - pausedDuration;
                 double durationSeconds = actualDuration.TotalSeconds;
                 
+                // 确保场景名称不为空
+                if (string.IsNullOrEmpty(sceneEnName))
+                {
+                    sceneEnName = "UnknownScene"; // 设置默认值
+                    LogManager.WriteDebugLog("TimerControl", $"警告: SaveToProfile中sceneEnName为空，使用默认值 '{sceneEnName}'");
+                }
+                
                 // 创建新的MF记录，确保设置正确的LatestTime和ElapsedTime
                 var newRecord = new DTwoMFTimerHelper.Data.MFRecord
                 {
-                    SceneName = currentScene,
-                    SceneEnName = sceneEnName,
-                    SceneZhName = sceneZhName,
+                    SceneName = sceneEnName, // 使用英文名称作为SceneName
                     ACT = actValue,
                     Difficulty = difficulty,
                     StartTime = startTime,
@@ -950,9 +1043,15 @@ namespace DTwoMFTimerHelper
                     // IsCompleted是只读属性，通过设置EndTime来自动计算
                 };
 
-                // 查找同场景同难度的未完成记录（不严格要求开始时间完全匹配）
+                // 获取英文场景名称并移除ACT前缀，与CreateStartRecord方法保持一致的格式
+                string sceneEnNameForSearch = DTwoMFTimerHelper.Data.DataManager.GetEnglishSceneName(currentScene);
+                string pureEnglishSceneNameForSearch = DTwoMFTimerHelper.Resources.LanguageManager.GetPureEnglishSceneName(currentScene);
+                
+                LogManager.WriteDebugLog("TimerControl", $"查找未完成记录: 原始场景名='{currentScene}', 纯英文场景名='{pureEnglishSceneNameForSearch}'");
+                
+                // 查找同场景同难度的未完成记录（使用与CreateStartRecord一致的纯英文场景名称格式）
                 var existingRecord = currentProfile.Records.FirstOrDefault(r => 
-                    r.SceneName == currentScene && 
+                    r.SceneName == pureEnglishSceneNameForSearch && 
                     r.Difficulty == difficulty && 
                     !r.IsCompleted);
                 
@@ -967,8 +1066,6 @@ namespace DTwoMFTimerHelper
                     existingRecord.LatestTime = DateTime.Now; // 设置LatestTime为结束时间
                     existingRecord.ElapsedTime = existingRecordSeconds; // 设置ElapsedTime为实际计算的持续时间
                     // IsCompleted是只读属性，通过设置EndTime来自动计算
-                    existingRecord.SceneEnName = sceneEnName;
-                    existingRecord.SceneZhName = sceneZhName;
                     existingRecord.ACT = actValue;
                     existingRecord.Difficulty = difficulty;
                     
@@ -1014,27 +1111,36 @@ namespace DTwoMFTimerHelper
                         }
                     }
                 }
-                // 检查场景名称是否包含"ACT"或"Act"或"act"
-                if (sceneName.Contains("ACT ") || sceneName.Contains("Act ") || sceneName.Contains("act "))
+                
+                // 移除ACT前缀（如果有），提取纯场景名称
+                string pureSceneName = sceneName;
+                if (sceneName.StartsWith("ACT ") || sceneName.StartsWith("Act ") || sceneName.StartsWith("act "))
                 {
-                    // 尝试提取数字
-                    foreach (var word in sceneName.Split(' '))
+                    int colonIndex = sceneName.IndexOf(':');
+                    if (colonIndex > 0)
                     {
-                        if (int.TryParse(word, out int act))
-                        {
-                            return act;
-                        }
+                        pureSceneName = sceneName.Substring(colonIndex + 1).Trim();
                     }
                 }
-                // 特殊处理女伯爵等常见场景
-                if (sceneName.Contains("女伯爵") || sceneName.Contains("countess"))
-                    return 1;
-                if (sceneName.Contains("古代通道") || sceneName.Contains("ancient tunnels"))
-                    return 2;
-                if (sceneName.Contains("混沌避难所") || sceneName.Contains("chaos sanctuary"))
-                    return 4;
-                if (sceneName.Contains("巴尔") || sceneName.Contains("baal"))
-                    return 5;
+                
+                // 使用DataManager获取场景到ACT值的映射
+                var sceneActMappings = DTwoMFTimerHelper.Data.DataManager.GetSceneActMappings();
+                
+                // 尝试在映射中查找纯场景名称对应的ACT值
+                if (sceneActMappings.TryGetValue(pureSceneName, out int actValue))
+                {
+                    return actValue;
+                }
+                
+                // 尝试查找包含场景名称的键
+                foreach (var mapping in sceneActMappings)
+                {
+                    if (pureSceneName.Contains(mapping.Key, StringComparison.OrdinalIgnoreCase) || 
+                        mapping.Key.Contains(pureSceneName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return mapping.Value;
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -1065,52 +1171,7 @@ namespace DTwoMFTimerHelper
             return DTwoMFTimerHelper.Data.GameDifficulty.Hell; // 默认地狱难度
         }
         
-        /// <summary>
-        /// 根据中文场景名称获取对应的英文名称
-        /// </summary>
-        private string GetSceneEnglishName(string chineseSceneName)
-        {
-            // 确保输入不为null
-            if (chineseSceneName == null)
-                return string.Empty;
-            // 常见场景的中英文映射
-            Dictionary<string, string> sceneMappings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-            {
-                { "ACT 1: 女伯爵", "ACT 1: Countess" },
-                { "ACT 2: 古代通道", "ACT 2: Ancient Tunnels" },
-                { "ACT 2: 虫子/都瑞尔", "ACT 2: Duriel" },
-                { "ACT 3: 墨菲斯托", "ACT 3: Mephisto" },
-                { "ACT 4: 混沌避难所与迪亚波罗", "ACT 4: Chaos Sanctuary & Diablo" },
-                { "ACT 5: 巴尔", "ACT 5: Baal" },
-                { "混沌避难所", "Chaos Sanctuary" },
-                { "女伯爵", "Countess" },
-                { "古代通道", "Ancient Tunnels" },
-                { "巴尔", "Baal" },
-                { "迪亚波罗", "Diablo" },
-                { "墨菲斯托", "Mephisto" },
-                { "都瑞尔", "Duriel" }
-            };
-            
-            // 尝试精确匹配
-            if (!string.IsNullOrEmpty(chineseSceneName) && sceneMappings.TryGetValue(chineseSceneName, out string? englishName))
-            {
-                return englishName ?? "Unknown Scene";
-            }
-            
-            // 尝试模糊匹配，提取ACT和数字部分
-            if (chineseSceneName.StartsWith("ACT ") || chineseSceneName.StartsWith("Act ") || chineseSceneName.StartsWith("act "))
-            {
-                int colonIndex = chineseSceneName.IndexOf(':');
-                if (colonIndex > 0)
-                {
-                    string actPart = chineseSceneName.Substring(0, colonIndex).Trim();
-                    return $"{actPart}: Unknown";
-                }
-            }
-            
-            // 如果没有匹配到，返回默认英文名称
-            return chineseSceneName ?? "Unknown Scene";
-        }
+        // GetSceneEnglishName方法已被移除，现在使用DTwoMFTimerHelper.Data.DataManager.GetEnglishSceneName和DTwoMFTimerHelper.Resources.LanguageManager.GetPureEnglishSceneName
         
         /// <summary>
         /// 获取当前游戏难度的中文显示文本
@@ -1260,36 +1321,23 @@ namespace DTwoMFTimerHelper
                 // 获取难度信息
                 var difficulty = GetCurrentDifficulty();
                 
-                // 根据当前语言设置正确的场景中英文名称
-                string sceneEnName = currentScene; // 默认值
-                string sceneZhName = currentScene; // 默认值
+                // 获取英文场景名称和纯英文场景名称（移除ACT前缀）
+                string sceneEnName = DTwoMFTimerHelper.Data.DataManager.GetEnglishSceneName(currentScene);
+                string pureEnglishSceneName = DTwoMFTimerHelper.Resources.LanguageManager.GetPureEnglishSceneName(currentScene);
                 
-                // 从设置中获取当前语言
-                bool isChineseScene = SettingsManager.StringToLanguage(SettingsManager.LoadSettings().Language) == DTwoMFTimerHelper.SettingsControl.LanguageOption.Chinese;
+                LogManager.WriteDebugLog("TimerControl", $"保存场景名称: 原始='{currentScene}', 英文='{sceneEnName}', 纯英文='{pureEnglishSceneName}'");
                 
-                // 如果是中文场景，需要区分中英文
-                if (isChineseScene || currentScene.StartsWith("ACT ") || currentScene.StartsWith("Act ") || currentScene.StartsWith("act "))
+                // 确保场景名称不为空
+                if (string.IsNullOrEmpty(pureEnglishSceneName))
                 {
-                    // 当前显示的是中文，所以SceneZhName就是currentScene
-                    sceneZhName = currentScene;
-                    
-                    // 尝试获取对应的英文名称
-                    sceneEnName = GetSceneEnglishName(currentScene);
-                    LogManager.WriteDebugLog("TimerControl", $"场景中英文映射: 中文='{sceneZhName}', 英文='{sceneEnName}'");
-                }
-                else
-                {
-                    // 当前显示的是英文，所以SceneEnName就是currentScene
-                    sceneEnName = currentScene;
-                    sceneZhName = currentScene; // 如果无法获取中文，保持一致
+                    pureEnglishSceneName = "UnknownScene"; // 设置默认值
+                    LogManager.WriteDebugLog("TimerControl", $"警告: CreateStartRecord中pureEnglishSceneName为空，使用默认值 '{pureEnglishSceneName}'");
                 }
                 
                 // 创建新的MF记录（未完成）
                 var newRecord = new DTwoMFTimerHelper.Data.MFRecord
                 {
-                    SceneName = currentScene,
-                    SceneEnName = sceneEnName,
-                    SceneZhName = sceneZhName,
+                    SceneName = pureEnglishSceneName, // 使用不带ACT前缀的英文名称作为SceneName
                     ACT = actValue,
                     Difficulty = difficulty,
                     StartTime = startTime,
@@ -1330,9 +1378,12 @@ namespace DTwoMFTimerHelper
                 
             var difficulty = GetCurrentDifficulty();
             
+            // 使用与创建记录时相同的场景名称处理逻辑
+            string pureEnglishSceneName = DTwoMFTimerHelper.Resources.LanguageManager.GetPureEnglishSceneName(currentScene);
+            
             // 查找同场景、同难度、未完成的最近一条记录
             return currentProfile.Records
-                .Where(r => r.SceneName == currentScene && r.Difficulty == difficulty && !r.IsCompleted)
+                .Where(r => r.SceneName == pureEnglishSceneName && r.Difficulty == difficulty && !r.IsCompleted)
                 .OrderByDescending(r => r.StartTime)
                 .FirstOrDefault();
         }

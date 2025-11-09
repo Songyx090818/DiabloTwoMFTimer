@@ -138,6 +138,8 @@ namespace DTwoMFTimerHelper
             // 
             cmbDifficulty.Location = new System.Drawing.Point(130, 160);
             cmbDifficulty.Margin = new Padding(6);
+            cmbDifficulty.DropDownStyle = ComboBoxStyle.DropDownList;
+            cmbDifficulty.SelectedIndexChanged += cmbDifficulty_SelectedIndexChanged;
             cmbDifficulty.Name = "cmbDifficulty";
             cmbDifficulty.Size = new System.Drawing.Size(200, 34);
             cmbDifficulty.TabIndex = 6;
@@ -158,7 +160,7 @@ namespace DTwoMFTimerHelper
             btnStartStop.Size = new System.Drawing.Size(130, 50);
             btnStartStop.TabIndex = 7;
             btnStartStop.UseVisualStyleBackColor = true;
-            btnStartStop.Click += btnStartStop_Click;
+            btnStartStop.Click += BtnStartStop_Click;
             btnStartStop.Enabled = false;
             // 
             // lblCurrentProfile
@@ -400,7 +402,85 @@ namespace DTwoMFTimerHelper
             if (btnCreateCharacter != null) btnCreateCharacter.Text = DTwoMFTimerHelper.Resources.LanguageManager.GetString("CreateCharacter");
             if (btnSwitchCharacter != null) btnSwitchCharacter.Text = DTwoMFTimerHelper.Resources.LanguageManager.GetString("SwitchCharacter");
             if (btnDeleteCharacter != null) btnDeleteCharacter.Text = DTwoMFTimerHelper.Resources.LanguageManager.GetString("DeleteCharacter");
-            if (btnStartStop != null) btnStartStop.Text = DTwoMFTimerHelper.Resources.LanguageManager.GetString("StartTimer");
+            
+            // 根据是否有未完成记录设置开始按钮文本
+            if (btnStartStop != null)
+            {
+                // 添加日志记录开始检查过程
+                DTwoMFTimerHelper.Utils.LogManager.WriteDebugLog("ProfileManager", "开始检查未完成记录");
+                
+                // 检查是否有未完成记录
+                bool hasIncompleteRecord = false;
+                if (currentProfile != null)
+                {
+                    DTwoMFTimerHelper.Utils.LogManager.WriteDebugLog("ProfileManager", $"当前角色: {currentProfile.Name}");
+                    
+                    var selectedScene = GetSelectedScene();
+                    if (selectedScene != null)
+                    {
+                        var difficulty = GetSelectedDifficulty();
+                        DTwoMFTimerHelper.Utils.LogManager.WriteDebugLog("ProfileManager", $"选中难度: {difficulty}");
+                        
+                        // 获取场景的纯英文名称（与记录存储格式一致）
+                        string sceneDisplayName = GetSceneDisplayName(selectedScene);
+                        DTwoMFTimerHelper.Utils.LogManager.WriteDebugLog("ProfileManager", $"场景显示名称: {sceneDisplayName}");
+                        
+                        string pureSceneName = sceneDisplayName;
+                        if (sceneDisplayName.StartsWith("ACT ") || sceneDisplayName.StartsWith("Act ") || sceneDisplayName.StartsWith("act "))
+                        {
+                            int colonIndex = sceneDisplayName.IndexOf(':');
+                            if (colonIndex > 0)
+                            {
+                                pureSceneName = sceneDisplayName.Substring(colonIndex + 1).Trim();
+                                DTwoMFTimerHelper.Utils.LogManager.WriteDebugLog("ProfileManager", $"提取纯场景名称: {pureSceneName}");
+                            }
+                        }
+                        
+                        string pureEnglishSceneName = DTwoMFTimerHelper.Resources.LanguageManager.GetPureEnglishSceneName(sceneDisplayName);
+                        DTwoMFTimerHelper.Utils.LogManager.WriteDebugLog("ProfileManager", $"获取纯英文场景名称: {pureEnglishSceneName}");
+                        
+                        // 记录当前配置文件中的记录数量
+                        DTwoMFTimerHelper.Utils.LogManager.WriteDebugLog("ProfileManager", $"当前角色记录数量: {currentProfile.Records.Count}");
+                              
+                        // 查找同场景、同难度、未完成的记录
+                        hasIncompleteRecord = currentProfile.Records.Any(r => 
+                            r.SceneName == pureEnglishSceneName && 
+                            r.Difficulty == difficulty && 
+                            !r.IsCompleted);
+                        
+                        DTwoMFTimerHelper.Utils.LogManager.WriteDebugLog("ProfileManager", $"是否存在未完成记录: {hasIncompleteRecord}");
+                        
+                        // 记录第一条匹配场景和难度的记录详细信息（用于调试）
+                        var matchingRecord = currentProfile.Records.FirstOrDefault(r => 
+                            r.SceneName == pureEnglishSceneName && 
+                            r.Difficulty == difficulty);
+                        if (matchingRecord != null)
+                        {
+                            DTwoMFTimerHelper.Utils.LogManager.WriteDebugLog("ProfileManager", $"找到匹配记录 - 场景: {matchingRecord.SceneName}, 难度: {matchingRecord.Difficulty}, 完成状态: {matchingRecord.IsCompleted}");
+                        }
+                    }
+                    else
+                    {
+                        DTwoMFTimerHelper.Utils.LogManager.WriteDebugLog("ProfileManager", "未选中场景");
+                    }
+                }
+                else
+                {
+                    DTwoMFTimerHelper.Utils.LogManager.WriteDebugLog("ProfileManager", "当前没有选择角色配置");
+                }
+                
+                // 根据是否有未完成记录设置按钮文本
+                if (hasIncompleteRecord)
+                {
+                    btnStartStop.Text = DTwoMFTimerHelper.Resources.LanguageManager.GetString("ContinueFarm");
+                    DTwoMFTimerHelper.Utils.LogManager.WriteDebugLog("ProfileManager", "设置按钮文本为: ContinueFarm");
+                }
+                else
+                {
+                    btnStartStop.Text = DTwoMFTimerHelper.Resources.LanguageManager.GetString("StartTimer");
+                    DTwoMFTimerHelper.Utils.LogManager.WriteDebugLog("ProfileManager", "设置按钮文本为: StartTimer");
+                }
+            }
             if (lblScene != null) lblScene.Text = DTwoMFTimerHelper.Resources.LanguageManager.GetString("SelectScene");
             if (lblDifficulty != null) lblDifficulty.Text = DTwoMFTimerHelper.Resources.LanguageManager.GetString("DifficultyLabel");
             
@@ -604,13 +684,34 @@ namespace DTwoMFTimerHelper
             LogManager.WriteDebugLog("ProfileManager", message);
         }
         
-        private void btnStartStop_Click(object? sender, EventArgs e)
+        private void BtnStartStop_Click(object? sender, EventArgs e)
         {            // 获取当前选择的场景和角色信息
             string selectedScene = cmbScene?.Text ?? "";
             string characterName = currentProfile != null ? GetCurrentCharacterName() : "";
             
+            // 获取不带ACT前缀的英文场景名称
+            string pureSceneName = selectedScene;
+            if (selectedScene.StartsWith("ACT ") || selectedScene.StartsWith("Act ") || selectedScene.StartsWith("act "))
+            {
+                int colonIndex = selectedScene.IndexOf(':');
+                if (colonIndex > 0)
+                {
+                    pureSceneName = selectedScene.Substring(colonIndex + 1).Trim();
+                }
+            }
+            
+            // 使用DataManager获取英文场景名称
+            string englishSceneName = DTwoMFTimerHelper.Data.DataManager.GetEnglishSceneName(pureSceneName);
+            
+            // 确保场景名称不为空
+            if (string.IsNullOrEmpty(englishSceneName))
+            {
+                englishSceneName = "UnknownScene"; // 设置默认值
+                WriteDebugLog($"警告: 获取英文场景名称失败，pureSceneName: '{pureSceneName}'，使用默认值 '{englishSceneName}'");
+            }
+            
             // 记录点击开始计时时的角色档案信息
-            WriteDebugLog($"btnStartStop_Click 调用（点击开始计时按钮），默认用户档案名称: {characterName}, 当前选择的场景: {selectedScene}");
+            WriteDebugLog($"btnStartStop_Click 调用（点击开始计时按钮），默认用户档案名称: {characterName}, 当前选择的场景: {selectedScene}, 英文纯名称: {englishSceneName}");
             WriteDebugLog($"当前CurrentProfile: {(currentProfile != null ? currentProfile.Name : "null")}");
             
             // 跳转到计时器页面
@@ -629,8 +730,8 @@ namespace DTwoMFTimerHelper
             TimerControl? timerControl = ParentForm?.Controls.Find("timerControl", true).FirstOrDefault() as TimerControl;
             if (timerControl != null)
             {
-                WriteDebugLog($"已找到TimerControl，准备设置角色和场景: {characterName}, {selectedScene}");
-                timerControl.SetCharacterAndScene(characterName, selectedScene);
+                WriteDebugLog($"已找到TimerControl，准备设置角色和场景: {characterName}, {englishSceneName}");
+                timerControl.SetCharacterAndScene(characterName, englishSceneName);
                 timerControl.StartTimer();
             }
             else
@@ -647,7 +748,15 @@ namespace DTwoMFTimerHelper
             {
                 Console.WriteLine($"场景已变更为: {cmbScene.Text}");
                 SyncTimerControl();
+                // 更新按钮文本，检查是否有未完成记录
+                UpdateUI();
             }
+        }
+        
+        private void cmbDifficulty_SelectedIndexChanged(object? sender, EventArgs e)
+        {            
+            // 当难度改变时，更新按钮文本，检查是否有未完成记录
+            UpdateUI();
         }
         
         /// <summary>
@@ -687,9 +796,7 @@ namespace DTwoMFTimerHelper
                     // 创建新的MF记录
                     currentRecord = new Data.MFRecord
                     {
-                        SceneName = selectedScene.zhCN,
-                        SceneEnName = selectedScene.enUS,
-                        SceneZhName = selectedScene.zhCN,
+                        SceneName = selectedScene.enUS, // 只保留SceneName字段，保存英文名称
                         ACT = selectedScene.ACT,
                         Difficulty = GetSelectedDifficulty(),
                         StartTime = startTime

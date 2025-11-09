@@ -77,5 +77,6 @@
   "FastestTimePlaceholder": "Fastest time: --:--:--.-",
   "AverageTime": "Average time: {{0}}",
   "AverageTimePlaceholder": "Average time: --:--:--.-",
-  "RunNumber": "Run {{0}}: {{1}}"
+  "RunNumber": "Run {{0}}: {{1}}",
+  "ContinueFarm": "Continue Farm"
 }

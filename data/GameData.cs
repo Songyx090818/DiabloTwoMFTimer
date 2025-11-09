@@ -32,8 +32,6 @@ namespace DTwoMFTimerHelper.Data
     public class MFRecord
     {
         public string SceneName { get; set; } = string.Empty;
-        public string SceneEnName { get; set; } = string.Empty;
-        public string SceneZhName { get; set; } = string.Empty;
         public int ACT { get; set; } = 0;
         public GameDifficulty Difficulty { get; set; } = GameDifficulty.Normal;
         [YamlDotNet.Serialization.YamlMember(Alias = "startTime")]
@@ -62,6 +60,7 @@ namespace DTwoMFTimerHelper.Data
                     LogManager.WriteDebugLog("GameData", $"[DurationSeconds] EndTime: {(EndTime.HasValue ? EndTime.Value.ToString() : "null")}");
                     LogManager.WriteDebugLog("GameData", $"[DurationSeconds] LatestTime: {(LatestTime.HasValue ? LatestTime.Value.ToString() : "null")}");
                     LogManager.WriteDebugLog("GameData", $"[DurationSeconds] ElapsedTime: {(ElapsedTime.HasValue ? ElapsedTime.Value.ToString() : "null")}");
+                    LogManager.WriteDebugLog("GameData", $"[DurationSeconds] isCompleted: {IsCompleted}");
                     LogManager.WriteDebugLog("GameData", "[DurationSeconds] 条件检查:");
                     LogManager.WriteDebugLog("GameData", $"[DurationSeconds] - EndTime.HasValue: {EndTime.HasValue}");
                     LogManager.WriteDebugLog("GameData", $"[DurationSeconds] - ElapsedTime.HasValue: {ElapsedTime.HasValue}");
