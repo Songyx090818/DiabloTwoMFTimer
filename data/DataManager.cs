@@ -355,6 +355,20 @@ namespace DTwoMFTimerHelper.Data
                                         LogManager.WriteDebugLog("DataManager", $"解析到EndTime: {currentRecord.EndTime}");
                                     }
                                     break;
+                                case "latesttime":
+                                    if (!string.IsNullOrEmpty(value) && DateTime.TryParse(value, out var latestTime))
+                                    {
+                                        currentRecord.LatestTime = latestTime;
+                                        LogManager.WriteDebugLog("DataManager", $"解析到LatestTime: {currentRecord.LatestTime}");
+                                    }
+                                    break;
+                                case "elapsedtime":
+                                    if (!string.IsNullOrEmpty(value) && double.TryParse(value, out var elapsedTime))
+                                    {
+                                        currentRecord.ElapsedTime = elapsedTime;
+                                        LogManager.WriteDebugLog("DataManager", $"解析到ElapsedTime: {currentRecord.ElapsedTime}");
+                                    }
+                                    break;
                             }
                         }
                     }

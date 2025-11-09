@@ -115,14 +115,14 @@ namespace DTwoMFTimerHelper
         {
             switch (charClass)
             {
-                case CharacterClass.Barbarian: return LanguageManager.GetString("Barbarian") ?? "野蛮人";
-                case CharacterClass.Sorceress: return LanguageManager.GetString("Sorceress") ?? "法师";
-                case CharacterClass.Assassin: return LanguageManager.GetString("Assassin") ?? "刺客";
-                case CharacterClass.Druid: return LanguageManager.GetString("Druid") ?? "德鲁伊";
-                case CharacterClass.Paladin: return LanguageManager.GetString("Paladin") ?? "圣骑士";
-                case CharacterClass.Amazon: return LanguageManager.GetString("Amazon") ?? "亚马逊";
-                case CharacterClass.Necromancer: return LanguageManager.GetString("Necromancer") ?? "死灵法师";
-                default: return charClass.ToString();
+                case CharacterClass.Barbarian: return LanguageManager.GetString("CharacterClass_Barbarian") ?? "野蛮人";
+                case CharacterClass.Sorceress: return LanguageManager.GetString("CharacterClass_Sorceress") ?? "法师";
+                case CharacterClass.Assassin: return LanguageManager.GetString("CharacterClass_Assassin") ?? "刺客";
+                case CharacterClass.Druid: return LanguageManager.GetString("CharacterClass_Druid") ?? "德鲁伊";
+                case CharacterClass.Paladin: return LanguageManager.GetString("CharacterClass_Paladin") ?? "圣骑士";
+                case CharacterClass.Amazon: return LanguageManager.GetString("CharacterClass_Amazon") ?? "亚马逊";
+                case CharacterClass.Necromancer: return LanguageManager.GetString("CharacterClass_Necromancer") ?? "死灵法师";
+                default: return LanguageManager.GetString("CharacterClass_Unknown") ?? "未知";
             }
         }
         

@@ -460,24 +460,24 @@ namespace DTwoMFTimerHelper
                     string characterClass = "";
                     if (currentProfile != null)
                     {
-                        // 将职业枚举转换为中文名称
+                        // 使用LanguageManager根据当前语言获取职业名称
                         switch (currentProfile.Class)
                         {
-                            case Data.CharacterClass.Barbarian: characterClass = "野蛮人";
+                            case Data.CharacterClass.Barbarian: characterClass = Resources.LanguageManager.GetString("CharacterClass_Barbarian");
                                 break;
-                            case Data.CharacterClass.Sorceress: characterClass = "法师";
+                            case Data.CharacterClass.Sorceress: characterClass = Resources.LanguageManager.GetString("CharacterClass_Sorceress");
                                 break;
-                            case Data.CharacterClass.Assassin: characterClass = "刺客";
+                            case Data.CharacterClass.Assassin: characterClass = Resources.LanguageManager.GetString("CharacterClass_Assassin");
                                 break;
-                            case Data.CharacterClass.Druid: characterClass = "德鲁伊";
+                            case Data.CharacterClass.Druid: characterClass = Resources.LanguageManager.GetString("CharacterClass_Druid");
                                 break;
-                            case Data.CharacterClass.Paladin: characterClass = "圣骑士";
+                            case Data.CharacterClass.Paladin: characterClass = Resources.LanguageManager.GetString("CharacterClass_Paladin");
                                 break;
-                            case Data.CharacterClass.Amazon: characterClass = "亚马逊";
+                            case Data.CharacterClass.Amazon: characterClass = Resources.LanguageManager.GetString("CharacterClass_Amazon");
                                 break;
-                            case Data.CharacterClass.Necromancer: characterClass = "死灵法师";
+                            case Data.CharacterClass.Necromancer: characterClass = Resources.LanguageManager.GetString("CharacterClass_Necromancer");
                                 break;
-                            default: characterClass = "未知";
+                            default: characterClass = Resources.LanguageManager.GetString("CharacterClass_Unknown");
                                 break;
                         }
                     }
@@ -911,14 +911,8 @@ namespace DTwoMFTimerHelper
                 string sceneEnName = currentScene; // 默认值
                 string sceneZhName = currentScene; // 默认值
                 
-                // 通过场景名称判断是否为中文
-                bool isChineseScene = currentScene.Contains("混沌避难所") || 
-                                    currentScene.Contains("女伯爵") || 
-                                    currentScene.Contains("古代通道") || 
-                                    currentScene.Contains("巴尔") || 
-                                    currentScene.Contains("迪亚波罗") || 
-                                    currentScene.Contains("墨菲斯托") || 
-                                    currentScene.Contains("都瑞尔");
+                // 从设置中获取当前语言
+                bool isChineseScene = SettingsManager.StringToLanguage(SettingsManager.LoadSettings().Language) == DTwoMFTimerHelper.SettingsControl.LanguageOption.Chinese;
                 
                 // 如果是中文场景，需要区分中英文
                 if (isChineseScene || currentScene.StartsWith("ACT ") || currentScene.StartsWith("Act ") || currentScene.StartsWith("act "))
@@ -1270,14 +1264,8 @@ namespace DTwoMFTimerHelper
                 string sceneEnName = currentScene; // 默认值
                 string sceneZhName = currentScene; // 默认值
                 
-                // 通过场景名称判断是否为中文
-                bool isChineseScene = currentScene.Contains("混沌避难所") || 
-                                    currentScene.Contains("女伯爵") || 
-                                    currentScene.Contains("古代通道") || 
-                                    currentScene.Contains("巴尔") || 
-                                    currentScene.Contains("迪亚波罗") || 
-                                    currentScene.Contains("墨菲斯托") || 
-                                    currentScene.Contains("都瑞尔");
+                // 从设置中获取当前语言
+                bool isChineseScene = SettingsManager.StringToLanguage(SettingsManager.LoadSettings().Language) == DTwoMFTimerHelper.SettingsControl.LanguageOption.Chinese;
                 
                 // 如果是中文场景，需要区分中英文
                 if (isChineseScene || currentScene.StartsWith("ACT ") || currentScene.StartsWith("Act ") || currentScene.StartsWith("act "))
