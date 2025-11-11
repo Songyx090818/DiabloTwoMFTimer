@@ -122,7 +122,7 @@ namespace DTwoMFTimerHelper.UI.Timer
                     Utils.LogManager.WriteDebugLog("CharacterSceneControl", $"查找角色档案失败: {ex.Message}");
                 }
             }
-            
+
             // 保存当前角色、场景和难度到设置
             SaveCharacterSceneSettings(character, scene);
             
@@ -134,7 +134,7 @@ namespace DTwoMFTimerHelper.UI.Timer
         /// </summary>
         /// <param name="character">角色名称</param>
         /// <param name="scene">场景名称</param>
-        private void SaveCharacterSceneSettings(string character, string scene)
+        private static void SaveCharacterSceneSettings(string character, string scene)
         {
             if (!string.IsNullOrEmpty(character))
             {

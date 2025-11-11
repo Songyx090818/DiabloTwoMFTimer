@@ -237,8 +237,8 @@ namespace DTwoMFTimerHelper.Utils
                 }
             }
             
-            // 使用DataManager获取场景对应的ACT值
-            int actValue = DTwoMFTimerHelper.Services.DataManager.GetSceneActValue(pureSceneName);
+            // 使用SceneManager获取场景对应的ACT值
+            int actValue = DTwoMFTimerHelper.Services.SceneManager.GetSceneActValue(pureSceneName);
             
             // 如果有ACT值，在显示时添加ACT前缀
             if (actValue > 0)

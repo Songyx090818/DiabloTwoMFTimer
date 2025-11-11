@@ -222,7 +222,7 @@ namespace DTwoMFTimerHelper.UI
             if (tabProfilePage != null)
             {
                 tabProfilePage.Controls.Add(profileManager);
-                profileManager.TimerStateChanged += OnCountTimerStateChanged;
+                // profileManager.TimerStateChanged += OnCountTimerStateChanged;
             }
             if (tabTimerPage != null)
             {

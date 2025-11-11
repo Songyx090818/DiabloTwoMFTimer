@@ -36,5 +36,32 @@ namespace DTwoMFTimerHelper.Utils
         {
             throw new NotImplementedException();
         }
+        /// <summary>
+        /// 写入调试日志
+        /// </summary>
+        /// <param name="className">调用类名</param>
+        /// <param name="message">日志消息</param>
+        public static void WriteErrorLog(string className, string message, Exception ex = null)
+        {
+            try
+            {
+                // 错误日志路径
+                string errorLogPath = Path.Combine(Environment.CurrentDirectory, "error_log.txt");
+                // 错误日志：记录文件路径和当前时间
+                Console.WriteLine($"[错误] 日志文件路径: {errorLogPath}, 当前时间: {DateTime.Now}");
+                using StreamWriter writer = new StreamWriter(errorLogPath, true);
+                writer.WriteLine($"[{DateTime.Now}] [{className}] {message} {ex?.Message}");
+            }
+            catch (Exception logEx)
+            {
+                // 避免日志系统本身的异常影响主流程
+                Console.WriteLine($"写入日志失败: {logEx.Message}");
+            }
+        }
+
+        internal static void WriteErrorLog(string v)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
