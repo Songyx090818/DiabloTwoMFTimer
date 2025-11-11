@@ -172,7 +172,22 @@ namespace DTwoMFTimerHelper.UI.Pomodoro
             UpdatePomodoroDisplay();
         }
 
-        public void UpdateUI()
+        /// <summary>
+        /// 公共方法，供外部调用刷新UI
+        /// </summary>
+        public void RefreshUI()
+        {
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new Action(UpdateUI));
+            }
+            else
+            {
+                UpdateUI();
+            }
+        }
+        
+        private void UpdateUI()
         {
             // 更新番茄时钟界面
             btnStartPomodoro!.Text = isPomodoroRunning ? 
@@ -189,7 +204,7 @@ namespace DTwoMFTimerHelper.UI.Pomodoro
             {
                 breakForm.Invoke((MethodInvoker)delegate
                 {
-                    breakForm.UpdateUI();
+                    breakForm.RefreshUI();
                 });
             }
         }

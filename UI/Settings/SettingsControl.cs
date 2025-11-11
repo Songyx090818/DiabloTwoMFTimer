@@ -340,7 +340,22 @@ namespace DTwoMFTimerHelper.UI.Settings
             this.PerformLayout();
         }
 
-        public void UpdateUI()
+        /// <summary>
+        /// 公共方法，供外部调用刷新UI
+        /// </summary>
+        public void RefreshUI()
+        {
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new Action(UpdateUI));
+            }
+            else
+            {
+                UpdateUI();
+            }
+        }
+        
+        private void UpdateUI()
         {
             // 更新设置页面文本
             btnConfirmSettings!.Text = LanguageManager.GetString("ConfirmSettings");

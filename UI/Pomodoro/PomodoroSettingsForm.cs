@@ -257,7 +257,22 @@ namespace DTwoMFTimerHelper.UI.Pomodoro
             ResumeLayout(false);
         }
 
-        public void UpdateUI()
+        /// <summary>
+        /// 公共方法，供外部调用刷新UI
+        /// </summary>
+        public void RefreshUI()
+        {
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new Action(UpdateUI));
+            }
+            else
+            {
+                UpdateUI();
+            }
+        }
+        
+        private void UpdateUI()
         {
             // 设置数值控件的值
             if (nudWorkTimeMin != null) nudWorkTimeMin.Value = WorkTimeMinutes;

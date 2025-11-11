@@ -348,10 +348,25 @@ namespace DTwoMFTimerHelper.UI
             }
             
             // 更新各功能控件的UI
-            profileManager?.UpdateUI();
-            timerControl?.UpdateUI();
-            pomodoroControl?.UpdateUI();
-            settingsControl?.UpdateUI();
+            profileManager?.RefreshUI();
+            timerControl?.RefreshUI();
+            pomodoroControl?.RefreshUI();
+            settingsControl?.RefreshUI();
+        }
+        
+        /// <summary>
+        /// 公共方法，供外部调用刷新UI
+        /// </summary>
+        public void RefreshUI()
+        {
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new Action(UpdateUI));
+            }
+            else
+            {
+                UpdateUI();
+            }
         }
 
         // 事件处理方法
