@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
-using DTwoMFTimerHelper.Data;
+using DTwoMFTimerHelper.Models;
 
 namespace DTwoMFTimerHelper.Utils
 {
@@ -66,7 +66,7 @@ namespace DTwoMFTimerHelper.Utils
                 {
                     string jsonContent = File.ReadAllText(jsonFilePath);
                     var deserialized = JsonSerializer.Deserialize<Dictionary<string, string>>(jsonContent);
-                    translations = deserialized ?? new Dictionary<string, string>();
+                    translations = deserialized ?? [];
                 }
                 catch (Exception ex)
                 {
@@ -124,8 +124,8 @@ namespace DTwoMFTimerHelper.Utils
         public static string GetString(string key, params object[] args)
         {
             if (key == null) return string.Empty;
-            string value = string.Empty;
-            
+            string value;
+
             // 首先尝试直接从翻译字典中获取
             if (translations != null && translations.TryGetValue(key, out string? tempValue) && tempValue != null)
             {
@@ -182,13 +182,13 @@ namespace DTwoMFTimerHelper.Utils
                 int colonIndex = sceneName.IndexOf(':');
                 if (colonIndex > 0)
                 {
-                    pureSceneName = sceneName.Substring(colonIndex + 1).Trim();
+                    pureSceneName = sceneName[(colonIndex + 1)..].Trim();
                 }
             }
             
             // 使用DataManager获取动态的场景映射
             string translatedSceneName = pureSceneName;
-            var sceneMappings = DTwoMFTimerHelper.Data.DataManager.GetSceneMappings();
+            var sceneMappings = DTwoMFTimerHelper.Services.DataManager.GetSceneMappings();
             
             if (sceneMappings.TryGetValue(pureSceneName, out string? translated))
             {
@@ -238,7 +238,7 @@ namespace DTwoMFTimerHelper.Utils
             }
             
             // 使用DataManager获取场景对应的ACT值
-            int actValue = DTwoMFTimerHelper.Data.DataManager.GetSceneActValue(pureSceneName);
+            int actValue = DTwoMFTimerHelper.Services.DataManager.GetSceneActValue(pureSceneName);
             
             // 如果有ACT值，在显示时添加ACT前缀
             if (actValue > 0)
@@ -266,12 +266,12 @@ namespace DTwoMFTimerHelper.Utils
                 int colonIndex = sceneName.IndexOf(':');
                 if (colonIndex > 0)
                 {
-                    pureSceneName = sceneName.Substring(colonIndex + 1).Trim();
+                    pureSceneName = sceneName[(colonIndex + 1)..].Trim();
                 }
             }
             
             // 使用DataManager获取对应的英文场景名称
-            return DTwoMFTimerHelper.Data.DataManager.GetEnglishSceneName(pureSceneName);
+            return DTwoMFTimerHelper.Services.DataManager.GetEnglishSceneName(pureSceneName);
         }
         
         /// <summary>

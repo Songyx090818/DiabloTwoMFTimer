@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
-using DTwoMFTimerHelper.Data;
+using DTwoMFTimerHelper.Models;
 using DTwoMFTimerHelper.Utils;
 
-namespace DTwoMFTimerHelper
+namespace DTwoMFTimerHelper.UI.Profiles
 {
     public class SwitchCharacterForm : Form
     {
@@ -14,7 +14,7 @@ namespace DTwoMFTimerHelper
         private Label? lblCharacters;
         
         // 属性
-        public Data.CharacterProfile? SelectedProfile { get; private set; }
+        public Models.CharacterProfile? SelectedProfile { get; private set; }
         
         public SwitchCharacterForm()
         {
@@ -48,11 +48,11 @@ namespace DTwoMFTimerHelper
             
             btnSelect.Location = new System.Drawing.Point(120, 230);
             btnSelect.Size = new System.Drawing.Size(80, 30);
-            btnSelect.Click += btnSelect_Click;
+            btnSelect.Click += BtnSelect_Click;
             
             btnCancel.Location = new System.Drawing.Point(250, 230);
             btnCancel.Size = new System.Drawing.Size(80, 30);
-            btnCancel.Click += btnCancel_Click;
+            btnCancel.Click += BtnCancel_Click;
             
             // 添加控件到表单
             this.Controls.Add(lblCharacters);
@@ -75,7 +75,7 @@ namespace DTwoMFTimerHelper
             {
                 Console.WriteLine("[详细调试] SwitchCharacterForm: 开始加载角色档案...");
                 // 明确指定只加载非隐藏角色
-                var profiles = DataManager.LoadAllProfiles(includeHidden: false);
+                var profiles = DTwoMFTimerHelper.Services.DataManager.LoadAllProfiles(includeHidden: false);
                 Console.WriteLine("[详细调试] SwitchCharacterForm: 从DataManager获取到角色档案");
                 
                 lstCharacters!.Items.Clear();
@@ -134,7 +134,7 @@ namespace DTwoMFTimerHelper
             }
         }
         
-        private void btnSelect_Click(object? sender, EventArgs e)
+        private void BtnSelect_Click(object? sender, EventArgs e)
         {
             if (lstCharacters!.SelectedItem is ProfileItem profileItem)
             {
@@ -168,7 +168,7 @@ namespace DTwoMFTimerHelper
             }
         }
         
-        private void btnCancel_Click(object? sender, EventArgs e)
+        private void BtnCancel_Click(object? sender, EventArgs e)
         {
             this.DialogResult = DialogResult.Cancel;
             this.Close();
@@ -177,10 +177,10 @@ namespace DTwoMFTimerHelper
         // 包装类，用于显示友好的角色信息
         private class ProfileItem
         {
-            public Data.CharacterProfile Profile { get; }
+            public Models.CharacterProfile Profile { get; }
             public string DisplayName { get; }
             
-            public ProfileItem(Data.CharacterProfile profile)
+            public ProfileItem(Models.CharacterProfile profile)
             {
                 Profile = profile;
                 
@@ -193,7 +193,7 @@ namespace DTwoMFTimerHelper
             
             // 使用Utils.LanguageManager中的GetLocalizedClassName方法
             
-            private string FormatTime(double seconds)
+            private static string FormatTime(double seconds)
             {
                 int hours = (int)(seconds / 3600);
                 int minutes = (int)((seconds % 3600) / 60);

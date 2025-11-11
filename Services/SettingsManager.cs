@@ -3,8 +3,9 @@ using System.IO;
 using System.Windows.Forms;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
+using DTwoMFTimerHelper.UI.Settings;
 
-namespace DTwoMFTimerHelper.Settings
+namespace DTwoMFTimerHelper.Services
 {
     public class AppSettings
     {

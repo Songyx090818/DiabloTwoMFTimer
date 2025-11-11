@@ -3,11 +3,15 @@ using System.Windows.Forms;
 using System.Drawing;
 using System.Windows.Input;
 using System.Runtime.InteropServices;
-using DTwoMFTimerHelper.Utils;
-using AntdUI;
-using DTwoMFTimerHelper.Settings;
+using DTwoMFTimerHelper.Utils; // Contains LanguageManager and LogManager
+using DTwoMFTimerHelper.Services;
+using DTwoMFTimerHelper.UI.Timer;
+using DTwoMFTimerHelper.UI.Pomodoro;
+using DTwoMFTimerHelper.UI.Settings;
+using DTwoMFTimerHelper.UI.Profiles;
+using DTwoMFTimerHelper.Models;
 
-namespace DTwoMFTimerHelper
+namespace DTwoMFTimerHelper.UI
 {
     public partial class MainForm : Form
     {
@@ -23,8 +27,7 @@ namespace DTwoMFTimerHelper
         private TimerControl? _timerControl;
         public TimerControl? TimerControl {
             get {
-                if (_timerControl == null)
-                    _timerControl = timerControl;
+                _timerControl ??= timerControl;
                 return _timerControl;
             }
         }
@@ -36,7 +39,7 @@ namespace DTwoMFTimerHelper
             
             // 加载设置
             LoadSettings();
-            
+
             // 启动测试：直接加载角色档案并显示详细信息
             LoadCharacterProfile();
             
@@ -51,7 +54,7 @@ namespace DTwoMFTimerHelper
             if (appSettings != null && Screen.PrimaryScreen != null)
             {
                 var position = SettingsManager.StringToWindowPosition(appSettings.WindowPosition);
-                settingsControl?.MoveWindowToPosition(this, position);
+                SettingsControl.MoveWindowToPosition(this, position);
             }
             
             this.ShowInTaskbar = true;
@@ -73,18 +76,18 @@ namespace DTwoMFTimerHelper
             }
         }
         
-        private void LoadCharacterProfile()
+        private static void LoadCharacterProfile()
          {
              try
              {
                  Console.WriteLine("[启动测试] 开始加载角色档案...");
                  // 调用DataManager加载角色档案，分别测试includeHidden=true和false
                  Console.WriteLine("[启动测试] 测试1: 只加载非隐藏角色 (includeHidden=false)");
-                 var profilesVisible = DTwoMFTimerHelper.Data.DataManager.LoadAllProfiles(includeHidden: false);
+                 var profilesVisible = DTwoMFTimerHelper.Services.DataManager.LoadAllProfiles(includeHidden: false);
                  Console.WriteLine($"[启动测试] 测试1结果: 找到 {profilesVisible.Count} 个非隐藏角色档案");
                  
                  Console.WriteLine("\n[启动测试] 测试2: 加载所有角色包括隐藏的 (includeHidden=true)");
-                 var profilesAll = DTwoMFTimerHelper.Data.DataManager.LoadAllProfiles(includeHidden: true);
+                 var profilesAll = DTwoMFTimerHelper.Services.DataManager.LoadAllProfiles(includeHidden: true);
                  Console.WriteLine($"[启动测试] 测试2结果: 找到 {profilesAll.Count} 个角色档案（包括隐藏的）");
                  
                  // 显示每个角色的详细信息
@@ -132,7 +135,7 @@ namespace DTwoMFTimerHelper
             tabControl.SelectedIndex = 0;
             tabControl.Size = new Size(894, 878);
             tabControl.TabIndex = 1;
-            tabControl.SelectedIndexChanged += tabControl_SelectedIndexChanged;
+            tabControl.SelectedIndexChanged += TabControl_SelectedIndexChanged;
             // 
             // tabProfilePage
             // 
@@ -206,9 +209,6 @@ namespace DTwoMFTimerHelper
             timerControl = new TimerControl();
             pomodoroControl = new PomodoroControl();
             settingsControl = new SettingsControl();
-            
-            // 尝试加载未完成的计时状态
-            timerControl.TryLoadPendingTimerState();
 
             // 设置控件的Dock属性
             profileManager.Dock = DockStyle.Fill;
@@ -270,8 +270,7 @@ namespace DTwoMFTimerHelper
         private void RegisterHotKey(Keys keys, int id)
         {
             int modifiers = 0;
-            int keyCode = 0;
-            
+
             // 提取修饰键
             if ((keys & Keys.Alt) == Keys.Alt)
                 modifiers |= MOD_ALT;
@@ -279,10 +278,10 @@ namespace DTwoMFTimerHelper
                 modifiers |= MOD_CONTROL;
             if ((keys & Keys.Shift) == Keys.Shift)
                 modifiers |= MOD_SHIFT;
-            
+
             // 提取主按键
-            keyCode = (int)(keys & Keys.KeyCode);
-            
+            int keyCode = (int)(keys & Keys.KeyCode);
+
             // 注册热键
             RegisterHotKey(this.Handle, id, modifiers, keyCode);
         }
@@ -309,7 +308,7 @@ namespace DTwoMFTimerHelper
             }
         }
         
-        private void tabControl_SelectedIndexChanged(object? sender, EventArgs e)
+        private void TabControl_SelectedIndexChanged(object? sender, EventArgs e)
         {
             // 当标签页切换时，可以在这里添加额外的逻辑
             // 根据当前选中的选项卡更新UI
@@ -324,7 +323,7 @@ namespace DTwoMFTimerHelper
 
         private void InitializeLanguageSupport()
         {
-            // 订阅语言改变事件
+            // 订阅语言改变事件 - 使用正确的Utils命名空间中的LanguageManager
             LanguageManager.OnLanguageChanged += LanguageManager_OnLanguageChanged;
             
             // 初始化UI文本
@@ -343,7 +342,7 @@ namespace DTwoMFTimerHelper
             if (tabControl != null && tabControl.TabPages.Count >= 4)
             {
                 tabControl.TabPages[0].Text = LanguageManager.GetString("TabProfile");
-                tabControl.TabPages[1].Text = "计时器";
+                tabControl.TabPages[1].Text = LanguageManager.GetString("TabMFTimer");
                 tabControl.TabPages[2].Text = LanguageManager.GetString("TabPomodoro");
                 tabControl.TabPages[3].Text = LanguageManager.GetString("TabSettings");
             }
@@ -430,7 +429,7 @@ namespace DTwoMFTimerHelper
         private void OnWindowPositionChanged(object? sender, SettingsControl.WindowPositionChangedEventArgs e)
         {
             // 窗口位置改变时的处理
-            settingsControl?.MoveWindowToPosition(this, e.Position);
+            SettingsControl.MoveWindowToPosition(this, e.Position);
             
             // 保存设置
             if (appSettings != null)

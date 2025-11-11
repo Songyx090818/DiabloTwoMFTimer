@@ -3,8 +3,9 @@ using System.Windows.Forms;
 using System.Drawing;
 using System.Windows.Input;
 using DTwoMFTimerHelper.Utils;
+using DTwoMFTimerHelper.Services;
 
-namespace DTwoMFTimerHelper
+namespace DTwoMFTimerHelper.UI.Settings
 {
     public partial class SettingsControl : UserControl
     {
@@ -121,7 +122,7 @@ namespace DTwoMFTimerHelper
             this.btnConfirmSettings.TabIndex = 5;
             this.btnConfirmSettings.Text = "确认";
             this.btnConfirmSettings.UseVisualStyleBackColor = true;
-            this.btnConfirmSettings.Click += new System.EventHandler(this.btnConfirmSettings_Click);
+            this.btnConfirmSettings.Click += new System.EventHandler(this.BtnConfirmSettings_Click);
             // 
             // radioTopLeft
             // 
@@ -273,7 +274,7 @@ namespace DTwoMFTimerHelper
             this.labelPauseHotkey.Size = new System.Drawing.Size(237, 23);
             this.labelPauseHotkey.TabIndex = 3;
             this.labelPauseHotkey.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.labelPauseHotkey.Click += new System.EventHandler(this.btnSetPauseHotkey_Click);
+            this.labelPauseHotkey.Click += new System.EventHandler(this.BtnSetPauseHotkey_Click);
             // 
             // labelStartStopHotkey - 可点击设置快捷键
             // 
@@ -284,7 +285,7 @@ namespace DTwoMFTimerHelper
             this.labelStartStopHotkey.Size = new System.Drawing.Size(237, 23);
             this.labelStartStopHotkey.TabIndex = 2;
             this.labelStartStopHotkey.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.labelStartStopHotkey.Click += new System.EventHandler(this.btnSetStartStopHotkey_Click);
+            this.labelStartStopHotkey.Click += new System.EventHandler(this.BtnSetStartStopHotkey_Click);
             // 
             // labelHotkeyPause
             // 
@@ -391,7 +392,7 @@ namespace DTwoMFTimerHelper
             return WindowPosition.TopLeft; // 默认左上
         }
 
-        public void MoveWindowToPosition(Form form, WindowPosition position)
+        public static void MoveWindowToPosition(Form form, WindowPosition position)
         {
             // 获取屏幕工作区域
             Rectangle screenBounds = Screen.GetWorkingArea(form);
@@ -438,7 +439,7 @@ namespace DTwoMFTimerHelper
         private bool isSettingHotkey = false;
         private string currentHotkeySetting = string.Empty;
 
-        private void btnConfirmSettings_Click(object? sender, EventArgs e)
+        private void BtnConfirmSettings_Click(object? sender, EventArgs e)
         {
             // 触发位置变更事件
             WindowPosition position = GetSelectedPosition();
@@ -466,7 +467,7 @@ namespace DTwoMFTimerHelper
             labelPauseHotkey!.Text = GetHotkeyDisplayText(pauseHotkey);
         }
 
-        private string GetHotkeyDisplayText(Keys keys)
+        private static string GetHotkeyDisplayText(Keys keys)
         {
             string text = string.Empty;
 
@@ -485,12 +486,12 @@ namespace DTwoMFTimerHelper
             return text;
         }
 
-        private void btnSetStartStopHotkey_Click(object? sender, EventArgs e)
+        private void BtnSetStartStopHotkey_Click(object? sender, EventArgs e)
         {
             StartHotkeySetup("StartStop");
         }
 
-        private void btnSetPauseHotkey_Click(object? sender, EventArgs e)
+        private void BtnSetPauseHotkey_Click(object? sender, EventArgs e)
         {
             StartHotkeySetup("Pause");
         }
@@ -564,47 +565,27 @@ namespace DTwoMFTimerHelper
         }
 
         // 位置变更事件参数
-        public class WindowPositionChangedEventArgs : EventArgs
+        public class WindowPositionChangedEventArgs(SettingsControl.WindowPosition position) : EventArgs
         {
-            public WindowPosition Position { get; }
-
-            public WindowPositionChangedEventArgs(WindowPosition position)
-            {
-                Position = position;
-            }
+            public WindowPosition Position { get; } = position;
         }
 
         // 语言变更事件参数
-        public class LanguageChangedEventArgs : EventArgs
+        public class LanguageChangedEventArgs(SettingsControl.LanguageOption language) : EventArgs
         {
-            public LanguageOption Language { get; }
-
-            public LanguageChangedEventArgs(LanguageOption language)
-            {
-                Language = language;
-            }
+            public LanguageOption Language { get; } = language;
         }
 
         // 窗口置顶变更事件参数
-        public class AlwaysOnTopChangedEventArgs : EventArgs
+        public class AlwaysOnTopChangedEventArgs(bool isAlwaysOnTop) : EventArgs
         {
-            public bool IsAlwaysOnTop { get; }
-
-            public AlwaysOnTopChangedEventArgs(bool isAlwaysOnTop)
-            {
-                IsAlwaysOnTop = isAlwaysOnTop;
-            }
+            public bool IsAlwaysOnTop { get; } = isAlwaysOnTop;
         }
 
         // 快捷键变更事件参数
-        public class HotkeyChangedEventArgs : EventArgs
+        public class HotkeyChangedEventArgs(Keys hotkey) : EventArgs
         {
-            public Keys Hotkey { get; }
-
-            public HotkeyChangedEventArgs(Keys hotkey)
-            {
-                Hotkey = hotkey;
-            }
+            public Keys Hotkey { get; } = hotkey;
         }
 
         // 控件字段

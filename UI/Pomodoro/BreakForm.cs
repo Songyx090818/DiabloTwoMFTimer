@@ -1,8 +1,9 @@
 using System;
 using System.Windows.Forms;
 using DTwoMFTimerHelper.Utils;
+using Timer = System.Windows.Forms.Timer;
 
-namespace DTwoMFTimerHelper
+namespace DTwoMFTimerHelper.UI.Pomodoro
 {
     public partial class BreakForm : Form
     {
@@ -20,7 +21,7 @@ namespace DTwoMFTimerHelper
         // 事件
         public event EventHandler? BreakSkipped;
 
-        private Timer? breakTimer;
+        private System.Windows.Forms.Timer breakTimer;
 
         public BreakForm(int breakDurationMinutes, BreakType breakType)
         {
@@ -37,8 +38,10 @@ namespace DTwoMFTimerHelper
             CurrentBreakType = breakType;
 
             // 初始化计时器 - 使用100ms间隔更稳定
-            breakTimer = new Timer();
-            breakTimer.Interval = 100; // 100毫秒
+            breakTimer = new System.Windows.Forms.Timer
+            {
+                Interval = 100 // 100毫秒
+            };
             breakTimer.Tick += BreakTimer_Tick;
             breakTimer.Start();
 
@@ -82,7 +85,7 @@ namespace DTwoMFTimerHelper
             lblBreakTime.TabIndex = 1;
             lblBreakTime.Text = "05:00.000";
             lblBreakTime.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            lblBreakTime.Click += lblBreakTime_Click;
+            lblBreakTime.Click += LblBreakTime_Click;
             // 
             // btnClose
             // 
@@ -94,7 +97,7 @@ namespace DTwoMFTimerHelper
             btnClose.TabIndex = 2;
             btnClose.Text = "关闭";
             btnClose.UseVisualStyleBackColor = true;
-            btnClose.Click += btnClose_Click;
+            btnClose.Click += BtnClose_Click;
             // 
             // btnSkipBreak
             // 
@@ -106,7 +109,7 @@ namespace DTwoMFTimerHelper
             btnSkipBreak.TabIndex = 3;
             btnSkipBreak.Text = "跳过休息";
             btnSkipBreak.UseVisualStyleBackColor = true;
-            btnSkipBreak.Click += btnSkipBreak_Click;
+            btnSkipBreak.Click += BtnSkipBreak_Click;
             // 
             // BreakForm
             // 
@@ -204,7 +207,7 @@ namespace DTwoMFTimerHelper
             }
         }
 
-        private void btnClose_Click(object? sender, EventArgs e)
+        private void BtnClose_Click(object? sender, EventArgs e)
         {
             // 暂停计时器
             breakTimer?.Stop();
@@ -212,7 +215,7 @@ namespace DTwoMFTimerHelper
             this.Close();
         }
 
-        private void btnSkipBreak_Click(object? sender, EventArgs e)
+        private void BtnSkipBreak_Click(object? sender, EventArgs e)
         {
             // 暂停计时器
             breakTimer?.Stop();
@@ -233,7 +236,7 @@ namespace DTwoMFTimerHelper
         private Button? btnClose;
         private Button? btnSkipBreak;
 
-        private void lblBreakTime_Click(object? sender, EventArgs e)
+        private void LblBreakTime_Click(object? sender, EventArgs e)
         {
 
         }

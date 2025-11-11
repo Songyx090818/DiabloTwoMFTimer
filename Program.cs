@@ -23,7 +23,7 @@ namespace DTwoMFTimerHelper
             
             try
             {
-                Application.Run(new MainForm());
+                Application.Run(new UI.MainForm());
             }
             catch (Exception ex)
             {

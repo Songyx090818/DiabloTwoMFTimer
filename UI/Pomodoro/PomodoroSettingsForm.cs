@@ -1,9 +1,9 @@
 using System;
 using System.Windows.Forms;
 using DTwoMFTimerHelper.Utils;
-using DTwoMFTimerHelper.Settings;
+using DTwoMFTimerHelper.Services;
 
-namespace DTwoMFTimerHelper
+namespace DTwoMFTimerHelper.UI.Pomodoro
 {
     public class PomodoroSettingsForm : Form
     {
@@ -37,18 +37,18 @@ namespace DTwoMFTimerHelper
             this.StartPosition = FormStartPosition.CenterScreen;
             this.TopMost = true;
 
-            // 从配置文件加载默认设置
-            var settings = SettingsManager.LoadSettings();
-            
-            // 使用传入的值作为当前值，但从配置文件获取默认值
+            // 设置默认值，避免在构造函数中进行复杂操作
             WorkTimeMinutes = workTime;
-            WorkTimeSeconds = settings.WorkTimeSeconds;
+            WorkTimeSeconds = 0;
             ShortBreakMinutes = shortBreakTime;
-            ShortBreakSeconds = settings.ShortBreakSeconds;
+            ShortBreakSeconds = 0;
             LongBreakMinutes = longBreakTime;
-            LongBreakSeconds = settings.LongBreakSeconds;
+            LongBreakSeconds = 0;
 
             InitializeComponent();
+            
+            // 初始化设置（移到InitializeComponent后，避免设计器问题）
+            LoadSettings();
             UpdateUI();
         }
 
@@ -58,21 +58,42 @@ namespace DTwoMFTimerHelper
             this.StartPosition = FormStartPosition.CenterScreen;
             this.TopMost = true;
 
-            // 从配置文件加载默认设置
-            var settings = SettingsManager.LoadSettings();
-            
-            // 使用传入的值，但如果传入的值为默认值，则使用配置文件中的值
+            // 设置默认值，避免在构造函数中进行复杂操作
             WorkTimeMinutes = workTimeMinutes;
-            WorkTimeSeconds = workTimeSeconds > 0 ? workTimeSeconds : settings.WorkTimeSeconds;
+            WorkTimeSeconds = workTimeSeconds;
             ShortBreakMinutes = shortBreakMinutes;
-            ShortBreakSeconds = shortBreakSeconds > 0 ? shortBreakSeconds : settings.ShortBreakSeconds;
+            ShortBreakSeconds = shortBreakSeconds;
             LongBreakMinutes = longBreakMinutes;
-            LongBreakSeconds = longBreakSeconds > 0 ? longBreakSeconds : settings.LongBreakSeconds;
+            LongBreakSeconds = longBreakSeconds;
 
             InitializeComponent();
+            
+            // 如果秒数为0，从配置文件加载（移到InitializeComponent后，避免设计器问题）
+            if (WorkTimeSeconds == 0 || ShortBreakSeconds == 0 || LongBreakSeconds == 0)
+            {
+                LoadSettings();
+            }
             UpdateUI();
         }
 
+        private void LoadSettings()
+        {
+            // 从配置文件加载默认设置
+            try
+            {
+                var settings = SettingsManager.LoadSettings();
+                
+                // 只在秒数为0时才从设置中加载
+                if (WorkTimeSeconds == 0) WorkTimeSeconds = settings.WorkTimeSeconds;
+                if (ShortBreakSeconds == 0) ShortBreakSeconds = settings.ShortBreakSeconds;
+                if (LongBreakSeconds == 0) LongBreakSeconds = settings.LongBreakSeconds;
+            }
+            catch
+            {
+                // 忽略可能的异常，确保设计器不会崩溃
+            }
+        }
+        
         private void InitializeComponent()
         {
             lblWorkTime = new Label();
@@ -138,21 +159,21 @@ namespace DTwoMFTimerHelper
             lblLongBreakTimeSec.Name = "lblLongBreakTimeSec";
             lblLongBreakTimeSec.Size = new System.Drawing.Size(47, 32);
             lblLongBreakTimeSec.TabIndex = 10;
-            lblLongBreakTimeSec.Click += lblLongBreakTimeSec_Click;
+            lblLongBreakTimeSec.Click += LblLongBreakTimeSec_Click;
             // 
             // nudWorkTimeMin
             // 
             nudWorkTimeMin.Location = new System.Drawing.Point(177, 30);
-            nudWorkTimeMin.Maximum = new decimal(new int[] { 60, 0, 0, 0 });
+            nudWorkTimeMin.Maximum = new decimal([60, 0, 0, 0]);
             nudWorkTimeMin.Name = "nudWorkTimeMin";
             nudWorkTimeMin.Size = new System.Drawing.Size(70, 34);
             nudWorkTimeMin.TabIndex = 1;
-            nudWorkTimeMin.ValueChanged += nudWorkTimeMin_ValueChanged;
+            nudWorkTimeMin.ValueChanged += NudWorkTimeMin_ValueChanged;
             // 
             // nudShortBreakTimeMin
             // 
             nudShortBreakTimeMin.Location = new System.Drawing.Point(177, 70);
-            nudShortBreakTimeMin.Maximum = new decimal(new int[] { 30, 0, 0, 0 });
+            nudShortBreakTimeMin.Maximum = new decimal([30, 0, 0, 0]);
             nudShortBreakTimeMin.Name = "nudShortBreakTimeMin";
             nudShortBreakTimeMin.Size = new System.Drawing.Size(70, 34);
             nudShortBreakTimeMin.TabIndex = 5;
@@ -160,7 +181,7 @@ namespace DTwoMFTimerHelper
             // nudLongBreakTimeMin
             // 
             nudLongBreakTimeMin.Location = new System.Drawing.Point(177, 110);
-            nudLongBreakTimeMin.Maximum = new decimal(new int[] { 60, 0, 0, 0 });
+            nudLongBreakTimeMin.Maximum = new decimal([60, 0, 0, 0]);
             nudLongBreakTimeMin.Name = "nudLongBreakTimeMin";
             nudLongBreakTimeMin.Size = new System.Drawing.Size(70, 34);
             nudLongBreakTimeMin.TabIndex = 9;
@@ -168,7 +189,7 @@ namespace DTwoMFTimerHelper
             // nudWorkTimeSec
             // 
             nudWorkTimeSec.Location = new System.Drawing.Point(306, 30);
-            nudWorkTimeSec.Maximum = new decimal(new int[] { 59, 0, 0, 0 });
+            nudWorkTimeSec.Maximum = new decimal([59, 0, 0, 0]);
             nudWorkTimeSec.Name = "nudWorkTimeSec";
             nudWorkTimeSec.Size = new System.Drawing.Size(70, 34);
             nudWorkTimeSec.TabIndex = 3;
@@ -176,7 +197,7 @@ namespace DTwoMFTimerHelper
             // nudShortBreakTimeSec
             // 
             nudShortBreakTimeSec.Location = new System.Drawing.Point(306, 70);
-            nudShortBreakTimeSec.Maximum = new decimal(new int[] { 59, 0, 0, 0 });
+            nudShortBreakTimeSec.Maximum = new decimal([59, 0, 0, 0]);
             nudShortBreakTimeSec.Name = "nudShortBreakTimeSec";
             nudShortBreakTimeSec.Size = new System.Drawing.Size(70, 34);
             nudShortBreakTimeSec.TabIndex = 7;
@@ -184,7 +205,7 @@ namespace DTwoMFTimerHelper
             // nudLongBreakTimeSec
             // 
             nudLongBreakTimeSec.Location = new System.Drawing.Point(306, 110);
-            nudLongBreakTimeSec.Maximum = new decimal(new int[] { 59, 0, 0, 0 });
+            nudLongBreakTimeSec.Maximum = new decimal([59, 0, 0, 0]);
             nudLongBreakTimeSec.Name = "nudLongBreakTimeSec";
             nudLongBreakTimeSec.Size = new System.Drawing.Size(70, 34);
             nudLongBreakTimeSec.TabIndex = 11;
@@ -195,7 +216,7 @@ namespace DTwoMFTimerHelper
             btnSave.Name = "btnSave";
             btnSave.Size = new System.Drawing.Size(80, 23);
             btnSave.TabIndex = 12;
-            btnSave.Click += btnSave_Click;
+            btnSave.Click += BtnSave_Click;
             // 
             // btnCancel
             // 
@@ -203,7 +224,7 @@ namespace DTwoMFTimerHelper
             btnCancel.Name = "btnCancel";
             btnCancel.Size = new System.Drawing.Size(80, 23);
             btnCancel.TabIndex = 13;
-            btnCancel.Click += btnCancel_Click;
+            btnCancel.Click += BtnCancel_Click;
             // 
             // PomodoroSettingsForm
             // 
@@ -257,7 +278,7 @@ namespace DTwoMFTimerHelper
             this.btnCancel!.Text = LanguageManager.GetString("Cancel") ?? "取消";
         }
 
-        private void btnSave_Click(object? sender, EventArgs e)
+        private void BtnSave_Click(object? sender, EventArgs e)
         {
             // 保存设置
             WorkTimeMinutes = (int)this.nudWorkTimeMin!.Value;
@@ -272,19 +293,19 @@ namespace DTwoMFTimerHelper
             this.Close();
         }
 
-        private void btnCancel_Click(object? sender, EventArgs e)
+        private void BtnCancel_Click(object? sender, EventArgs e)
         {
             // 设置对话框结果为Cancel
             this.DialogResult = DialogResult.Cancel;
             this.Close();
         }
 
-        private void nudWorkTimeMin_ValueChanged(object? sender, EventArgs e)
+        private void NudWorkTimeMin_ValueChanged(object? sender, EventArgs e)
         {
 
         }
 
-        private void lblLongBreakTimeSec_Click(object? sender, EventArgs e)
+        private void LblLongBreakTimeSec_Click(object? sender, EventArgs e)
         {
 
         }

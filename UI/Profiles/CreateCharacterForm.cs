@@ -1,9 +1,9 @@
 using System;
 using System.Windows.Forms;
-using DTwoMFTimerHelper.Data;
+using DTwoMFTimerHelper.Models;
 using DTwoMFTimerHelper.Utils;
 
-namespace DTwoMFTimerHelper
+namespace DTwoMFTimerHelper.UI.Profiles
 {
     public class CreateCharacterForm : Form
     {
@@ -27,6 +27,7 @@ namespace DTwoMFTimerHelper
         public CreateCharacterForm()
         {
             InitializeComponent();
+            SetupCharacterClasses();
             UpdateUI();
         }
         
@@ -61,21 +62,15 @@ namespace DTwoMFTimerHelper
             cmbCharacterClass.Size = new System.Drawing.Size(180, 25);
             cmbCharacterClass.DropDownStyle = ComboBoxStyle.DropDownList;
             
-            // 添加职业选项
-            foreach (CharacterClass charClass in Enum.GetValues(typeof(CharacterClass)))
-            {
-                cmbCharacterClass.Items.Add(charClass);
-            }
-            if (cmbCharacterClass.Items.Count > 0)
-                cmbCharacterClass.SelectedIndex = 0;
+            // 职业选项将在SetupCharacterClasses方法中添加
             
             btnConfirm.Location = new System.Drawing.Point(120, 230);
             btnConfirm.Size = new System.Drawing.Size(80, 30);
-            btnConfirm.Click += btnConfirm_Click;
+            btnConfirm.Click += BtnConfirm_Click;
             
             btnCancel.Location = new System.Drawing.Point(250, 230);
             btnCancel.Size = new System.Drawing.Size(80, 30);
-            btnCancel.Click += btnCancel_Click;
+            btnCancel.Click += BtnCancel_Click;
             
             // 添加控件到表单
             this.Controls.Add(lblCharacterName);
@@ -86,9 +81,23 @@ namespace DTwoMFTimerHelper
             this.Controls.Add(btnCancel);
         }
         
+        private void SetupCharacterClasses()
+        {
+            // 添加职业选项
+            if (cmbCharacterClass != null)
+            {
+                foreach (CharacterClass charClass in Enum.GetValues(typeof(CharacterClass)))
+                {
+                    cmbCharacterClass.Items.Add(charClass);
+                }
+                if (cmbCharacterClass.Items.Count > 0)
+                    cmbCharacterClass.SelectedIndex = 0;
+            }
+        }
+        
         public void UpdateUI()
         {
-            this.Text = LanguageManager.GetString("CreateCharacter") ?? "创建角色档案";
+            this.Text = LanguageManager.GetString("CreateCharacter") ?? "创建";
             lblCharacterName!.Text = LanguageManager.GetString("CharacterName") ?? "角色名称:";
             lblCharacterClass!.Text = LanguageManager.GetString("CharacterClass") ?? "职业:";
             btnConfirm!.Text = LanguageManager.GetString("Confirm") ?? "确认";
@@ -113,7 +122,7 @@ namespace DTwoMFTimerHelper
         
         // 使用LanguageManager中的GetLocalizedClassName方法
         
-        private CharacterClass GetCharacterClassFromLocalizedName(string localizedName)
+        private static CharacterClass GetCharacterClassFromLocalizedName(string localizedName)
         {
             // 反向映射
             foreach (CharacterClass charClass in Enum.GetValues(typeof(CharacterClass)))
@@ -124,7 +133,7 @@ namespace DTwoMFTimerHelper
             return CharacterClass.Barbarian; // 默认值
         }
         
-        private void btnConfirm_Click(object? sender, EventArgs e)
+        private void BtnConfirm_Click(object? sender, EventArgs e)
         {
             // 验证输入
             if (string.IsNullOrEmpty(CharacterName))
@@ -134,7 +143,7 @@ namespace DTwoMFTimerHelper
             }
             
             // 检查角色是否已存在
-            if (DataManager.FindProfileByName(CharacterName, true) != null)
+            if (DTwoMFTimerHelper.Services.DataManager.FindProfileByName(CharacterName, true) != null)
             {
                 MessageBox.Show(LanguageManager.GetString("CharacterExists") ?? "该角色名称已存在", "提示");
                 return;
@@ -144,7 +153,7 @@ namespace DTwoMFTimerHelper
             this.Close();
         }
         
-        private void btnCancel_Click(object? sender, EventArgs e)
+        private void BtnCancel_Click(object? sender, EventArgs e)
         {
             this.DialogResult = DialogResult.Cancel;
             this.Close();

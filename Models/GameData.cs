@@ -6,7 +6,7 @@ using System.Reflection;
 using YamlDotNet.Serialization;
 using DTwoMFTimerHelper.Utils;
 
-namespace DTwoMFTimerHelper.Data
+namespace DTwoMFTimerHelper.Models
 {
     // 游戏难度枚举
     public enum GameDifficulty

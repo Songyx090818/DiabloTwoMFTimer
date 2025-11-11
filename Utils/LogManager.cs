@@ -1,7 +1,6 @@
 using System;
 using System.IO;
-using DTwoMFTimerHelper.Data;
-using DTwoMFTimerHelper.Utils;
+using DTwoMFTimerHelper.Models;
 
 namespace DTwoMFTimerHelper.Utils
 {
@@ -23,16 +22,19 @@ namespace DTwoMFTimerHelper.Utils
                 string debugLogPath = Path.Combine(Environment.CurrentDirectory, "debug_log.txt");
                 // 调试日志：记录文件路径和当前时间
                 Console.WriteLine($"[调试] 日志文件路径: {debugLogPath}, 当前时间: {DateTime.Now}");
-                using (StreamWriter writer = new StreamWriter(debugLogPath, true))
-                {
-                    writer.WriteLine($"[{DateTime.Now}] [{className}] {message}");
-                }
+                using StreamWriter writer = new StreamWriter(debugLogPath, true);
+                writer.WriteLine($"[{DateTime.Now}] [{className}] {message}");
             }
             catch (Exception logEx)
             {
                 // 避免日志系统本身的异常影响主流程
                 Console.WriteLine($"写入日志失败: {logEx.Message}");
             }
+        }
+
+        internal static void WriteDebugLog(string v)
+        {
+            throw new NotImplementedException();
         }
     }
 }
