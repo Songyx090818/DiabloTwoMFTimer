@@ -297,7 +297,7 @@ namespace DTwoMFTimerHelper.UI.Timer
         private string GetCurrentDifficultyText()
         {
             var difficulty = ProfileService.Instance.CurrentDifficulty;
-            return SceneManager.GetLocalizedDifficultyName(difficulty);
+            return SceneService.GetLocalizedDifficultyName(difficulty);
         }
         #endregion
 

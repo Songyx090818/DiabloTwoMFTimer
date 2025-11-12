@@ -11,7 +11,7 @@ using DTwoMFTimerHelper.Models;
 
 namespace DTwoMFTimerHelper.Services
 {
-    public static class DataManager
+    public static class DataService
     {
         // 动态获取当前用户的AppData\Roaming路径
         private static readonly string ProfilesDirectory = Path.Combine(
@@ -21,17 +21,17 @@ namespace DTwoMFTimerHelper.Services
             "");
 
         // 静态构造函数，用于验证目录路径
-        static DataManager()
+        static DataService()
         {
-            LogManager.WriteDebugLog("DataManager", $"[目录验证] 角色档案目录路径: {ProfilesDirectory}");
-            LogManager.WriteDebugLog("DataManager", $"[目录验证] 目录是否存在: {Directory.Exists(ProfilesDirectory)}");
+            LogManager.WriteDebugLog("DataService", $"[目录验证] 角色档案目录路径: {ProfilesDirectory}");
+            LogManager.WriteDebugLog("DataService", $"[目录验证] 目录是否存在: {Directory.Exists(ProfilesDirectory)}");
             if (Directory.Exists(ProfilesDirectory))
             {
                 var files = Directory.GetFiles(ProfilesDirectory, "*.yaml");
-                LogManager.WriteDebugLog("DataManager", $"[目录验证] 目录中找到 {files.Length} 个YAML文件");
+                LogManager.WriteDebugLog("DataService", $"[目录验证] 目录中找到 {files.Length} 个YAML文件");
                 foreach (var file in files)
                 {
-                    LogManager.WriteDebugLog("DataManager", $"[目录验证] - {Path.GetFileName(file)}");
+                    LogManager.WriteDebugLog("DataService", $"[目录验证] - {Path.GetFileName(file)}");
                 }
             }
         }
@@ -48,7 +48,7 @@ namespace DTwoMFTimerHelper.Services
 
         public static List<CharacterProfile> LoadAllProfiles(bool includeHidden = false)
         {
-            LogManager.WriteDebugLog("DataManager", $"调用ProfileLoader加载角色档案，includeHidden={includeHidden}");
+            LogManager.WriteDebugLog("DataService", $"调用ProfileLoader加载角色档案，includeHidden={includeHidden}");
             return ProfileLoader.LoadAllProfiles(includeHidden);
         }
 
@@ -218,8 +218,8 @@ namespace DTwoMFTimerHelper.Services
         /// </summary>
         public static List<FarmingScene> LoadFarmingSpots()
         {
-            // 调用SceneManager加载场景数据
-            return SceneManager.LoadFarmingSpots();
+            // 调用SceneService加载场景数据
+            return SceneService.LoadFarmingSpots();
         }
 
         /// <summary>
@@ -227,8 +227,8 @@ namespace DTwoMFTimerHelper.Services
         /// </summary>
         public static Dictionary<string, string> GetSceneMappings()
         {
-            // 调用SceneManager获取场景映射
-            return SceneManager.GetSceneMappings();
+            // 调用SceneService获取场景映射
+            return SceneService.GetSceneMappings();
         }
 
         /// <summary>
@@ -236,8 +236,8 @@ namespace DTwoMFTimerHelper.Services
         /// </summary>
         public static Dictionary<string, int> GetSceneActMappings()
         {
-            // 调用SceneManager获取场景ACT映射
-            return SceneManager.GetSceneActMappings();
+            // 调用SceneService获取场景ACT映射
+            return SceneService.GetSceneActMappings();
         }
 
         /// <summary>
@@ -245,8 +245,8 @@ namespace DTwoMFTimerHelper.Services
         /// </summary>
         public static string GetEnglishSceneName(string sceneName)
         {
-            // 调用SceneManager获取英文场景名称
-            return SceneManager.GetEnglishSceneName(sceneName);
+            // 调用SceneService获取英文场景名称
+            return SceneService.GetEnglishSceneName(sceneName);
         }
 
 
@@ -263,7 +263,7 @@ namespace DTwoMFTimerHelper.Services
         {
             try
             {
-                LogManager.WriteDebugLog("DataManager", $"开始创建新角色档案: {name}, 职业: {characterClass}");
+                LogManager.WriteDebugLog("DataService", $"开始创建新角色档案: {name}, 职业: {characterClass}");
 
                 // 验证输入参数
                 if (string.IsNullOrWhiteSpace(name))
@@ -275,7 +275,7 @@ namespace DTwoMFTimerHelper.Services
                 var existingProfile = FindProfileByName(name);
                 if (existingProfile != null)
                 {
-                    LogManager.WriteDebugLog("DataManager", $"角色 '{name}' 已存在");
+                    LogManager.WriteDebugLog("DataService", $"角色 '{name}' 已存在");
                     throw new InvalidOperationException($"角色 '{name}' 已存在");
                 }
 
@@ -288,14 +288,14 @@ namespace DTwoMFTimerHelper.Services
                     Records = []
                 };
 
-                LogManager.WriteDebugLog("DataManager", $"角色对象创建成功，现在准备保存");
+                LogManager.WriteDebugLog("DataService", $"角色对象创建成功，现在准备保存");
 
                 // 目录检查和创建将在SaveProfile方法中完成，避免重复逻辑
 
                 // 保存配置文件
                 SaveProfile(profile);
 
-                LogManager.WriteDebugLog("DataManager", $"成功创建并保存角色档案: {name}");
+                LogManager.WriteDebugLog("DataService", $"成功创建并保存角色档案: {name}");
 
                 // 直接返回创建的profile对象，避免因文件系统缓存导致的验证失败
                 // 后续操作会通过正常加载流程确保数据一致性
@@ -303,8 +303,8 @@ namespace DTwoMFTimerHelper.Services
             }
             catch (Exception ex)
             {
-                LogManager.WriteDebugLog("DataManager", $"创建角色档案失败: {ex.Message}");
-                LogManager.WriteDebugLog("DataManager", $"异常堆栈: {ex.StackTrace}");
+                LogManager.WriteDebugLog("DataService", $"创建角色档案失败: {ex.Message}");
+                LogManager.WriteDebugLog("DataService", $"异常堆栈: {ex.StackTrace}");
                 // 在所有模式下都显示详细错误信息，确保用户知道具体失败原因
                 string errorMsg = ex.InnerException != null
                     ? $"创建角色失败: {ex.Message}\n内部错误: {ex.InnerException.Message}"

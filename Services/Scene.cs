@@ -10,9 +10,9 @@ using YamlDotNet.Serialization.NamingConventions;
 namespace DTwoMFTimerHelper.Services
 {
     /// <summary>
-    /// 场景数据管理器，负责加载和管理游戏场景数据
+    /// 场景数据服务，负责加载和管理游戏场景数据
     /// </summary>
-    public static class SceneManager
+    public static class SceneService
     {
         // 场景数据的YAML文件路径
         private static string FarmingSpotsPath => FindFarmingSpotsFile();
@@ -37,14 +37,14 @@ namespace DTwoMFTimerHelper.Services
             {
                 if (File.Exists(path))
                 {
-                    LogManager.WriteDebugLog("SceneManager", $"找到FarmingSpots.yaml文件：{path}");
+                    LogManager.WriteDebugLog("SceneService", $"找到FarmingSpots.yaml文件：{path}");
                     return path;
                 }
             }
             
             // 如果都不存在，返回应用程序基目录下的Resources路径（标准位置）
             string defaultPath = possiblePaths[0];
-            LogManager.WriteDebugLog("SceneManager", $"未找到FarmingSpots.yaml文件。尝试使用默认路径：{defaultPath}");
+            LogManager.WriteDebugLog("SceneService", $"未找到FarmingSpots.yaml文件。尝试使用默认路径：{defaultPath}");
             
             return defaultPath;
         }
@@ -66,42 +66,42 @@ namespace DTwoMFTimerHelper.Services
             // 检查缓存是否存在
             if (_cachedFarmingSpots != null)
             {
-                LogManager.WriteDebugLog("SceneManager", $"返回缓存的场景数据，共 {_cachedFarmingSpots.Count} 个场景");
+                LogManager.WriteDebugLog("SceneService", $"返回缓存的场景数据，共 {_cachedFarmingSpots.Count} 个场景");
                 return _cachedFarmingSpots;
             }
 
-            LogManager.WriteDebugLog("SceneManager", "===== 开始加载场景数据 =====");
-            LogManager.WriteDebugLog("SceneManager", $"尝试加载的文件路径: {FarmingSpotsPath}");
-            LogManager.WriteDebugLog("SceneManager", $"当前应用程序基目录: {AppDomain.CurrentDomain.BaseDirectory}");
-            LogManager.WriteDebugLog("SceneManager", $"当前工作目录: {Directory.GetCurrentDirectory()}");
+            LogManager.WriteDebugLog("SceneService", "===== 开始加载场景数据 =====");
+            LogManager.WriteDebugLog("SceneService", $"尝试加载的文件路径: {FarmingSpotsPath}");
+            LogManager.WriteDebugLog("SceneService", $"当前应用程序基目录: {AppDomain.CurrentDomain.BaseDirectory}");
+            LogManager.WriteDebugLog("SceneService", $"当前工作目录: {Directory.GetCurrentDirectory()}");
 
             try
             {
                 bool fileExists = File.Exists(FarmingSpotsPath);
-                LogManager.WriteDebugLog("SceneManager", $"文件是否存在: {fileExists}");
+                LogManager.WriteDebugLog("SceneService", $"文件是否存在: {fileExists}");
 
                 if (fileExists)
                 {
-                    LogManager.WriteDebugLog("SceneManager", "文件存在，开始读取内容...");
+                    LogManager.WriteDebugLog("SceneService", "文件存在，开始读取内容...");
                     var yaml = File.ReadAllText(FarmingSpotsPath);
-                    LogManager.WriteDebugLog("SceneManager", $"成功读取文件内容，长度: {yaml.Length} 字符");
+                    LogManager.WriteDebugLog("SceneService", $"成功读取文件内容，长度: {yaml.Length} 字符");
 
                     var data = sceneDeserializer.Deserialize<FarmingSpotsData>(yaml);
                      
                     if (data == null)
                     {
-                        LogManager.WriteDebugLog("SceneManager", "反序列化失败: 数据为null");
+                        LogManager.WriteDebugLog("SceneService", "反序列化失败: 数据为null");
                         return [];
                     }
                      
                     if (data.FarmingSpots == null)
                     {
-                        LogManager.WriteDebugLog("SceneManager", "反序列化失败: FarmingSpots为null");
+                        LogManager.WriteDebugLog("SceneService", "反序列化失败: FarmingSpots为null");
                         return [];
                     }
                      
                     int sceneCount = data.FarmingSpots.Count;
-                    LogManager.WriteDebugLog("SceneManager", $"反序列化成功，场景数量: {sceneCount}");
+                    LogManager.WriteDebugLog("SceneService", $"反序列化成功，场景数量: {sceneCount}");
 
                     // 只输出到控制台，不再显示弹窗
                     int count = data.FarmingSpots != null ? data.FarmingSpots.Count : 0;
@@ -114,7 +114,7 @@ namespace DTwoMFTimerHelper.Services
                 }
                 else
                 {
-                    LogManager.WriteDebugLog("SceneManager", "错误: 文件不存在");
+                    LogManager.WriteDebugLog("SceneService", "错误: 文件不存在");
                     // 尝试列出当前目录下的文件，帮助诊断问题
                     if (!string.IsNullOrEmpty(FarmingSpotsPath))
                     {
@@ -122,10 +122,10 @@ namespace DTwoMFTimerHelper.Services
                         if (!string.IsNullOrEmpty(currentDir) && Directory.Exists(currentDir))
                         {
                         var files = Directory.GetFiles(currentDir);
-                        LogManager.WriteDebugLog("SceneManager", $"目录 {currentDir} 中的文件:");
+                        LogManager.WriteDebugLog("SceneService", $"目录 {currentDir} 中的文件:");
                         foreach (var file in files)
                         {
-                            LogManager.WriteDebugLog("SceneManager", $"  - {Path.GetFileName(file)}");
+                            LogManager.WriteDebugLog("SceneService", $"  - {Path.GetFileName(file)}");
                         }
                     }
                     }
@@ -142,21 +142,21 @@ namespace DTwoMFTimerHelper.Services
                     foreach (string path in possiblePaths)
                     {
                         bool exists = File.Exists(path);
-                        LogManager.WriteDebugLog("SceneManager", $"尝试路径: {path}, 是否存在: {exists}");
+                        LogManager.WriteDebugLog("SceneService", $"尝试路径: {path}, 是否存在: {exists}");
                     }
                 }
             }
             catch (Exception ex)
             {
-                LogManager.WriteDebugLog("SceneManager", $"加载场景数据失败: {ex.Message}");
-                LogManager.WriteDebugLog("SceneManager", $"异常类型: {ex.GetType().FullName}");
-                LogManager.WriteDebugLog("SceneManager", $"异常堆栈: {ex.StackTrace}");
+                LogManager.WriteDebugLog("SceneService", $"加载场景数据失败: {ex.Message}");
+                LogManager.WriteDebugLog("SceneService", $"异常类型: {ex.GetType().FullName}");
+                LogManager.WriteDebugLog("SceneService", $"异常堆栈: {ex.StackTrace}");
                 
                 // 如果有内部异常，也记录下来
                 if (ex.InnerException != null)
                 {
-                    LogManager.WriteDebugLog("SceneManager", $"内部异常: {ex.InnerException.Message ?? "未知异常"}");
-                    LogManager.WriteDebugLog("SceneManager", $"内部异常类型: {ex.InnerException.GetType().FullName ?? "未知类型"}");
+                    LogManager.WriteDebugLog("SceneService", $"内部异常: {ex.InnerException.Message ?? "未知异常"}");
+                    LogManager.WriteDebugLog("SceneService", $"内部异常类型: {ex.InnerException.GetType().FullName ?? "未知类型"}");
                 }
             }
 
@@ -253,8 +253,8 @@ namespace DTwoMFTimerHelper.Services
                     }
                 }
                 
-                // 使用SceneManager获取场景到ACT值的映射
-                var sceneActMappings = SceneManager.GetSceneActMappings();
+                // 使用SceneService获取场景到ACT值的映射
+                var sceneActMappings = SceneService.GetSceneActMappings();
                 
                 // 尝试在映射中查找纯场景名称对应的ACT值
                 if (sceneActMappings.TryGetValue(pureSceneName, out int actValue))
@@ -274,7 +274,7 @@ namespace DTwoMFTimerHelper.Services
             }
             catch (Exception ex)
             {
-                LogManager.WriteDebugLog("SceneManager", $"提取ACT值失败: {ex.Message}");
+                LogManager.WriteDebugLog("SceneService", $"提取ACT值失败: {ex.Message}");
             }
             return 0; // 默认返回0
         }

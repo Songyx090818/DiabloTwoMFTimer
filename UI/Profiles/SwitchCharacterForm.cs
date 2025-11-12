@@ -75,8 +75,8 @@ namespace DTwoMFTimerHelper.UI.Profiles
             {
                 Console.WriteLine("[详细调试] SwitchCharacterForm: 开始加载角色档案...");
                 // 明确指定只加载非隐藏角色
-                var profiles = DTwoMFTimerHelper.Services.DataManager.LoadAllProfiles(includeHidden: false);
-                Console.WriteLine("[详细调试] SwitchCharacterForm: 从DataManager获取到角色档案");
+                var profiles = DTwoMFTimerHelper.Services.DataService.LoadAllProfiles(includeHidden: false);
+            Console.WriteLine("[详细调试] SwitchCharacterForm: 从DataService获取到角色档案");
                 
                 lstCharacters!.Items.Clear();
                 Console.WriteLine("[详细调试] SwitchCharacterForm: 已清空角色列表");

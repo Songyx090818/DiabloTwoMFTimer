@@ -81,14 +81,14 @@ namespace DTwoMFTimerHelper.UI
              try
              {
                  Console.WriteLine("[启动测试] 开始加载角色档案...");
-                 // 调用DataManager加载角色档案，分别测试includeHidden=true和false
-                 Console.WriteLine("[启动测试] 测试1: 只加载非隐藏角色 (includeHidden=false)");
-                 var profilesVisible = DTwoMFTimerHelper.Services.DataManager.LoadAllProfiles(includeHidden: false);
-                 Console.WriteLine($"[启动测试] 测试1结果: 找到 {profilesVisible.Count} 个非隐藏角色档案");
-                 
-                 Console.WriteLine("\n[启动测试] 测试2: 加载所有角色包括隐藏的 (includeHidden=true)");
-                 var profilesAll = DTwoMFTimerHelper.Services.DataManager.LoadAllProfiles(includeHidden: true);
-                 Console.WriteLine($"[启动测试] 测试2结果: 找到 {profilesAll.Count} 个角色档案（包括隐藏的）");
+                 // 调用DataService加载角色档案，分别测试includeHidden=true和false
+            Console.WriteLine("[启动测试] 测试1: 只加载非隐藏角色 (includeHidden=false)");
+            var profilesVisible = DTwoMFTimerHelper.Services.DataService.LoadAllProfiles(includeHidden: false);
+            Console.WriteLine($"[启动测试] 测试1结果: 找到 {profilesVisible.Count} 个非隐藏角色档案");
+            
+            Console.WriteLine("\n[启动测试] 测试2: 加载所有角色包括隐藏的 (includeHidden=true)");
+            var profilesAll = DTwoMFTimerHelper.Services.DataService.LoadAllProfiles(includeHidden: true);
+            Console.WriteLine($"[启动测试] 测试2结果: 找到 {profilesAll.Count} 个角色档案（包括隐藏的）");
                  
                  // 显示每个角色的详细信息
                  Console.WriteLine("\n[启动测试] 所有角色详细信息:");

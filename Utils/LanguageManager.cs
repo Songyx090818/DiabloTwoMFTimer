@@ -186,9 +186,9 @@ namespace DTwoMFTimerHelper.Utils
                 }
             }
             
-            // 使用DataManager获取动态的场景映射
+            // 使用DataService获取动态的场景映射
             string translatedSceneName = pureSceneName;
-            var sceneMappings = DTwoMFTimerHelper.Services.DataManager.GetSceneMappings();
+            var sceneMappings = DTwoMFTimerHelper.Services.DataService.GetSceneMappings();
             
             if (sceneMappings.TryGetValue(pureSceneName, out string? translated))
             {
@@ -237,8 +237,8 @@ namespace DTwoMFTimerHelper.Utils
                 }
             }
             
-            // 使用SceneManager获取场景对应的ACT值
-            int actValue = DTwoMFTimerHelper.Services.SceneManager.GetSceneActValue(pureSceneName);
+            // 使用SceneService获取场景对应的ACT值
+            int actValue = DTwoMFTimerHelper.Services.SceneService.GetSceneActValue(pureSceneName);
             
             // 如果有ACT值，在显示时添加ACT前缀
             if (actValue > 0)
@@ -270,8 +270,8 @@ namespace DTwoMFTimerHelper.Utils
                 }
             }
             
-            // 使用DataManager获取对应的英文场景名称
-            return DTwoMFTimerHelper.Services.DataManager.GetEnglishSceneName(pureSceneName);
+            // 使用DataService获取对应的英文场景名称
+            return DTwoMFTimerHelper.Services.DataService.GetEnglishSceneName(pureSceneName);
         }
         
         /// <summary>

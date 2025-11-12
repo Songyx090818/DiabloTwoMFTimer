@@ -140,7 +140,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
             
             // 添加难度选项
             foreach (Models.GameDifficulty difficulty in Enum.GetValues(typeof(Models.GameDifficulty)))
-                    cmbDifficulty.Items.Add(SceneManager.GetLocalizedDifficultyName(difficulty));
+                    cmbDifficulty.Items.Add(SceneService.GetLocalizedDifficultyName(difficulty));
             if (cmbDifficulty.Items.Count > 0)
                 cmbDifficulty.SelectedIndex = 2; // 默认地狱难度
               
@@ -212,7 +212,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
         }
         private void LoadFarmingScenes()
         {
-            farmingScenes = Services.SceneManager.LoadFarmingSpots();
+            farmingScenes = Services.SceneService.LoadFarmingSpots();
             
             cmbScene?.Items.Clear();
             
@@ -224,7 +224,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
             {
                 foreach (var scene in farmingScenes)
                 {
-                    string displayName = SceneManager.GetSceneDisplayName(scene);
+                    string displayName = SceneService.GetSceneDisplayName(scene);
                     cmbScene?.Items.Add(displayName);
                 }
                 
@@ -281,7 +281,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
                 // 尝试加载上次使用的角色档案
                 if (!string.IsNullOrEmpty(settings.LastUsedProfile))
                 {
-                    var profile = Services.DataManager.FindProfileByName(settings.LastUsedProfile);
+                    var profile = Services.DataService.FindProfileByName(settings.LastUsedProfile);
                     if (profile != null)
                     {
                         currentProfile = profile;
@@ -303,7 +303,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
         {
             if (cmbDifficulty?.SelectedIndex >= 0)
             {
-                return SceneManager.GetDifficultyByIndex(cmbDifficulty.SelectedIndex);
+                return SceneService.GetDifficultyByIndex(cmbDifficulty.SelectedIndex);
             }
             return Models.GameDifficulty.Hell;
         }
@@ -361,7 +361,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
                         WriteDebugLog($"选中难度: {difficulty}");
                         
                         // 获取场景的纯英文名称（与记录存储格式一致）
-                        string sceneDisplayName = SceneManager.GetSceneDisplayName(selectedScene);
+                        string sceneDisplayName = SceneService.GetSceneDisplayName(selectedScene);
                         WriteDebugLog($"场景显示名称: {sceneDisplayName}");
                         
                         string pureSceneName = sceneDisplayName;
@@ -479,7 +479,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
                     WriteDebugLog($"角色职业: {charClass}");
 
                     // 创建新角色档案
-                    currentProfile = Services.DataManager.CreateNewProfile(characterName, charClass);
+                    currentProfile = Services.DataService.CreateNewProfile(characterName, charClass);
 
                     // 验证创建结果
                     if (currentProfile == null)
@@ -565,7 +565,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
             if (MessageBox.Show(confirmMsg, "删除角色", MessageBoxButtons.YesNo) == DialogResult.Yes)
             {
                 // 删除角色档案
-                Services.DataManager.DeleteProfile(currentProfile);
+                Services.DataService.DeleteProfile(currentProfile);
                 currentProfile = null;
                 currentRecord = null;
                 UpdateUI();
@@ -599,8 +599,8 @@ namespace DTwoMFTimerHelper.UI.Profiles
                 string selectedDifficultyText = cmbDifficulty.SelectedItem?.ToString() ?? "未知";
                 WriteDebugLog($"难度索引已变更为: {selectedIndex}，显示文本: {selectedDifficultyText}");
                 
-                // 使用SceneManager中的GetDifficultyByIndex方法获取对应的GameDifficulty枚举值
-                Models.GameDifficulty difficulty = Services.SceneManager.GetDifficultyByIndex(selectedIndex);
+                // 使用SceneService中的GetDifficultyByIndex方法获取对应的GameDifficulty枚举值
+            Models.GameDifficulty difficulty = Services.SceneService.GetDifficultyByIndex(selectedIndex);
                 
                 // 更新ProfileService中的CurrentDifficulty
                 if (Services.ProfileService.Instance != null)
@@ -656,7 +656,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
                     Console.WriteLine($"尝试加载上次使用的角色档案: {lastUsedProfileName}");
                     
                     // 加载所有角色档案
-                    var allProfiles = Services.DataManager.LoadAllProfiles(false);
+                    var allProfiles = Services.DataService.LoadAllProfiles(false);
                     WriteDebugLog($"已加载所有角色档案，数量: {allProfiles.Count}");
                     
                     // 查找上次使用的角色档案

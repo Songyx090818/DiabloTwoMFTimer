@@ -109,7 +109,7 @@ namespace DTwoMFTimerHelper.Services
         {
             try
             {
-                FarmingScenes = SceneManager.LoadFarmingSpots();
+                FarmingScenes = SceneService.LoadFarmingSpots();
                 
                 if (FarmingScenes.Count == 0)
                 {
@@ -138,7 +138,7 @@ namespace DTwoMFTimerHelper.Services
             {
                 LogManager.WriteDebugLog("ProfileService", $"开始创建新角色: {characterName}, 职业: {characterClass}");
                 
-                var profile = DataManager.CreateNewProfile(characterName, characterClass);
+                var profile = DataService.CreateNewProfile(characterName, characterClass);
                 
                 if (profile == null)
                 {
@@ -200,7 +200,7 @@ namespace DTwoMFTimerHelper.Services
             {
                 LogManager.WriteDebugLog("ProfileService", $"开始删除角色: {profile.Name}");
                 
-                DataManager.DeleteProfile(profile);
+                DataService.DeleteProfile(profile);
                 
                 // 如果删除的是当前角色，清空当前角色
                 if (CurrentProfile?.Name == profile.Name)
@@ -225,7 +225,7 @@ namespace DTwoMFTimerHelper.Services
         /// </summary>
         public List<CharacterProfile> GetAllProfiles()
         {
-            return DataManager.LoadAllProfiles(false);
+            return DataService.LoadAllProfiles(false);
         }
 
         /// <summary>
@@ -233,7 +233,7 @@ namespace DTwoMFTimerHelper.Services
         /// </summary>
         public CharacterProfile? FindProfileByName(string name)
         {
-            return DataManager.FindProfileByName(name);
+            return DataService.FindProfileByName(name);
         }
 
         /// <summary>
@@ -301,7 +301,7 @@ namespace DTwoMFTimerHelper.Services
         /// </summary>
         public List<string> GetSceneDisplayNames()
         {
-            return FarmingScenes.Select(scene => SceneManager.GetSceneDisplayName(scene)).ToList();
+            return FarmingScenes.Select(scene => SceneService.GetSceneDisplayName(scene)).ToList();
         }
 
         /// <summary>
@@ -310,7 +310,7 @@ namespace DTwoMFTimerHelper.Services
         public FarmingScene? GetSceneByDisplayName(string displayName)
         {
             return FarmingScenes.FirstOrDefault(scene => 
-                SceneManager.GetSceneDisplayName(scene) == displayName);
+                SceneService.GetSceneDisplayName(scene) == displayName);
         }
 
         /// <summary>
@@ -320,7 +320,7 @@ namespace DTwoMFTimerHelper.Services
         {
             return Enum.GetValues(typeof(GameDifficulty))
                       .Cast<GameDifficulty>()
-                      .Select(d => SceneManager.GetLocalizedDifficultyName(d))
+                      .Select(d => SceneService.GetLocalizedDifficultyName(d))
                       .ToList();
         }
 
