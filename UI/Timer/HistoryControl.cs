@@ -25,8 +25,8 @@ namespace DTwoMFTimerHelper.UI.Timer
         public HistoryControl()
         {            
             InitializeComponent();
-            // 初始化历史记录服务
-            _historyService = new TimerHistoryService();
+            // 使用历史记录服务的单例实例
+            _historyService = TimerHistoryService.Instance;
             // 注册语言变更事件
             LanguageManager.OnLanguageChanged += LanguageManager_OnLanguageChanged;
         }

@@ -8,8 +8,20 @@ namespace DTwoMFTimerHelper.Services
 {
     public class TimerHistoryService
     {
+        #region Singleton Implementation
+        private static readonly Lazy<TimerHistoryService> _instance = 
+            new(() => new TimerHistoryService());
+        
+        public static TimerHistoryService Instance => _instance.Value;
+        
+        private TimerHistoryService()
+        {
+            RunHistory = [];
+        }
+        #endregion
+
         // 历史记录数据
-        public List<TimeSpan> RunHistory { get; private set; } = [];
+        public List<TimeSpan> RunHistory { get; private set; }
 
         // 历史记录统计信息
         public int RunCount { get; private set; } = 0;
