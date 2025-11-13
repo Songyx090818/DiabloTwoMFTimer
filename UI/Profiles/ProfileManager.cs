@@ -1,12 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Windows.Forms;
 using System.Linq;
-using DTwoMFTimerHelper.Models;
 using DTwoMFTimerHelper.Services;
 using DTwoMFTimerHelper.Utils;
-using DTwoMFTimerHelper.UI.Timer;
 
 namespace DTwoMFTimerHelper.UI.Profiles
 {
@@ -317,7 +314,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
 
         private static void WriteDebugLog(string message)
         {
-            Utils.LogManager.WriteDebugLog("ProfileManager", message);
+            LogManager.WriteDebugLog("ProfileManager", message);
         }
 
         /// <summary>
@@ -511,51 +508,55 @@ namespace DTwoMFTimerHelper.UI.Profiles
         }
 
         private void BtnSwitchCharacter_Click(object? sender, EventArgs e)
+{
+    using var form = new SwitchCharacterForm();
+    if (form.ShowDialog() == DialogResult.OK && form.SelectedProfile != null)
+    {
+        try
         {
-            using var form = new SwitchCharacterForm();
-            if (form.ShowDialog() == DialogResult.OK && form.SelectedProfile != null)
+            WriteDebugLog("开始切换角色...");
+            
+            var selectedProfile = form.SelectedProfile;
+
+            // 验证角色数据
+            if (selectedProfile == null || string.IsNullOrWhiteSpace(selectedProfile.Name))
             {
-                try
-                {
-                    WriteDebugLog("开始切换角色...");
-                    // 切换角色，确保类型正确
-                    var selectedProfile = form.SelectedProfile;
+                throw new InvalidOperationException("无效的角色数据");
+            }
 
-                    // 验证角色数据
-                    if (selectedProfile == null || string.IsNullOrWhiteSpace(selectedProfile.Name))
-                    {
-                        throw new InvalidOperationException("无效的角色数据");
-                    }
+            // 使用 ProfileService 的单例来统一管理角色切换
+            bool switchResult = ProfileService.Instance.SwitchCharacter(selectedProfile);
+            
+            if (switchResult)
+            {
+                // 更新本地引用
+                currentProfile = selectedProfile;
+                currentRecord = null;
 
-                    // 确保使用的是Data命名空间下的CharacterProfile
-                    // 由于我们已经修改了CharacterProfile的命名空间，现在应该可以直接使用
-                    currentProfile = selectedProfile;
-                    currentRecord = null;
+                WriteDebugLog($"成功切换到角色: {currentProfile.Name}");
 
-                    // 更新上次使用的角色档案设置
-                    var settings = Services.SettingsManager.LoadSettings();
-                    settings.LastUsedProfile = currentProfile.Name;
-                    Services.SettingsManager.SaveSettings(settings);
+                // 更新UI显示新角色信息
+                UpdateUI();
 
-                    WriteDebugLog($"成功切换到角色: {currentProfile.Name}");
+                // 同步更新TimerControl（确保这里不会再次触发角色切换）
+                SyncTimerControl();
 
-                    // 更新UI显示新角色信息
-                    UpdateUI();
-
-                    // 同步更新TimerControl
-                    SyncTimerControl();
-
-                    // 显示成功消息
-                    MessageBox.Show($"已成功切换到角色 '{currentProfile.Name}'", "切换成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-                catch (Exception ex)
-                {
-                    WriteDebugLog($"切换角色失败: {ex.Message}");
-                    WriteDebugLog($"异常堆栈: {ex.StackTrace}");
-                    MessageBox.Show($"切换角色失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
+                // 显示成功消息
+                MessageBox.Show($"已成功切换到角色 '{currentProfile.Name}'", "切换成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            else
+            {
+                throw new InvalidOperationException("角色切换失败");
             }
         }
+        catch (Exception ex)
+        {
+            WriteDebugLog($"切换角色失败: {ex.Message}");
+            WriteDebugLog($"异常堆栈: {ex.StackTrace}");
+            MessageBox.Show($"切换角色失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
+}
 
         private void BtnDeleteCharacter_Click(object? sender, EventArgs e)
         {
@@ -580,10 +581,20 @@ namespace DTwoMFTimerHelper.UI.Profiles
         // 场景选择变更事件处理
         private void CmbScene_SelectedIndexChanged(object? sender, EventArgs e)
         {            
-            // 当场景改变时，更新UI
+            // 当场景改变时，更新UI和ProfileService
             if (cmbScene != null)
             {
                 WriteDebugLog($"场景已变更为: {cmbScene.Text}");
+                
+                // 同步更新ProfileService中的CurrentScene
+                if (Services.ProfileService.Instance != null)
+                {
+                    Services.ProfileService.Instance.CurrentScene = cmbScene.Text;
+                    
+                    // 同步更新TimerControl
+                    SyncTimerControl();
+                }
+                
                 // 更新按钮文本，检查是否有未完成记录
                 UpdateUI();
             }
@@ -600,7 +611,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
                 WriteDebugLog($"难度索引已变更为: {selectedIndex}，显示文本: {selectedDifficultyText}");
                 
                 // 使用SceneService中的GetDifficultyByIndex方法获取对应的GameDifficulty枚举值
-            Models.GameDifficulty difficulty = Services.SceneService.GetDifficultyByIndex(selectedIndex);
+                Models.GameDifficulty difficulty = Services.SceneService.GetDifficultyByIndex(selectedIndex);
                 
                 // 更新ProfileService中的CurrentDifficulty
                 if (Services.ProfileService.Instance != null)
@@ -662,7 +673,8 @@ namespace DTwoMFTimerHelper.UI.Profiles
                     // 查找上次使用的角色档案
                     var profile = allProfiles.FirstOrDefault(p => p.Name == lastUsedProfileName);
                     if (profile != null)
-                    {                        currentProfile = profile;
+                    {                        
+                        currentProfile = profile;
                         currentRecord = null;
                         UpdateUI();
                         WriteDebugLog($"成功加载上次使用的角色档案: {lastUsedProfileName}, profile.Name={profile.Name}");

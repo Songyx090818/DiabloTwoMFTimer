@@ -87,13 +87,8 @@ namespace DTwoMFTimerHelper.UI.Timer
             UpdateUI();
         }
 
-        public void UpdateCharacterSceneInfo(string characterName, CharacterProfile? profile, string sceneName, string difficultyText)
-        {            // 通过ProfileService更新数据
-            if (profile != null)
-            {                ProfileService.Instance.SwitchCharacter(profile);
-            }
-            ProfileService.Instance.CurrentScene = sceneName;
-            
+        public void UpdateCharacterSceneInfo()
+        {
             // 更新UI
             UpdateUI();
         }
@@ -104,25 +99,34 @@ namespace DTwoMFTimerHelper.UI.Timer
         /// <param name="character">角色名称</param>
         /// <param name="scene">场景名称</param>
         public void UpdateUI()
-        {            // 更新角色显示
+        {    
+            // 更新角色显示
             if (lblCharacterDisplay != null)
-            {                var profile = ProfileService.Instance.CurrentProfile;
+            {                
+                var profile = ProfileService.Instance.CurrentProfile;
                 if (profile == null)
-                {                    lblCharacterDisplay.Text = "";
-                }                else
-                {                    // 获取角色职业信息
+                {                    
+                    lblCharacterDisplay.Text = "";
+                }               
+                else
+                {   
+                    // 获取角色职业信息
                     string characterClass = Utils.LanguageManager.GetLocalizedClassName(profile.Class);
 
                     // 显示角色名称加职业
                     lblCharacterDisplay.Text = $"{profile.Name} ({characterClass})";
-                }            }
+                }           
+            }
 
             // 更新场景显示
             if (lblSceneDisplay != null)
-            {                string currentScene = ProfileService.Instance.CurrentScene;
+            {
+                string currentScene = ProfileService.Instance.CurrentScene;
                 if (string.IsNullOrEmpty(currentScene))
-                {                    lblSceneDisplay.Text = "";
-                }                else
+                {
+                    lblSceneDisplay.Text = "";
+                }
+                else
                 {                    // 获取本地化的场景名称
                     string localizedSceneName = Utils.LanguageManager.GetString(currentScene);
                     // 获取本地化的难度名称
@@ -130,7 +134,8 @@ namespace DTwoMFTimerHelper.UI.Timer
 
                     // 在场景名称前添加难度
                     lblSceneDisplay.Text = $"{localizedDifficultyName} {localizedSceneName}";
-                }            }
+                }
+            }
         }
     }
 }

@@ -61,7 +61,7 @@ namespace DTwoMFTimerHelper.UI.Timer
         }
         
         public void UpdateUI()
-        {            // 更新历史记录列表
+        {   // 更新历史记录列表
             if (lstRunHistory != null)
             {
                 lstRunHistory.Items.Clear();
@@ -124,7 +124,8 @@ namespace DTwoMFTimerHelper.UI.Timer
         }
 
         public void UpdateHistory(List<TimeSpan> runHistory)
-        {            // 使用服务更新历史记录数据
+        {   
+            // 使用服务更新历史记录数据
             _historyService.UpdateHistory(runHistory);
             
             // 更新UI

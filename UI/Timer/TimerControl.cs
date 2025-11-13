@@ -43,8 +43,8 @@ namespace DTwoMFTimerHelper.UI.Timer
         public bool IsTimerRunning => _timerService.IsRunning;
         public Models.CharacterProfile? CurrentProfile 
         { 
-            get => _timerService.CurrentProfile;
-            set => _timerService.CurrentProfile = value; // value可以为null，因为_timerService.CurrentProfile现在是可空类型
+            get => ProfileService.Instance.CurrentProfile;
+            set => ProfileService.Instance.CurrentProfile = value; // 直接设置ProfileService中的属性
         }
         #endregion
 
@@ -169,10 +169,11 @@ namespace DTwoMFTimerHelper.UI.Timer
         /// </summary>
         public void SyncWithProfileManager()
         {
-            TryGetProfileInfoFromMainForm();
-            historyControl?.LoadProfileHistoryData(CurrentProfile, _timerService.CurrentScene, _timerService.CurrentCharacter, ProfileService.Instance.CurrentDifficulty);
+            UpdateProfileInfoFromService();
+            historyControl?.LoadProfileHistoryData(CurrentProfile, ProfileService.Instance.CurrentScene, ProfileService.Instance.CurrentProfile?.Name ?? "", ProfileService.Instance.CurrentDifficulty);
             UpdateUI();
-            LogManager.WriteDebugLog("TimerControl", $"已同步角色和场景信息: {_timerService.CurrentCharacter} - {_timerService.CurrentScene}");
+            string characterName = ProfileService.Instance.CurrentProfile?.Name ?? "";
+            LogManager.WriteDebugLog("TimerControl", $"已同步角色和场景信息: {characterName} - {ProfileService.Instance.CurrentScene}");
         }
 
         /// <summary>
@@ -252,49 +253,33 @@ namespace DTwoMFTimerHelper.UI.Timer
 
         private void UpdateCharacterSceneInfo()
         {
-            if (characterSceneControl != null && CurrentProfile != null)
-            {
-                // 获取本地化的场景名称
-                string localizedSceneName = LanguageManager.GetString(_timerService.CurrentScene);
-                
-                // 获取游戏难度文本
-                string difficultyText = GetCurrentDifficultyText();
-                
-                characterSceneControl.UpdateCharacterSceneInfo(
-                    _timerService.CurrentCharacter, 
-                    CurrentProfile, 
-                    localizedSceneName, 
-                    difficultyText);
-            }
+            characterSceneControl?.UpdateCharacterSceneInfo();
         }
 
-        private void TryGetProfileInfoFromMainForm()
+        private void UpdateProfileInfoFromService()
         {
-            var mainForm = this.FindForm() as MainForm;
-            if (mainForm != null && mainForm.ProfileManager != null)
+            // 直接使用ProfileService获取信息
+            var profileService = ProfileService.Instance;
+            
+            if (profileService.CurrentProfile != null)
             {
-                var profileManager = mainForm.ProfileManager;
-                if (profileManager.CurrentProfile != null)
-                {
-                    CurrentProfile = profileManager.CurrentProfile;
-                    _timerService.CurrentCharacter = profileManager.CurrentProfile.Name;
-                    _timerService.CurrentScene = profileManager.CurrentScene;
-                    
-                    // 从ProfileService获取并同步最新的难度信息
-                    var currentDifficulty = ProfileService.Instance.CurrentDifficulty;
-                    LogManager.WriteDebugLog("TimerControl", $"同步难度信息: {currentDifficulty}");
-                    
-                    // 确保角色场景控件也更新难度显示
-                    UpdateCharacterSceneInfo();
-                }
-                else
-                {
-                    LogManager.WriteDebugLog("TimerControl", "ProfileManager.CurrentProfile 为 null，无法获取角色信息");
-                }
+                CurrentProfile = profileService.CurrentProfile;
+                // TimerService不再需要单独设置这些属性，它会直接从ProfileService获取
+                
+                // 获取当前难度信息
+                var currentDifficulty = profileService.CurrentDifficulty;
+                LogManager.WriteDebugLog("TimerControl", $"同步难度信息: {currentDifficulty}");
+                
+                // 确保角色场景控件也更新难度显示
+                UpdateCharacterSceneInfo();
+            }
+            else
+            {
+                LogManager.WriteDebugLog("TimerControl", "ProfileService.CurrentProfile 为 null，无法获取角色信息");
             }
         }
 
-        private string GetCurrentDifficultyText()
+        private static string GetCurrentDifficultyText()
         {
             var difficulty = ProfileService.Instance.CurrentDifficulty;
             return SceneService.GetLocalizedDifficultyName(difficulty);

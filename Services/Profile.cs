@@ -54,17 +54,20 @@ namespace DTwoMFTimerHelper.Services
         private string _currentScene = string.Empty;
         public string CurrentScene
         {
-            get => _currentScene;
+            get => LanguageManager.GetString(_currentScene);
             set
             {
-                if (_currentScene != value)
+                // 确保保存时使用英文场景名称
+                string englishSceneName = SceneService.GetEnglishSceneName(value);
+                
+                if (_currentScene != englishSceneName)
                 {
-                    _currentScene = value;
-                    CurrentSceneChanged?.Invoke(value);
+                    _currentScene = englishSceneName;
+                    CurrentSceneChanged?.Invoke(englishSceneName);
                     
                     // 保存到设置
                     var settings = SettingsManager.LoadSettings();
-                    settings.LastUsedScene = value;
+                    settings.LastUsedScene = englishSceneName;
                     SettingsManager.SaveSettings(settings);
                     
                     // 检查是否有未完成记录
@@ -98,7 +101,7 @@ namespace DTwoMFTimerHelper.Services
         public string CurrentDifficultyLocalized => 
              Utils.LanguageManager.GetString($"Difficulty{_currentDifficulty}");
 
-        public List<FarmingScene> FarmingScenes { get; private set; } = new List<FarmingScene>();
+        public List<FarmingScene> FarmingScenes { get; private set; } = [];
         #endregion
 
         #region Public Methods
@@ -316,7 +319,7 @@ namespace DTwoMFTimerHelper.Services
         /// <summary>
         /// 获取本地化的难度名称列表
         /// </summary>
-        public List<string> GetLocalizedDifficultyNames()
+        public static List<string> GetLocalizedDifficultyNames()
         {
             return Enum.GetValues(typeof(GameDifficulty))
                       .Cast<GameDifficulty>()
@@ -327,7 +330,7 @@ namespace DTwoMFTimerHelper.Services
         /// <summary>
         /// 根据索引获取难度
         /// </summary>
-        public GameDifficulty GetDifficultyByIndex(int index)
+        public static GameDifficulty GetDifficultyByIndex(int index)
         {
             var difficulties = Enum.GetValues(typeof(GameDifficulty)).Cast<GameDifficulty>().ToList();
             return index >= 0 && index < difficulties.Count ? difficulties[index] : GameDifficulty.Hell;

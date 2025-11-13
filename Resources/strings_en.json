@@ -51,7 +51,7 @@
   "CurrentCharacter": "Current Character: {{0}} ({{1}})",
   "CurrentCharacterNotSelected": "Current Character: Not Selected",
   "Reset": "Reset",
-  "SelectScene": "Select Scene:",
+  "SelectScene": "Scene:",
   "CharacterClass_Barbarian": "Barbarian",
   "CharacterClass_Sorceress": "Sorceress",
   "CharacterClass_Assassin": "Assassin",

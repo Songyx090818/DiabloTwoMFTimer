@@ -50,7 +50,7 @@
   "Reset": "重置",
   "CurrentCharacter": "当前角色: {{0}} ({{1}})",
   "CurrentCharacterNotSelected": "当前角色: 未选择",
-  "SelectScene": "选择场景:",
+  "SelectScene": "场景:",
   "CharacterClass_Barbarian": "野蛮人",
   "CharacterClass_Sorceress": "法师",
   "CharacterClass_Assassin": "刺客",

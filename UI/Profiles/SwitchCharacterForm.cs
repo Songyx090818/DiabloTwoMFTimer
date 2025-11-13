@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Windows.Forms;
-using DTwoMFTimerHelper.Models;
 using DTwoMFTimerHelper.Utils;
 
 namespace DTwoMFTimerHelper.UI.Profiles
@@ -73,44 +71,44 @@ namespace DTwoMFTimerHelper.UI.Profiles
         {
             try
             {
-                Console.WriteLine("[详细调试] SwitchCharacterForm: 开始加载角色档案...");
+                LogManager.WriteDebugLog("SwitchCharacterForm", "[详细调试] 开始加载角色档案...");
                 // 明确指定只加载非隐藏角色
                 var profiles = DTwoMFTimerHelper.Services.DataService.LoadAllProfiles(includeHidden: false);
-            Console.WriteLine("[详细调试] SwitchCharacterForm: 从DataService获取到角色档案");
+                LogManager.WriteDebugLog("SwitchCharacterForm", "[详细调试] 从DataService获取到角色档案");
                 
                 lstCharacters!.Items.Clear();
-                Console.WriteLine("[详细调试] SwitchCharacterForm: 已清空角色列表");
+                LogManager.WriteDebugLog("SwitchCharacterForm", "[详细调试] 已清空角色列表");
                 
-                Console.WriteLine($"[详细调试] SwitchCharacterForm: 找到 {profiles.Count} 个角色档案");
+                LogManager.WriteDebugLog("SwitchCharacterForm", $"[详细调试] 找到 {profiles.Count} 个角色档案");
                 
                 // 显示每个角色的详细信息
                 foreach (var profile in profiles)
                 {
-                    Console.WriteLine($"[详细调试] SwitchCharacterForm: 加载角色: {profile.Name}, 职业: {profile.Class}, IsHidden: {profile.IsHidden}");
+                    LogManager.WriteDebugLog("SwitchCharacterForm", $"[详细调试] 加载角色: {profile.Name}, 职业: {profile.Class}, IsHidden: {profile.IsHidden}");
                     var profileItem = new ProfileItem(profile);
-                    Console.WriteLine($"[详细调试] SwitchCharacterForm: 创建ProfileItem: {profileItem.DisplayName}");
+                    LogManager.WriteDebugLog("SwitchCharacterForm", $"[详细调试] 创建ProfileItem: {profileItem.DisplayName}");
                     lstCharacters.Items.Add(profileItem);
-                    Console.WriteLine($"[详细调试] SwitchCharacterForm: 已添加到列表，当前列表项数: {lstCharacters.Items.Count}");
+                    LogManager.WriteDebugLog("SwitchCharacterForm", $"[详细调试] 已添加到列表，当前列表项数: {lstCharacters.Items.Count}");
                 }
                 
                 if (lstCharacters.Items.Count > 0)
                 {
                     lstCharacters.SelectedIndex = 0;
-                    Console.WriteLine($"[详细调试] SwitchCharacterForm: 已选中第一个角色: {lstCharacters.SelectedItem}");
+                    LogManager.WriteDebugLog("SwitchCharacterForm", $"[详细调试] 已选中第一个角色: {lstCharacters.SelectedItem}");
                 }
                 else
                 {
-                    Console.WriteLine("[详细调试] SwitchCharacterForm: 角色列表为空");
+                    LogManager.WriteDebugLog("SwitchCharacterForm", "[详细调试] 角色列表为空");
                 }
                 
                 // 更新UI显示
-                Console.WriteLine("[详细调试] SwitchCharacterForm: 准备更新空列表消息");
+                LogManager.WriteDebugLog("SwitchCharacterForm", "[详细调试] 准备更新空列表消息");
                 UpdateEmptyListMessage();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"加载角色档案异常: {ex.Message}");
-                Console.WriteLine($"异常堆栈: {ex.StackTrace}");
+                LogManager.WriteDebugLog("SwitchCharacterForm", $"加载角色档案异常: {ex.Message}"); 
+                LogManager.WriteDebugLog("SwitchCharacterForm", $"异常堆栈: {ex.StackTrace}");  
                 // 使用本地化的错误消息
                 MessageBox.Show($"{LanguageManager.GetString("ErrorLoadingProfiles") ?? "加载角色档案失败"}: {ex.Message}", 
                     LanguageManager.GetString("Error") ?? "错误");
@@ -123,7 +121,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
             {
                 // 确保使用本地化的空列表消息
                 string emptyMessage = LanguageManager.GetString("NoCharactersFound") ?? "没有找到角色档案";
-                Console.WriteLine($"角色列表为空，显示消息: {emptyMessage}");
+                LogManager.WriteDebugLog("SwitchCharacterForm", $"角色列表为空，显示消息: {emptyMessage}");
                 lstCharacters.Items.Add(emptyMessage);
                 btnSelect!.Enabled = false;
             }
@@ -142,13 +140,13 @@ namespace DTwoMFTimerHelper.UI.Profiles
                 if (profileItem.Profile != null && !string.IsNullOrEmpty(profileItem.Profile.Name))
                 {
                     SelectedProfile = profileItem.Profile;
-                    Console.WriteLine($"已选择角色: {profileItem.Profile.Name}");
+                    LogManager.WriteDebugLog("SwitchCharacterForm", $"已选择角色: {profileItem.Profile.Name}");
                     this.DialogResult = DialogResult.OK;
                     this.Close();
                 }
                 else
                 {
-                    Console.WriteLine("选中的角色数据无效");
+                    LogManager.WriteDebugLog("SwitchCharacterForm", "选中的角色数据无效");
                     MessageBox.Show(LanguageManager.GetString("InvalidCharacter") ?? "选中的角色数据无效", 
                         LanguageManager.GetString("Warning") ?? "警告");
                 }
@@ -156,13 +154,13 @@ namespace DTwoMFTimerHelper.UI.Profiles
             else if (lstCharacters.Items.Count == 1 && lstCharacters.SelectedItem is string)
             {
                 // 如果只有一项且是字符串（空列表提示消息），给出更明确的提示
-                Console.WriteLine("用户尝试选择空列表提示消息");
+                LogManager.WriteDebugLog("SwitchCharacterForm", "用户尝试选择空列表提示消息");
                 MessageBox.Show(LanguageManager.GetString("NoCharactersAvailable") ?? "没有可用的角色档案，请先创建角色。", 
                     LanguageManager.GetString("Information") ?? "提示");
             }
             else
             {
-                Console.WriteLine("请先选择角色");
+                LogManager.WriteDebugLog("SwitchCharacterForm", "请先选择角色");
                 MessageBox.Show(LanguageManager.GetString("SelectCharacterFirst") ?? "请先选择一个角色", 
                     LanguageManager.GetString("Information") ?? "提示");
             }
