@@ -9,11 +9,11 @@ namespace DTwoMFTimerHelper.Services
     public class TimerHistoryService
     {
         #region Singleton Implementation
-        private static readonly Lazy<TimerHistoryService> _instance = 
+        private static readonly Lazy<TimerHistoryService> _instance =
             new(() => new TimerHistoryService());
-        
+
         public static TimerHistoryService Instance => _instance.Value;
-        
+
         private TimerHistoryService()
         {
             RunHistory = [];
@@ -121,8 +121,8 @@ namespace DTwoMFTimerHelper.Services
                             }
 
                             // 更新记录的持续时间
-                              record.DurationSeconds = correctDuration;
-                              LogManager.WriteDebugLog("TimerHistoryService", $"[加载记录 #{i + 1}] 更新后的持续时间: {correctDuration}秒");
+                            record.DurationSeconds = correctDuration;
+                            LogManager.WriteDebugLog("TimerHistoryService", $"[加载记录 #{i + 1}] 更新后的持续时间: {correctDuration}秒");
 
                             TimeSpan duration = TimeSpan.FromSeconds(correctDuration);
                             RunHistory.Add(duration);
@@ -164,13 +164,13 @@ namespace DTwoMFTimerHelper.Services
         {            // 更新历史记录数据
             RunHistory = runHistory;
             RunCount = runHistory.Count;
-            
+
             // 重新计算统计数据
             if (RunCount > 0)
             {
                 FastestTime = TimeSpan.MaxValue;
                 double totalSeconds = 0;
-                
+
                 foreach (var time in runHistory)
                 {
                     if (time < FastestTime)
@@ -179,7 +179,7 @@ namespace DTwoMFTimerHelper.Services
                     }
                     totalSeconds += time.TotalSeconds;
                 }
-                
+
                 AverageTime = TimeSpan.FromSeconds(totalSeconds / RunCount);
             }
             else
@@ -194,17 +194,17 @@ namespace DTwoMFTimerHelper.Services
         /// </summary>
         /// <param name="runTime">运行时间</param>
         public void AddRunRecord(TimeSpan runTime)
-        {            
+        {
             // 添加到历史记录末尾，保持按StartTime升序排序
             RunHistory.Add(runTime);
             RunCount++;
-            
+
             // 更新最快时间
             if (runTime < FastestTime)
             {
                 FastestTime = runTime;
             }
-            
+
             // 更新平均时间
             double totalSeconds = 0;
             foreach (var time in RunHistory)

@@ -141,7 +141,7 @@ namespace DTwoMFTimerHelper.UI.Pomodoro
                 UpdateUI();
             }
         }
-        
+
         private void UpdateUI()
         {
             // 更新标题

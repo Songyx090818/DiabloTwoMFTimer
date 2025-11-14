@@ -19,6 +19,13 @@ ProfileManager 选择时是中文，并且带有ACT前缀
 问题：1. TimerService.cs中如何与Timer.cs进行通信？
 2.TimerService.cs中怎么确保程序在运行时只有一个实例？
 3. 在别的UI中如何使用TimerService.cs？
+##
+.net WinForm项目中，有个计时器的界面，有开始，暂停等功能，并且会保持记录到yaml文件中。TimerService.cs负责计时器的逻辑，Timer.cs负责界面的展示。MFRecord是记录的数据。问题：
+1. 当我从yaml文件中加载未完成的记录时，显示未完成的时间是正确的，但再执行 Timer.cs 122-122 计时器无法正确的按0.1秒时间累计增加。
+2. Timer.cs 122-122 执行时，会保存yaml文件，但durationSeconds计算错误.
+下面是代码:
 
 ## 需求
 ### 增加掉落记录功能
+
+

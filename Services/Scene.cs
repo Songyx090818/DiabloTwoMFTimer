@@ -5,7 +5,6 @@ using System.Linq;
 using DTwoMFTimerHelper.Models;
 using DTwoMFTimerHelper.Utils;
 using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
 
 namespace DTwoMFTimerHelper.Services
 {
@@ -19,7 +18,7 @@ namespace DTwoMFTimerHelper.Services
 
         // 智能查找FarmingSpots.yaml文件
         private static string FindFarmingSpotsFile()
-        {   
+        {
             // 构建可能的路径列表，优先检查Resources文件夹（最佳实践）
             var possiblePaths = new List<string>
             {
@@ -31,7 +30,7 @@ namespace DTwoMFTimerHelper.Services
                 Path.Combine(Directory.GetCurrentDirectory(), "Resources", "FarmingSpots.yaml"),
                 Path.Combine(Directory.GetCurrentDirectory(), "data", "FarmingSpots.yaml")
             };
-            
+
             // 检查哪个路径存在
             foreach (string path in possiblePaths)
             {
@@ -41,11 +40,11 @@ namespace DTwoMFTimerHelper.Services
                     return path;
                 }
             }
-            
+
             // 如果都不存在，返回应用程序基目录下的Resources路径（标准位置）
             string defaultPath = possiblePaths[0];
             LogManager.WriteDebugLog("SceneService", $"未找到FarmingSpots.yaml文件。尝试使用默认路径：{defaultPath}");
-            
+
             return defaultPath;
         }
 
@@ -87,19 +86,19 @@ namespace DTwoMFTimerHelper.Services
                     LogManager.WriteDebugLog("SceneService", $"成功读取文件内容，长度: {yaml.Length} 字符");
 
                     var data = sceneDeserializer.Deserialize<FarmingSpotsData>(yaml);
-                     
+
                     if (data == null)
                     {
                         LogManager.WriteDebugLog("SceneService", "反序列化失败: 数据为null");
                         return [];
                     }
-                     
+
                     if (data.FarmingSpots == null)
                     {
                         LogManager.WriteDebugLog("SceneService", "反序列化失败: FarmingSpots为null");
                         return [];
                     }
-                     
+
                     int sceneCount = data.FarmingSpots.Count;
                     LogManager.WriteDebugLog("SceneService", $"反序列化成功，场景数量: {sceneCount}");
 
@@ -121,15 +120,15 @@ namespace DTwoMFTimerHelper.Services
                         string currentDir = Path.GetDirectoryName(FarmingSpotsPath) ?? string.Empty;
                         if (!string.IsNullOrEmpty(currentDir) && Directory.Exists(currentDir))
                         {
-                        var files = Directory.GetFiles(currentDir);
-                        LogManager.WriteDebugLog("SceneService", $"目录 {currentDir} 中的文件:");
-                        foreach (var file in files)
-                        {
-                            LogManager.WriteDebugLog("SceneService", $"  - {Path.GetFileName(file)}");
+                            var files = Directory.GetFiles(currentDir);
+                            LogManager.WriteDebugLog("SceneService", $"目录 {currentDir} 中的文件:");
+                            foreach (var file in files)
+                            {
+                                LogManager.WriteDebugLog("SceneService", $"  - {Path.GetFileName(file)}");
+                            }
                         }
                     }
-                    }
-                    
+
                     // 尝试多个可能的正确路径，优先检查Resources文件夹
                     var possiblePaths = new List<string>
                     {
@@ -203,8 +202,7 @@ namespace DTwoMFTimerHelper.Services
             if (string.IsNullOrEmpty(sceneName))
                 return sceneName;
 
-            // 移除可能的引号（单引号或双引号）
-            string cleanSceneName = sceneName.Trim('"', '\'');
+            string cleanSceneName = getPureSceneName(sceneName);
 
             // 如果已经是英文，直接返回
             if (!cleanSceneName.Any(c => c >= '\u4e00' && c <= '\u9fff'))
@@ -223,6 +221,22 @@ namespace DTwoMFTimerHelper.Services
             return cleanSceneName;
         }
 
+        public static string getPureSceneName(string sceneName)
+        {
+            // 移除ACT前缀（如果有），提取纯场景名称
+            string pureSceneName = sceneName;
+            pureSceneName = pureSceneName.Trim('"', '\'');
+            if (sceneName.StartsWith("ACT ") || sceneName.StartsWith("Act ") || sceneName.StartsWith("act "))
+            {
+                int colonIndex = sceneName.IndexOf(':');
+                if (colonIndex > 0)
+                {
+                    pureSceneName = sceneName[(colonIndex + 1)..].Trim();
+                }
+            }
+            return pureSceneName; ;
+        }
+
         /// <summary>
         /// 根据场景名称获取ACT值
         /// </summary>
@@ -234,29 +248,21 @@ namespace DTwoMFTimerHelper.Services
                     return 0;
 
                 // 移除ACT前缀（如果有），提取纯场景名称
-                string pureSceneName = sceneName;
-                if (sceneName.StartsWith("ACT ") || sceneName.StartsWith("Act ") || sceneName.StartsWith("act "))
-                {
-                    int colonIndex = sceneName.IndexOf(':');
-                    if (colonIndex > 0)
-                    {
-                        pureSceneName = sceneName[(colonIndex + 1)..].Trim();
-                    }
-                }
-                
+                string pureSceneName = getPureSceneName(sceneName);
+
                 // 使用SceneService获取场景到ACT值的映射
                 var sceneActMappings = SceneService.GetSceneActMappings();
-                
+
                 // 尝试在映射中查找纯场景名称对应的ACT值
                 if (sceneActMappings.TryGetValue(pureSceneName, out int actValue))
                 {
                     return actValue;
                 }
-                
+
                 // 尝试查找包含场景名称的键
                 foreach (var mapping in sceneActMappings)
                 {
-                    if (pureSceneName.Contains(mapping.Key, StringComparison.OrdinalIgnoreCase) || 
+                    if (pureSceneName.Contains(mapping.Key, StringComparison.OrdinalIgnoreCase) ||
                         mapping.Key.Contains(pureSceneName, StringComparison.OrdinalIgnoreCase))
                     {
                         return mapping.Value;
@@ -269,7 +275,7 @@ namespace DTwoMFTimerHelper.Services
             }
             return 0; // 默认返回0
         }
-        
+
         /// <summary>
         /// 获取场景显示名称（包含ACT前缀）
         /// </summary>
@@ -283,7 +289,7 @@ namespace DTwoMFTimerHelper.Services
             string name = scene.GetSceneName(language);
             return $"{actText}: {name}";
         }
-        
+
         /// <summary>
         /// 获取本地化的难度名称
         /// </summary>
@@ -299,7 +305,7 @@ namespace DTwoMFTimerHelper.Services
                 _ => LanguageManager.GetString("DifficultyUnknown"),
             };
         }
-        
+
         /// <summary>
         /// 根据索引获取游戏难度
         /// </summary>
@@ -316,7 +322,7 @@ namespace DTwoMFTimerHelper.Services
             };
         }
     }
-    
+
     /// <summary>
     /// YAML数据结构模型
     /// </summary>

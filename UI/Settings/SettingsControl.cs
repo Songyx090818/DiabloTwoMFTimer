@@ -354,7 +354,7 @@ namespace DTwoMFTimerHelper.UI.Settings
                 UpdateUI();
             }
         }
-        
+
         private void UpdateUI()
         {
             // 更新设置页面文本

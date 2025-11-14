@@ -10,7 +10,7 @@ namespace DTwoMFTimerHelper.UI.Timer
     {
         // 服务层引用
         private readonly TimerService _timerService;
-        
+
         // 组件引用
         private StatisticsControl? statisticsControl;
         private HistoryControl? historyControl;
@@ -26,23 +26,23 @@ namespace DTwoMFTimerHelper.UI.Timer
         public TimerControl()
         {
             InitializeComponent();
-            
+
             // 获取TimerService单例实例
             _timerService = TimerService.Instance;
-            
+
             // 订阅服务事件
             SubscribeToServiceEvents();
-            
+
             // 注册语言变更事件
             LanguageManager.OnLanguageChanged += LanguageManager_OnLanguageChanged;
-            
+
             UpdateUI();
         }
 
         #region Properties
         public bool IsTimerRunning => _timerService.IsRunning;
-        public Models.CharacterProfile? CurrentProfile 
-        { 
+        public Models.CharacterProfile? CurrentProfile
+        {
             get => ProfileService.Instance.CurrentProfile;
             set => ProfileService.Instance.CurrentProfile = value; // 直接设置ProfileService中的属性
         }
@@ -76,7 +76,7 @@ namespace DTwoMFTimerHelper.UI.Timer
             else if (lblTimeDisplay != null)
             {
                 lblTimeDisplay.Text = timeString;
-                
+
                 // 根据时间长度调整字体大小
                 var elapsed = _timerService.GetElapsedTime();
                 if (elapsed.Hours > 9)
@@ -104,7 +104,7 @@ namespace DTwoMFTimerHelper.UI.Timer
             {
                 btnStatusIndicator.BackColor = isRunning ? Color.Green : Color.Red;
             }
-            
+
             TimerStateChanged?.Invoke(this, EventArgs.Empty);
             UpdateStatistics();
         }
@@ -126,7 +126,7 @@ namespace DTwoMFTimerHelper.UI.Timer
                 lblTimeDisplay.Font = new Font("Microsoft YaHei UI", 30F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(134)));
                 lblTimeDisplay.Text = "00:00:00:0";
             }
-            
+
             UpdateStatistics();
         }
 
@@ -244,10 +244,10 @@ namespace DTwoMFTimerHelper.UI.Timer
                 int runCount = historyControl.RunCount;
                 TimeSpan fastestTime = historyControl.FastestTime;
                 var runHistory = historyControl.RunHistory;
-                
+
                 statisticsControl.UpdateStatistics(runCount, fastestTime, runHistory);
             }
-            
+
             historyControl?.UpdateHistory(historyControl.RunHistory);
         }
 
@@ -260,16 +260,16 @@ namespace DTwoMFTimerHelper.UI.Timer
         {
             // 直接使用ProfileService获取信息
             var profileService = ProfileService.Instance;
-            
+
             if (profileService.CurrentProfile != null)
             {
                 CurrentProfile = profileService.CurrentProfile;
                 // TimerService不再需要单独设置这些属性，它会直接从ProfileService获取
-                
+
                 // 获取当前难度信息
                 var currentDifficulty = profileService.CurrentDifficulty;
                 LogManager.WriteDebugLog("TimerControl", $"同步难度信息: {currentDifficulty}");
-                
+
                 // 确保角色场景控件也更新难度显示
                 UpdateCharacterSceneInfo();
             }
@@ -315,7 +315,7 @@ namespace DTwoMFTimerHelper.UI.Timer
                 TabIndex = 1,
                 Text = "00:00:00:0"
             };
-            
+
             // 初始化统计信息控件
             statisticsControl = new StatisticsControl
             {
@@ -335,7 +335,7 @@ namespace DTwoMFTimerHelper.UI.Timer
                 TabIndex = 3,
                 Parent = this
             };
-            
+
             // 初始化角色场景信息组件
             characterSceneControl = new CharacterSceneControl
             {
@@ -344,9 +344,9 @@ namespace DTwoMFTimerHelper.UI.Timer
                 Size = new Size(290, 40),
                 TabIndex = 4
             };
-            
+
             SuspendLayout();
-            
+
             // TimerControl - 主控件设置
             AutoScaleDimensions = new SizeF(9F, 20F);
             AutoScaleMode = AutoScaleMode.Font;

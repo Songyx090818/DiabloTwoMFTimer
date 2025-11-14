@@ -21,7 +21,7 @@ namespace DTwoMFTimerHelper.UI.Pomodoro
         private int completedPomodoros = 0; // 已完成的番茄数
         private System.Windows.Forms.Timer? timer;
         private BreakForm? breakForm; // 休息窗口引用
-        
+
         // 状态枚举
         private enum TimerState
         {
@@ -29,7 +29,7 @@ namespace DTwoMFTimerHelper.UI.Pomodoro
             ShortBreak,// 短休息状态
             LongBreak  // 长休息状态
         }
-        
+
         private TimerState currentState = TimerState.Work;
 
         // 事件
@@ -40,14 +40,14 @@ namespace DTwoMFTimerHelper.UI.Pomodoro
         {
             InitializeComponent();
             InitializeTimer();
-            
+
             // 从配置文件加载设置
             LoadSettings();
-            
+
             InitializePomodoro();
             UpdateUI();
         }
-        
+
         private void LoadSettings()
         {
             var settings = SettingsManager.LoadSettings();
@@ -61,7 +61,7 @@ namespace DTwoMFTimerHelper.UI.Pomodoro
                 longBreakSeconds = settings.LongBreakSeconds;
             }
         }
-        
+
         private void SaveSettings()
         {
             var settings = SettingsManager.LoadSettings();
@@ -186,19 +186,19 @@ namespace DTwoMFTimerHelper.UI.Pomodoro
                 UpdateUI();
             }
         }
-        
+
         private void UpdateUI()
         {
             // 更新番茄时钟界面
-            btnStartPomodoro!.Text = isPomodoroRunning ? 
-                LanguageManager.GetString("PausePomodoro") : 
+            btnStartPomodoro!.Text = isPomodoroRunning ?
+                LanguageManager.GetString("PausePomodoro") :
                 LanguageManager.GetString("StartPomodoro");
             btnPomodoroReset!.Text = LanguageManager.GetString("ResetPomodoro");
             btnPomodoroSettings!.Text = LanguageManager.GetString("Settings") ?? "设置";
-            
+
             // 更新番茄时钟显示
             UpdatePomodoroDisplay();
-            
+
             // 如果有休息窗口，也更新其UI
             if (breakForm != null && !breakForm.IsDisposed)
             {
@@ -214,30 +214,30 @@ namespace DTwoMFTimerHelper.UI.Pomodoro
             if (isPomodoroRunning)
             {
                 pomodoroTimeLeft = pomodoroTimeLeft.Subtract(TimeSpan.FromMilliseconds(100));
-                
+
                 if (pomodoroTimeLeft <= TimeSpan.Zero)
                 {
                     // 时间结束，切换状态
-                            pomodoroTimeLeft = TimeSpan.Zero;
-                            
-                            // 工作时间结束时不停止计时器，继续进行休息时间计时
-                            // 休息时间结束时才停止计时器
-                            if (currentState != TimerState.Work)
-                            {
-                                isPomodoroRunning = false;
-                                timer?.Stop();
-                            }
-                    
+                    pomodoroTimeLeft = TimeSpan.Zero;
+
+                    // 工作时间结束时不停止计时器，继续进行休息时间计时
+                    // 休息时间结束时才停止计时器
+                    if (currentState != TimerState.Work)
+                    {
+                        isPomodoroRunning = false;
+                        timer?.Stop();
+                    }
+
                     // 播放提示音
                     SystemSounds.Beep.Play();
-                    
+
                     // 根据当前状态处理
                     switch (currentState)
                     {
                         case TimerState.Work:
                             // 工作时间结束，增加完成的番茄数
                             completedPomodoros++;
-                            
+
                             // 检查是否需要长休息
                             if (completedPomodoros % 4 == 0)
                             {
@@ -250,25 +250,25 @@ namespace DTwoMFTimerHelper.UI.Pomodoro
                                 ShowBreakForm(shortBreakMinutes, BreakForm.BreakType.ShortBreak);
                             }
                             break;
-                            
+
                         case TimerState.ShortBreak:
-                            case TimerState.LongBreak:
-                                // 休息时间结束，返回工作状态
-                                currentState = TimerState.Work;
-                                pomodoroTimeLeft = new TimeSpan(0, workTimeMinutes, workTimeSeconds);
-                            
+                        case TimerState.LongBreak:
+                            // 休息时间结束，返回工作状态
+                            currentState = TimerState.Work;
+                            pomodoroTimeLeft = new TimeSpan(0, workTimeMinutes, workTimeSeconds);
+
                             // 播放提示音
                             SystemSounds.Beep.Play();
                             break;
                     }
-                    
+
                     // 触发完成事件
                     PomodoroCompleted?.Invoke(this, EventArgs.Empty);
-                    
+
                     // 更新显示
                     UpdatePomodoroDisplay();
                 }
-                
+
                 UpdatePomodoroDisplay();
             }
         }
@@ -276,11 +276,11 @@ namespace DTwoMFTimerHelper.UI.Pomodoro
         private void UpdatePomodoroDisplay()
         {
             // 格式化为 分:秒:十分之一秒（只显示一位）
-            string formattedTime = string.Format("{0:00}:{1:00}:{2}", 
-                pomodoroTimeLeft.Minutes, 
-                pomodoroTimeLeft.Seconds, 
+            string formattedTime = string.Format("{0:00}:{1:00}:{2}",
+                pomodoroTimeLeft.Minutes,
+                pomodoroTimeLeft.Seconds,
                 pomodoroTimeLeft.Milliseconds / 100);
-            
+
             // 根据状态设置时间显示颜色
             switch (currentState)
             {
@@ -292,13 +292,13 @@ namespace DTwoMFTimerHelper.UI.Pomodoro
                     lblPomodoroTime!.ForeColor = System.Drawing.Color.Green;
                     break;
             }
-            
+
             lblPomodoroTime!.Text = formattedTime;
-            
+
             // 更新番茄计数显示
             int bigPomodoros = completedPomodoros / 4;
             int smallPomodoros = completedPomodoros % 4;
-            
+
             string countText;
             if (smallPomodoros == 0)
             {
@@ -308,7 +308,7 @@ namespace DTwoMFTimerHelper.UI.Pomodoro
             {
                 countText = $"{bigPomodoros}个大番茄，{smallPomodoros}个小番茄";
             }
-            
+
             lblPomodoroCount!.Text = countText;
         }
 
@@ -320,7 +320,7 @@ namespace DTwoMFTimerHelper.UI.Pomodoro
                 isPomodoroRunning = true;
                 timer?.Start();
                 btnStartPomodoro!.Text = LanguageManager.GetString("PausePomodoro");
-                
+
                 // 触发事件
                 TimerStateChanged?.Invoke(this, EventArgs.Empty);
             }
@@ -330,7 +330,7 @@ namespace DTwoMFTimerHelper.UI.Pomodoro
                 isPomodoroRunning = false;
                 timer?.Stop();
                 btnStartPomodoro!.Text = LanguageManager.GetString("StartPomodoro");
-                
+
                 // 触发事件
                 TimerStateChanged?.Invoke(this, EventArgs.Empty);
             }
@@ -341,11 +341,11 @@ namespace DTwoMFTimerHelper.UI.Pomodoro
             // 重置番茄时钟
             InitializePomodoro();
             UpdateUI();
-            
+
             // 触发事件
             TimerStateChanged?.Invoke(this, EventArgs.Empty);
         }
-        
+
         private void BtnPomodoroSettings_Click(object? sender, EventArgs e)
         {
             // 打开设置窗口
@@ -373,7 +373,7 @@ namespace DTwoMFTimerHelper.UI.Pomodoro
                 }
             }
         }
-        
+
         private void ShowBreakForm(int breakDurationMinutes, BreakForm.BreakType breakType)
         {
             // 如果已经有休息窗口打开，先关闭
@@ -381,17 +381,17 @@ namespace DTwoMFTimerHelper.UI.Pomodoro
             {
                 breakForm.Close();
             }
-            
+
             // 创建新的休息窗口
             breakForm = new BreakForm(breakDurationMinutes, breakType);
             breakForm.BreakSkipped += BreakForm_BreakSkipped;
-            
+
             // 显示休息窗口（非模态）
             breakForm.Show(this.FindForm());
-            
+
             // 设置相应的休息状态
             currentState = (breakType == BreakForm.BreakType.ShortBreak) ? TimerState.ShortBreak : TimerState.LongBreak;
-            
+
             // 根据休息类型设置时间
             if (breakType == BreakForm.BreakType.ShortBreak)
             {
@@ -402,13 +402,13 @@ namespace DTwoMFTimerHelper.UI.Pomodoro
                 pomodoroTimeLeft = new TimeSpan(0, longBreakMinutes, longBreakSeconds);
             }
         }
-        
+
         private void BreakForm_BreakSkipped(object? sender, EventArgs e)
         {
             // 跳过休息，直接进入下一个工作状态
             currentState = TimerState.Work;
             pomodoroTimeLeft = new TimeSpan(0, workTimeMinutes, workTimeSeconds);
-            
+
             // 播放提示音
             SystemSounds.Beep.Play();
         }

@@ -9,11 +9,11 @@ namespace DTwoMFTimerHelper.Services
     public class ProfileService
     {
         #region Singleton Implementation
-        private static readonly Lazy<ProfileService> _instance = 
+        private static readonly Lazy<ProfileService> _instance =
             new Lazy<ProfileService>(() => new ProfileService());
-        
+
         public static ProfileService Instance => _instance.Value;
-        
+
         private ProfileService()
         {
             LoadLastUsedProfile();
@@ -39,7 +39,7 @@ namespace DTwoMFTimerHelper.Services
                 {
                     _currentProfile = value;
                     CurrentProfileChanged?.Invoke(value);
-                    
+
                     // 保存到设置
                     if (value != null)
                     {
@@ -59,17 +59,17 @@ namespace DTwoMFTimerHelper.Services
             {
                 // 确保保存时使用英文场景名称
                 string englishSceneName = SceneService.GetEnglishSceneName(value);
-                
+
                 if (_currentScene != englishSceneName)
                 {
                     _currentScene = englishSceneName;
                     CurrentSceneChanged?.Invoke(englishSceneName);
-                    
+
                     // 保存到设置
                     var settings = SettingsManager.LoadSettings();
                     settings.LastUsedScene = englishSceneName;
                     SettingsManager.SaveSettings(settings);
-                    
+
                     // 检查是否有未完成记录
                     CheckIncompleteRecord();
                 }
@@ -86,19 +86,19 @@ namespace DTwoMFTimerHelper.Services
                 {
                     _currentDifficulty = value;
                     CurrentDifficultyChanged?.Invoke(value);
-                    
+
                     // 保存到设置
                     var settings = SettingsManager.LoadSettings();
                     settings.LastUsedDifficulty = value.ToString();
                     SettingsManager.SaveSettings(settings);
-                    
+
                     // 检查是否有未完成记录
                     CheckIncompleteRecord();
                 }
             }
         }
 
-        public string CurrentDifficultyLocalized => 
+        public string CurrentDifficultyLocalized =>
              Utils.LanguageManager.GetString($"Difficulty{_currentDifficulty}");
 
         public List<FarmingScene> FarmingScenes { get; private set; } = [];
@@ -113,7 +113,7 @@ namespace DTwoMFTimerHelper.Services
             try
             {
                 FarmingScenes = SceneService.LoadFarmingSpots();
-                
+
                 if (FarmingScenes.Count == 0)
                 {
                     LogManager.WriteDebugLog("ProfileService", "场景列表为空");
@@ -122,7 +122,7 @@ namespace DTwoMFTimerHelper.Services
                 {
                     LogManager.WriteDebugLog("ProfileService", $"场景列表加载完成，总数: {FarmingScenes.Count}");
                 }
-                
+
                 // 加载上次使用的场景
                 LoadLastUsedScene();
             }
@@ -140,9 +140,9 @@ namespace DTwoMFTimerHelper.Services
             try
             {
                 LogManager.WriteDebugLog("ProfileService", $"开始创建新角色: {characterName}, 职业: {characterClass}");
-                
+
                 var profile = DataService.CreateNewProfile(characterName, characterClass);
-                
+
                 if (profile == null)
                 {
                     LogManager.WriteDebugLog("ProfileService", "创建角色失败，返回的配置文件为null");
@@ -150,11 +150,11 @@ namespace DTwoMFTimerHelper.Services
                 }
 
                 LogManager.WriteDebugLog("ProfileService", $"角色创建成功: {profile.Name}");
-                
+
                 // 设置为当前角色
                 CurrentProfile = profile;
                 ProfileListChanged?.Invoke();
-                
+
                 return profile;
             }
             catch (Exception ex)
@@ -172,7 +172,7 @@ namespace DTwoMFTimerHelper.Services
             try
             {
                 LogManager.WriteDebugLog("ProfileService", $"开始切换角色到: {profile.Name}");
-                
+
                 // 验证角色数据
                 if (profile == null || string.IsNullOrWhiteSpace(profile.Name))
                 {
@@ -202,9 +202,9 @@ namespace DTwoMFTimerHelper.Services
             try
             {
                 LogManager.WriteDebugLog("ProfileService", $"开始删除角色: {profile.Name}");
-                
+
                 DataService.DeleteProfile(profile);
-                
+
                 // 如果删除的是当前角色，清空当前角色
                 if (CurrentProfile?.Name == profile.Name)
                 {
@@ -297,7 +297,7 @@ namespace DTwoMFTimerHelper.Services
         /// </summary>
         public FarmingScene? GetSceneByDisplayName(string displayName)
         {
-            return FarmingScenes.FirstOrDefault(scene => 
+            return FarmingScenes.FirstOrDefault(scene =>
                 SceneService.GetSceneDisplayName(scene) == displayName);
         }
 
@@ -324,7 +324,7 @@ namespace DTwoMFTimerHelper.Services
         /// <summary>
         /// 根据难度获取索引
         /// </summary>
-        public int GetDifficultyIndex(GameDifficulty difficulty)
+        public static int GetDifficultyIndex(GameDifficulty difficulty)
         {
             var difficulties = Enum.GetValues(typeof(GameDifficulty)).Cast<GameDifficulty>().ToList();
             return difficulties.IndexOf(difficulty);
@@ -343,11 +343,9 @@ namespace DTwoMFTimerHelper.Services
                 var settings = SettingsManager.LoadSettings();
                 string lastUsedProfileName = settings.LastUsedProfile;
                 LogManager.WriteDebugLog("ProfileService", $"从配置文件加载设置: LastUsedProfile={lastUsedProfileName}");
-                
                 if (!string.IsNullOrWhiteSpace(lastUsedProfileName))
                 {
                     LogManager.WriteDebugLog("ProfileService", $"尝试加载上次使用的角色档案: {lastUsedProfileName}");
-                    
                     var profile = FindProfileByName(lastUsedProfileName);
                     if (profile != null)
                     {
@@ -382,9 +380,9 @@ namespace DTwoMFTimerHelper.Services
                 {
                     CurrentScene = settings.LastUsedScene;
                 }
-                
+
                 // 加载上次使用的难度
-                if (!string.IsNullOrEmpty(settings.LastUsedDifficulty) && 
+                if (!string.IsNullOrEmpty(settings.LastUsedDifficulty) &&
                     Enum.TryParse<GameDifficulty>(settings.LastUsedDifficulty, out var difficulty))
                 {
                     CurrentDifficulty = difficulty;
@@ -410,34 +408,34 @@ namespace DTwoMFTimerHelper.Services
                 SyncIncompleteRecordToTimer();
             }
         }
-        
+
         /// <summary>
         /// 将未完成记录同步到TimerService
         /// </summary>
-        private void SyncIncompleteRecordToTimer()
+        public void SyncIncompleteRecordToTimer()
         {
             try
             {
                 if (CurrentProfile == null || string.IsNullOrEmpty(CurrentScene))
                     return;
-                
+
                 // 获取纯英文场景名称以匹配记录
                 string pureEnglishSceneName = LanguageManager.GetPureEnglishSceneName(CurrentScene);
-                
+
                 // 查找未完成记录
                 var incompleteRecord = CurrentProfile.Records.FirstOrDefault(r =>
                     r.SceneName == pureEnglishSceneName &&
                     r.Difficulty == CurrentDifficulty &&
                     !r.IsCompleted);
-                
+
                 if (incompleteRecord != null)
                 {
                     LogManager.WriteDebugLog("ProfileService", $"同步未完成记录到Timer: 场景={pureEnglishSceneName}, 开始时间={incompleteRecord.StartTime}, 持续时间={incompleteRecord.DurationSeconds}秒, 计算持续时间={incompleteRecord.CalculatedDurationSeconds}秒");
-                    
+
                     // 使用TimerService提供的公共方法来恢复状态，避免使用反射
                     var timerService = TimerService.Instance;
-                    timerService.RestoreFromIncompleteRecord(incompleteRecord.CalculatedDurationSeconds);
-                    
+                    timerService.RestoreFromIncompleteRecord();
+
                     LogManager.WriteDebugLog("ProfileService", "未完成记录已成功同步到TimerService");
                 }
             }

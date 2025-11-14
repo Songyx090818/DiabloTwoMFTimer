@@ -16,7 +16,7 @@ namespace DTwoMFTimerHelper
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
             Application.ThreadException += new System.Threading.ThreadExceptionEventHandler(Application_ThreadException);
             AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
-            
+
             Application.SetHighDpiMode(HighDpiMode.SystemAware);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
@@ -36,14 +36,14 @@ namespace DTwoMFTimerHelper
                 MessageBox.Show($"发生未处理的异常。错误详情已保存到 {errorLogPath}", "应用程序错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-        
+
         private static void Application_ThreadException(object sender, System.Threading.ThreadExceptionEventArgs e)
         {
             string errorLogPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "thread_error_log.txt");
             File.WriteAllText(errorLogPath, e.Exception.ToString());
             MessageBox.Show($"发生线程异常。错误详情已保存到 {errorLogPath}", "应用程序错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
-        
+
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             string errorLogPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "domain_error_log.txt");

@@ -15,11 +15,11 @@ namespace DTwoMFTimerHelper.Utils
         // 语言常量
         public const string Chinese = "zh-CN";
         public const string English = "en-US";
-        
+
         // 当前语言
         private static CultureInfo currentCulture = CultureInfo.CurrentCulture;
         private static Dictionary<string, string> translations = [];
-        
+
         // 语言变更事件
         public static event EventHandler? OnLanguageChanged;
 
@@ -47,18 +47,18 @@ namespace DTwoMFTimerHelper.Utils
         private static void LoadTranslations(CultureInfo? culture)
         {
             translations.Clear();
-            
+
             // 确定要加载的语言文件
             string langCode = culture?.Name.StartsWith("zh") ?? false ? "zh" : "en";
             string jsonFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", $"strings_{langCode}.json");
-            
+
             // 如果文件不存在，尝试使用相对路径
             if (!File.Exists(jsonFilePath))
             {
                 // 尝试直接在Resources目录中查找
                 jsonFilePath = Path.Combine("Resources", $"strings_{langCode}.json");
             }
-            
+
             // 加载JSON文件中的翻译
             if (File.Exists(jsonFilePath))
             {
@@ -73,11 +73,11 @@ namespace DTwoMFTimerHelper.Utils
                     LogManager.WriteErrorLog("LanguageManager", $"Error loading translations: {ex.Message}");
                 }
             }
-            
+
             // 添加必要的默认翻译字符串作为后备
             AddDefaultTranslations(langCode);
         }
-        
+
         private static void AddDefaultTranslations(string langCode)
         {
             // 英文默认翻译
@@ -90,7 +90,7 @@ namespace DTwoMFTimerHelper.Utils
                 { "General", "General" },
                 { "Hotkeys", "Hotkeys" }
             };
-            
+
             // 如果是中文，使用中文翻译
             if (langCode == "zh")
             {
@@ -104,7 +104,7 @@ namespace DTwoMFTimerHelper.Utils
                     { "Hotkeys", "快捷键" }
                 };
             }
-            
+
             // 添加或更新默认翻译
             foreach (var pair in defaultTranslations)
             {
@@ -145,7 +145,7 @@ namespace DTwoMFTimerHelper.Utils
                     return key;
                 }
             }
-            
+
             // 处理格式化参数
             if (args != null && args.Length > 0)
             {
@@ -164,7 +164,7 @@ namespace DTwoMFTimerHelper.Utils
             }
             return value;
         }
-        
+
         /// <summary>
         /// 根据当前语言自动翻译场景名称
         /// </summary>
@@ -174,7 +174,7 @@ namespace DTwoMFTimerHelper.Utils
         {
             // 检查是否是中文环境
             bool isChinese = currentCulture.Name.StartsWith("zh");
-            
+
             // 移除现有的ACT前缀（如果有）
             string pureSceneName = sceneName;
             if (sceneName.StartsWith("ACT ") || sceneName.StartsWith("Act ") || sceneName.StartsWith("act "))
@@ -185,11 +185,11 @@ namespace DTwoMFTimerHelper.Utils
                     pureSceneName = sceneName[(colonIndex + 1)..].Trim();
                 }
             }
-            
+
             // 使用DataService获取动态的场景映射
             string translatedSceneName = pureSceneName;
             var sceneMappings = DTwoMFTimerHelper.Services.DataService.GetSceneMappings();
-            
+
             if (sceneMappings.TryGetValue(pureSceneName, out string? translated))
             {
                 // 根据当前语言环境选择正确的翻译
@@ -205,7 +205,7 @@ namespace DTwoMFTimerHelper.Utils
                         // 如果当前翻译不是中文，尝试获取中文名称
                         foreach (var kvp in sceneMappings)
                         {
-                            if (kvp.Value.Equals(translated, StringComparison.OrdinalIgnoreCase) && 
+                            if (kvp.Value.Equals(translated, StringComparison.OrdinalIgnoreCase) &&
                                 kvp.Key.Any(c => c >= '\u4e00' && c <= '\u9fff'))
                             {
                                 translatedSceneName = kvp.Key;
@@ -226,7 +226,7 @@ namespace DTwoMFTimerHelper.Utils
                         // 如果当前翻译不是英文，尝试获取英文名称
                         foreach (var kvp in sceneMappings)
                         {
-                            if (kvp.Value.Equals(translated, StringComparison.OrdinalIgnoreCase) && 
+                            if (kvp.Value.Equals(translated, StringComparison.OrdinalIgnoreCase) &&
                                 !kvp.Key.Any(c => c >= '\u4e00' && c <= '\u9fff'))
                             {
                                 translatedSceneName = kvp.Key;
@@ -236,19 +236,19 @@ namespace DTwoMFTimerHelper.Utils
                     }
                 }
             }
-            
+
             // 使用SceneService获取场景对应的ACT值
             int actValue = DTwoMFTimerHelper.Services.SceneService.GetSceneActValue(pureSceneName);
-            
+
             // 如果有ACT值，在显示时添加ACT前缀
             if (actValue > 0)
             {
                 return $"ACT {actValue}: {translatedSceneName}";
             }
-            
+
             return sceneName;
         }
-        
+
         /// <summary>
         /// 获取纯英文的场景名称（移除ACT前缀和语言信息）
         /// </summary>
@@ -258,7 +258,7 @@ namespace DTwoMFTimerHelper.Utils
         {
             if (string.IsNullOrEmpty(sceneName))
                 return sceneName;
-            
+
             // 移除ACT前缀（如果有）
             string pureSceneName = sceneName;
             if (sceneName.StartsWith("ACT ") || sceneName.StartsWith("Act ") || sceneName.StartsWith("act "))
@@ -269,11 +269,11 @@ namespace DTwoMFTimerHelper.Utils
                     pureSceneName = sceneName[(colonIndex + 1)..].Trim();
                 }
             }
-            
+
             // 使用DataService获取对应的英文场景名称
             return DTwoMFTimerHelper.Services.DataService.GetEnglishSceneName(pureSceneName);
         }
-        
+
         /// <summary>
         /// 获取本地化的职业名称
         /// </summary>

@@ -46,7 +46,7 @@ namespace DTwoMFTimerHelper.UI.Pomodoro
             LongBreakSeconds = 0;
 
             InitializeComponent();
-            
+
             // 初始化设置（移到InitializeComponent后，避免设计器问题）
             LoadSettings();
             UpdateUI();
@@ -67,7 +67,7 @@ namespace DTwoMFTimerHelper.UI.Pomodoro
             LongBreakSeconds = longBreakSeconds;
 
             InitializeComponent();
-            
+
             // 如果秒数为0，从配置文件加载（移到InitializeComponent后，避免设计器问题）
             if (WorkTimeSeconds == 0 || ShortBreakSeconds == 0 || LongBreakSeconds == 0)
             {
@@ -82,7 +82,7 @@ namespace DTwoMFTimerHelper.UI.Pomodoro
             try
             {
                 var settings = SettingsManager.LoadSettings();
-                
+
                 // 只在秒数为0时才从设置中加载
                 if (WorkTimeSeconds == 0) WorkTimeSeconds = settings.WorkTimeSeconds;
                 if (ShortBreakSeconds == 0) ShortBreakSeconds = settings.ShortBreakSeconds;
@@ -93,7 +93,7 @@ namespace DTwoMFTimerHelper.UI.Pomodoro
                 // 忽略可能的异常，确保设计器不会崩溃
             }
         }
-        
+
         private void InitializeComponent()
         {
             lblWorkTime = new Label();
@@ -271,7 +271,7 @@ namespace DTwoMFTimerHelper.UI.Pomodoro
                 UpdateUI();
             }
         }
-        
+
         private void UpdateUI()
         {
             // 设置数值控件的值

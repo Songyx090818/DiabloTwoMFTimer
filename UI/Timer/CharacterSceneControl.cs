@@ -22,9 +22,10 @@ namespace DTwoMFTimerHelper.UI.Timer
             ProfileService.Instance.CurrentSceneChanged += OnSceneChanged;
             ProfileService.Instance.CurrentDifficultyChanged += OnDifficultyChanged;
         }
-        
+
         protected override void Dispose(bool disposing)
-        {            if (disposing)
+        {
+            if (disposing)
             {                // 取消注册语言变更事件
                 Utils.LanguageManager.OnLanguageChanged -= LanguageManager_OnLanguageChanged;
                 // 取消注册ProfileService事件
@@ -34,17 +35,20 @@ namespace DTwoMFTimerHelper.UI.Timer
             }
             base.Dispose(disposing);
         }
-        
+
         private void OnProfileChanged(CharacterProfile? profile)
-        {            UpdateUI();
+        {
+            UpdateUI();
         }
-        
+
         private void OnSceneChanged(string scene)
-        {            UpdateUI();
+        {
+            UpdateUI();
         }
-        
+
         private void OnDifficultyChanged(GameDifficulty difficulty)
-        {            UpdateUI();
+        {
+            UpdateUI();
         }
 
         private void InitializeComponent()
@@ -92,30 +96,30 @@ namespace DTwoMFTimerHelper.UI.Timer
             // 更新UI
             UpdateUI();
         }
-        
+
         /// <summary>
         /// 保存角色和场景设置
         /// </summary>
         /// <param name="character">角色名称</param>
         /// <param name="scene">场景名称</param>
         public void UpdateUI()
-        {    
+        {
             // 更新角色显示
             if (lblCharacterDisplay != null)
-            {                
+            {
                 var profile = ProfileService.Instance.CurrentProfile;
                 if (profile == null)
-                {                    
+                {
                     lblCharacterDisplay.Text = "";
-                }               
+                }
                 else
-                {   
+                {
                     // 获取角色职业信息
                     string characterClass = Utils.LanguageManager.GetLocalizedClassName(profile.Class);
 
                     // 显示角色名称加职业
                     lblCharacterDisplay.Text = $"{profile.Name} ({characterClass})";
-                }           
+                }
             }
 
             // 更新场景显示

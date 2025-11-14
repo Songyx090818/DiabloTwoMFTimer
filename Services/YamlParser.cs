@@ -21,11 +21,11 @@ namespace DTwoMFTimerHelper.Services
         public static CharacterProfile? ParseYamlManually(string yamlContent, string filePath)
         {
             var profile = new CharacterProfile { Records = new List<MFRecord>() };
-            
+
             try
             {
                 LogManager.WriteDebugLog("YamlParser", $"开始手动解析文件: {Path.GetFileName(filePath)}");
-                
+
                 bool isInRecordsSection = false;
                 MFRecord? currentRecord = null;
 
@@ -84,7 +84,7 @@ namespace DTwoMFTimerHelper.Services
                             break;
                     }
                 }
-                
+
                 foreach (var line in yamlContent.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries))
                 {
                     // 检查是否进入records部分
@@ -94,17 +94,17 @@ namespace DTwoMFTimerHelper.Services
                         LogManager.WriteDebugLog("YamlParser", "进入records部分");
                         continue;
                     }
-                    
+
                     if (!isInRecordsSection)
                     {
                         // 处理基本属性
                         var parts = line.Split([':'], 2);
                         if (parts.Length < 2)
                             continue;
-                        
+
                         var key = parts[0].Trim().ToLower();
                         var value = parts[1].Trim();
-                        
+
                         if (key == "name" || key == "character")
                         {
                             profile.Name = value.Trim('"', '\'');
@@ -138,11 +138,11 @@ namespace DTwoMFTimerHelper.Services
                                 profile.Records.Add(currentRecord);
                                 LogManager.WriteDebugLog("YamlParser", $"添加记录完成，当前记录数: {profile.Records.Count}");
                             }
-                            
+
                             // 开始新记录
                             currentRecord = new MFRecord();
                             LogManager.WriteDebugLog("YamlParser", "开始新记录");
-                            
+
                             // 检查同一行是否有属性
                             string trimmedLine = line.TrimStart('-').Trim();
                             if (!string.IsNullOrEmpty(trimmedLine) && trimmedLine.Contains(":"))
@@ -166,21 +166,21 @@ namespace DTwoMFTimerHelper.Services
                         }
                     }
                 }
-                
+
                 // 添加最后一条记录
                 if (currentRecord != null)
                 {
                     profile.Records.Add(currentRecord);
                     LogManager.WriteDebugLog("YamlParser", $"添加最后一条记录，最终记录数: {profile.Records.Count}");
                 }
-                
+
                 // 设置默认名称
                 if (string.IsNullOrEmpty(profile.Name))
                 {
                     profile.Name = "未命名角色";
                     LogManager.WriteDebugLog("YamlParser", $"未找到名称，设置为默认值: {profile.Name}");
                 }
-                
+
                 LogManager.WriteDebugLog("YamlParser", $"手动解析完成，成功加载 {profile.Records.Count} 条记录");
                 return profile;
             }

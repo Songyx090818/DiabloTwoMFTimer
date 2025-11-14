@@ -19,12 +19,14 @@ namespace DTwoMFTimerHelper.UI
         private TimerControl? timerControl;
         private SettingsControl? settingsControl;
         private AppSettings? appSettings;
-        
+
         // 公共属性，用于在ProfileManager中访问
         public TabControl? TabControl => tabControl;
         private TimerControl? _timerControl;
-        public TimerControl? TimerControl {
-            get {
+        public TimerControl? TimerControl
+        {
+            get
+            {
                 _timerControl ??= timerControl;
                 return _timerControl;
             }
@@ -34,38 +36,38 @@ namespace DTwoMFTimerHelper.UI
         public MainForm()
         {
             InitializeComponent();
-            
+
             // 加载设置
             LoadSettings();
 
             // 启动测试：直接加载角色档案并显示详细信息
             LoadCharacterProfile();
-            
+
             InitializeControls();
             InitializeLanguageSupport();
-            
+
             // 确保窗口可见并具有合理的大小和位置
             this.Size = new Size(480, 600);
             this.StartPosition = FormStartPosition.Manual;
-            
+
             // 应用保存的窗口位置
             if (appSettings != null && Screen.PrimaryScreen != null)
             {
                 var position = SettingsManager.StringToWindowPosition(appSettings.WindowPosition);
                 SettingsControl.MoveWindowToPosition(this, position);
             }
-            
+
             this.ShowInTaskbar = true;
             this.Visible = true;
-            
+
             // 加载上次使用的角色档案
             profileManager?.LoadLastUsedProfile();
         }
-        
+
         private void LoadSettings()
         {
             appSettings = SettingsManager.LoadSettings();
-            
+
             // 应用设置
             if (appSettings != null)
             {
@@ -73,9 +75,9 @@ namespace DTwoMFTimerHelper.UI
                 this.TopMost = appSettings.AlwaysOnTop;
             }
         }
-        
+
         private static void LoadCharacterProfile()
-         {
+        {
             try
             {
                 LogManager.WriteDebugLog("MainForm", "[启动测试] 开始加载角色档案...");
@@ -83,20 +85,20 @@ namespace DTwoMFTimerHelper.UI
                 LogManager.WriteDebugLog("MainForm", "[启动测试] 测试1: 只加载非隐藏角色 (includeHidden=false)");
                 var profilesVisible = DTwoMFTimerHelper.Services.DataService.LoadAllProfiles(includeHidden: false);
                 LogManager.WriteDebugLog("MainForm", $"[启动测试] 测试1结果: 找到 {profilesVisible.Count} 个非隐藏角色档案");
-                
+
                 LogManager.WriteDebugLog("MainForm", "\n[启动测试] 测试2: 加载所有角色包括隐藏的 (includeHidden=true)");
                 var profilesAll = DTwoMFTimerHelper.Services.DataService.LoadAllProfiles(includeHidden: true);
                 LogManager.WriteDebugLog("MainForm", $"[启动测试] 测试2结果: 找到 {profilesAll.Count} 个角色档案（包括隐藏的）");
-                    
-                 // 显示每个角色的详细信息
+
+                // 显示每个角色的详细信息
                 LogManager.WriteDebugLog("MainForm", "\n[启动测试] 所有角色详细信息:");
                 foreach (var profile in profilesAll)
                 {
                     LogManager.WriteDebugLog("MainForm", $"[启动测试] - 角色: {profile.Name}, 职业: {profile.Class}, IsHidden: {profile.IsHidden}");
                 }
-                 
+
                 LogManager.WriteDebugLog("MainForm", "[启动测试] 角色档案加载完成");
-             }
+            }
             catch (Exception ex)
             {
                 LogManager.WriteErrorLog("MainForm", $"[启动测试] 加载角色档案失败", ex);
@@ -179,16 +181,16 @@ namespace DTwoMFTimerHelper.UI
         private const int MOD_CONTROL = 0x0002;
         private const int MOD_SHIFT = 0x0004;
         private const int MOD_WIN = 0x0008;
-        
+
         private const int HOTKEY_ID_STARTSTOP = 1;
         private const int HOTKEY_ID_PAUSE = 2;
-        
+
         [DllImport("user32.dll")]
         private static extern bool RegisterHotKey(IntPtr hWnd, int id, int fsModifiers, int vk);
-        
+
         [DllImport("user32.dll")]
         private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
-        
+
         // 当前注册的快捷键
         private Keys currentStartStopHotkey = Keys.Q | Keys.Alt;
         private Keys currentPauseHotkey = Keys.Space | Keys.Control;
@@ -208,7 +210,7 @@ namespace DTwoMFTimerHelper.UI
             settingsControl.Dock = DockStyle.Fill;
 
             // 标签页已经在InitializeComponent中添加，这里不需要重复添加
-            
+
             // 添加到对应的TabPage
             if (tabProfilePage != null)
             {
@@ -235,29 +237,29 @@ namespace DTwoMFTimerHelper.UI
                 settingsControl.StartStopHotkeyChanged += OnStartStopHotkeyChanged;
                 settingsControl.PauseHotkeyChanged += OnPauseHotkeyChanged;
             }
-            
+
             // 注册默认快捷键
             RegisterHotkeys();
         }
-        
+
         private void RegisterHotkeys()
         {
             // 先注销可能存在的热键
             UnregisterHotKeys();
-            
+
             // 注册开始/停止热键
             RegisterHotKey(currentStartStopHotkey, HOTKEY_ID_STARTSTOP);
-            
+
             // 注册暂停热键
             RegisterHotKey(currentPauseHotkey, HOTKEY_ID_PAUSE);
         }
-        
+
         private void UnregisterHotKeys()
         {
             UnregisterHotKey(this.Handle, HOTKEY_ID_STARTSTOP);
             UnregisterHotKey(this.Handle, HOTKEY_ID_PAUSE);
         }
-        
+
         private void RegisterHotKey(Keys keys, int id)
         {
             int modifiers = 0;
@@ -276,15 +278,15 @@ namespace DTwoMFTimerHelper.UI
             // 注册热键
             RegisterHotKey(this.Handle, id, modifiers, keyCode);
         }
-        
+
         protected override void WndProc(ref System.Windows.Forms.Message m)
         {
             base.WndProc(ref m);
-            
+
             if (m.Msg == WM_HOTKEY)
             {
                 int id = m.WParam.ToInt32();
-                
+
                 switch (id)
                 {
                     case HOTKEY_ID_STARTSTOP:
@@ -298,13 +300,13 @@ namespace DTwoMFTimerHelper.UI
                 }
             }
         }
-        
+
         private void TabControl_SelectedIndexChanged(object? sender, EventArgs e)
         {
             // 当标签页切换时，可以在这里添加额外的逻辑
             // 根据当前选中的选项卡更新UI
             UpdateUI();
-            
+
             // 当切换到计时器标签页时，调用OnTabSelected方法以加载角色档案数据
             if (tabControl != null && tabControl.SelectedIndex == 1 && timerControl != null)
             {
@@ -316,10 +318,10 @@ namespace DTwoMFTimerHelper.UI
         {
             // 订阅语言改变事件 - 使用正确的Utils命名空间中的LanguageManager
             LanguageManager.OnLanguageChanged += LanguageManager_OnLanguageChanged;
-            
+
             // 初始化UI文本
             UpdateUI();
-            
+
             // 初始化窗口置顶状态
             this.TopMost = true;
         }
@@ -328,7 +330,7 @@ namespace DTwoMFTimerHelper.UI
         {
             // 更新界面文本
             this.Text = LanguageManager.GetString("FormTitle");
-            
+
             // 更新选项卡标题
             if (tabControl != null && tabControl.TabPages.Count >= 4)
             {
@@ -337,14 +339,14 @@ namespace DTwoMFTimerHelper.UI
                 tabControl.TabPages[2].Text = LanguageManager.GetString("TabPomodoro");
                 tabControl.TabPages[3].Text = LanguageManager.GetString("TabSettings");
             }
-            
+
             // 更新各功能控件的UI
             profileManager?.RefreshUI();
             timerControl?.RefreshUI();
             pomodoroControl?.RefreshUI();
             settingsControl?.RefreshUI();
         }
-        
+
         /// <summary>
         /// 公共方法，供外部调用刷新UI
         /// </summary>
@@ -378,7 +380,7 @@ namespace DTwoMFTimerHelper.UI
             // 番茄时钟完成时的处理
             // 可以在这里添加提示或其他操作
         }
-        
+
         private void OnTimerTimerStateChanged(object? sender, EventArgs e)
         {
             UpdateUI();
@@ -396,7 +398,7 @@ namespace DTwoMFTimerHelper.UI
             {
                 LanguageManager.SwitchLanguage(LanguageManager.English);
             }
-            
+
             // 保存设置
             if (appSettings != null)
             {
@@ -404,12 +406,12 @@ namespace DTwoMFTimerHelper.UI
                 SettingsManager.SaveSettings(appSettings);
             }
         }
-        
+
         private void OnAlwaysOnTopChanged(object? sender, SettingsControl.AlwaysOnTopChangedEventArgs e)
         {
             // 窗口置顶状态改变时的处理
             this.TopMost = e.IsAlwaysOnTop;
-            
+
             // 保存设置
             if (appSettings != null)
             {
@@ -417,26 +419,26 @@ namespace DTwoMFTimerHelper.UI
                 SettingsManager.SaveSettings(appSettings);
             }
         }
-        
+
         private void OnStartStopHotkeyChanged(object? sender, SettingsControl.HotkeyChangedEventArgs e)
         {
             // 更新并重新注册开始/停止快捷键
             currentStartStopHotkey = e.Hotkey;
             RegisterHotkeys();
         }
-        
+
         private void OnPauseHotkeyChanged(object? sender, SettingsControl.HotkeyChangedEventArgs e)
         {
             // 更新并重新注册暂停快捷键
             currentPauseHotkey = e.Hotkey;
             RegisterHotkeys();
         }
-        
+
         private void OnWindowPositionChanged(object? sender, SettingsControl.WindowPositionChangedEventArgs e)
         {
             // 窗口位置改变时的处理
             SettingsControl.MoveWindowToPosition(this, e.Position);
-            
+
             // 保存设置
             if (appSettings != null)
             {
@@ -444,7 +446,7 @@ namespace DTwoMFTimerHelper.UI
                 SettingsManager.SaveSettings(appSettings);
             }
         }
-        
+
 
 
         private void LanguageManager_OnLanguageChanged(object? sender, EventArgs e)
@@ -457,7 +459,7 @@ namespace DTwoMFTimerHelper.UI
         private System.Windows.Forms.TabPage? tabTimerPage;
         private System.Windows.Forms.TabPage? tabPomodoroPage;
         private System.Windows.Forms.TabPage? tabSettingsPage;
-        
+
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             // 程序关闭时保存计时器状态

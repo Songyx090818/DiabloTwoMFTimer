@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
-using System.Linq;
 using DTwoMFTimerHelper.Utils;
 using DTwoMFTimerHelper.Models;
 using DTwoMFTimerHelper.Services;
@@ -15,7 +14,7 @@ namespace DTwoMFTimerHelper.UI.Timer
 
         // 历史记录服务
         private readonly TimerHistoryService _historyService;
-        
+
         // 历史记录统计信息（通过服务暴露）
         public int RunCount => _historyService.RunCount;
         public TimeSpan FastestTime => _historyService.FastestTime;
@@ -23,14 +22,14 @@ namespace DTwoMFTimerHelper.UI.Timer
         public List<TimeSpan> RunHistory => _historyService.RunHistory;
 
         public HistoryControl()
-        {            
+        {
             InitializeComponent();
             // 使用历史记录服务的单例实例
             _historyService = TimerHistoryService.Instance;
             // 注册语言变更事件
             LanguageManager.OnLanguageChanged += LanguageManager_OnLanguageChanged;
         }
-        
+
         /// <summary>
         /// 从角色档案加载特定场景的历史数据
         /// </summary>
@@ -40,26 +39,26 @@ namespace DTwoMFTimerHelper.UI.Timer
         /// <param name="difficulty">游戏难度</param>
         /// <returns>是否成功加载历史数据</returns>
         public bool LoadProfileHistoryData(CharacterProfile? profile, string scene, string characterName, GameDifficulty difficulty)
-        {   
+        {
             bool result = _historyService.LoadProfileHistoryData(profile, scene, characterName, difficulty);
-            
+
             // 如果加载成功，更新UI
             if (result)
             {
                 UpdateUI();
             }
-            
+
             return result;
         }
-        
+
         /// <summary>
         /// 重置历史数据
         /// </summary>
         private void ResetHistoryData()
-        {   
+        {
             _historyService.ResetHistoryData();
         }
-        
+
         public void UpdateUI()
         {   // 更新历史记录列表
             if (lstRunHistory != null)
@@ -88,9 +87,9 @@ namespace DTwoMFTimerHelper.UI.Timer
                 }
             }
         }
-        
+
         protected override void Dispose(bool disposing)
-        {   
+        {
             if (disposing)
             {
                 // 取消注册语言变更事件
@@ -126,14 +125,14 @@ namespace DTwoMFTimerHelper.UI.Timer
         }
 
         public void UpdateHistory(List<TimeSpan> runHistory)
-        {   
+        {
             // 使用服务更新历史记录数据
             _historyService.UpdateHistory(runHistory);
-            
+
             // 更新UI
             UpdateUI();
         }
-        
+
         /// <summary>
         /// 添加新的运行记录
         /// </summary>
@@ -141,7 +140,7 @@ namespace DTwoMFTimerHelper.UI.Timer
         public void AddRunRecord(TimeSpan runTime)
         {            // 使用服务添加运行记录
             _historyService.AddRunRecord(runTime);
-            
+
             // 更新UI
             UpdateUI();
         }

@@ -322,12 +322,13 @@ namespace DTwoMFTimerHelper.Services
         {
             var existingRecord = profile.Records.FirstOrDefault(r =>
                 r.StartTime == record.StartTime &&
-                r.SceneName == record.SceneName);
+                r.SceneName == record.SceneName &&
+                r.Difficulty == record.Difficulty &&
+                r.IsCompleted == false);
 
             if (existingRecord != null)
             {
                 existingRecord.EndTime = record.EndTime;
-                existingRecord.Difficulty = record.Difficulty;
                 existingRecord.LatestTime = record.LatestTime;
                 existingRecord.DurationSeconds = record.DurationSeconds;
                 // 更新其他字段

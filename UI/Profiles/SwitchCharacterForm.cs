@@ -10,17 +10,17 @@ namespace DTwoMFTimerHelper.UI.Profiles
         private Button? btnSelect;
         private Button? btnCancel;
         private Label? lblCharacters;
-        
+
         // 属性
         public Models.CharacterProfile? SelectedProfile { get; private set; }
-        
+
         public SwitchCharacterForm()
         {
             InitializeComponent();
             UpdateUI();
             LoadProfiles();
         }
-        
+
         private void InitializeComponent()
         {
             // 设置窗口属性
@@ -29,36 +29,36 @@ namespace DTwoMFTimerHelper.UI.Profiles
             this.StartPosition = FormStartPosition.CenterScreen;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
-            
+
             // 初始化控件
             lblCharacters = new Label();
             lstCharacters = new ListBox();
             btnSelect = new Button();
             btnCancel = new Button();
-            
+
             // 设置控件位置和大小
             lblCharacters.Location = new System.Drawing.Point(30, 20);
             lblCharacters.Size = new System.Drawing.Size(100, 25);
-            
+
             lstCharacters.Location = new System.Drawing.Point(30, 50);
             lstCharacters.Size = new System.Drawing.Size(320, 160);
             lstCharacters.DisplayMember = "DisplayName";
-            
+
             btnSelect.Location = new System.Drawing.Point(120, 230);
             btnSelect.Size = new System.Drawing.Size(80, 30);
             btnSelect.Click += BtnSelect_Click;
-            
+
             btnCancel.Location = new System.Drawing.Point(250, 230);
             btnCancel.Size = new System.Drawing.Size(80, 30);
             btnCancel.Click += BtnCancel_Click;
-            
+
             // 添加控件到表单
             this.Controls.Add(lblCharacters);
             this.Controls.Add(lstCharacters);
             this.Controls.Add(btnSelect);
             this.Controls.Add(btnCancel);
         }
-        
+
         public void UpdateUI()
         {
             this.Text = LanguageManager.GetString("SwitchCharacter") ?? "切换角色档案";
@@ -66,7 +66,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
             btnSelect!.Text = LanguageManager.GetString("Select") ?? "选择";
             btnCancel!.Text = LanguageManager.GetString("Cancel") ?? "取消";
         }
-        
+
         private void LoadProfiles()
         {
             try
@@ -75,7 +75,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
                 // 明确指定只加载非隐藏角色
                 var profiles = DTwoMFTimerHelper.Services.DataService.LoadAllProfiles(includeHidden: false);
                 LogManager.WriteDebugLog("SwitchCharacterForm", "[详细调试] 从DataService获取到角色档案");
-                
+
                 lstCharacters!.Items.Clear();
                 LogManager.WriteDebugLog("SwitchCharacterForm", "[详细调试] 已清空角色列表");
 
@@ -90,7 +90,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
                     lstCharacters.Items.Add(profileItem);
                     LogManager.WriteDebugLog("SwitchCharacterForm", $"[详细调试] 已添加到列表，当前列表项数: {lstCharacters.Items.Count}");
                 }
-                
+
                 if (lstCharacters.Items.Count > 0)
                 {
                     lstCharacters.SelectedIndex = 0;
@@ -100,21 +100,21 @@ namespace DTwoMFTimerHelper.UI.Profiles
                 {
                     LogManager.WriteDebugLog("SwitchCharacterForm", "[详细调试] 角色列表为空");
                 }
-                
+
                 // 更新UI显示
                 LogManager.WriteDebugLog("SwitchCharacterForm", "[详细调试] 准备更新空列表消息");
                 UpdateEmptyListMessage();
             }
             catch (Exception ex)
             {
-                LogManager.WriteDebugLog("SwitchCharacterForm", $"加载角色档案异常: {ex.Message}"); 
-                LogManager.WriteDebugLog("SwitchCharacterForm", $"异常堆栈: {ex.StackTrace}");  
+                LogManager.WriteDebugLog("SwitchCharacterForm", $"加载角色档案异常: {ex.Message}");
+                LogManager.WriteDebugLog("SwitchCharacterForm", $"异常堆栈: {ex.StackTrace}");
                 // 使用本地化的错误消息
-                MessageBox.Show($"{LanguageManager.GetString("ErrorLoadingProfiles") ?? "加载角色档案失败"}: {ex.Message}", 
+                MessageBox.Show($"{LanguageManager.GetString("ErrorLoadingProfiles") ?? "加载角色档案失败"}: {ex.Message}",
                     LanguageManager.GetString("Error") ?? "错误");
             }
         }
-        
+
         private void UpdateEmptyListMessage()
         {
             if (lstCharacters!.Items.Count == 0)
@@ -131,7 +131,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
                 btnSelect!.Enabled = true;
             }
         }
-        
+
         private void BtnSelect_Click(object? sender, EventArgs e)
         {
             if (lstCharacters!.SelectedItem is ProfileItem profileItem)
@@ -147,7 +147,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
                 else
                 {
                     LogManager.WriteDebugLog("SwitchCharacterForm", "选中的角色数据无效");
-                    MessageBox.Show(LanguageManager.GetString("InvalidCharacter") ?? "选中的角色数据无效", 
+                    MessageBox.Show(LanguageManager.GetString("InvalidCharacter") ?? "选中的角色数据无效",
                         LanguageManager.GetString("Warning") ?? "警告");
                 }
             }
@@ -155,48 +155,48 @@ namespace DTwoMFTimerHelper.UI.Profiles
             {
                 // 如果只有一项且是字符串（空列表提示消息），给出更明确的提示
                 LogManager.WriteDebugLog("SwitchCharacterForm", "用户尝试选择空列表提示消息");
-                MessageBox.Show(LanguageManager.GetString("NoCharactersAvailable") ?? "没有可用的角色档案，请先创建角色。", 
+                MessageBox.Show(LanguageManager.GetString("NoCharactersAvailable") ?? "没有可用的角色档案，请先创建角色。",
                     LanguageManager.GetString("Information") ?? "提示");
             }
             else
             {
                 LogManager.WriteDebugLog("SwitchCharacterForm", "请先选择角色");
-                MessageBox.Show(LanguageManager.GetString("SelectCharacterFirst") ?? "请先选择一个角色", 
+                MessageBox.Show(LanguageManager.GetString("SelectCharacterFirst") ?? "请先选择一个角色",
                     LanguageManager.GetString("Information") ?? "提示");
             }
         }
-        
+
         private void BtnCancel_Click(object? sender, EventArgs e)
         {
             this.DialogResult = DialogResult.Cancel;
             this.Close();
         }
-        
+
         // 包装类，用于显示友好的角色信息
         private class ProfileItem
         {
             public Models.CharacterProfile Profile { get; }
             public string DisplayName { get; }
-            
+
             public ProfileItem(Models.CharacterProfile profile)
             {
                 Profile = profile;
-                
+
                 // 获取本地化的职业名称
                 string className = DTwoMFTimerHelper.Utils.LanguageManager.GetLocalizedClassName(profile.Class);
-                
+
                 // 显示角色名称、职业和游戏统计
                 DisplayName = $"{profile.Name} - {className} (游戏局数: {profile.CompletedGamesCount}, 总时间: {FormatTime(profile.TotalPlayTimeSeconds)})";
             }
-            
+
             // 使用Utils.LanguageManager中的GetLocalizedClassName方法
-            
+
             private static string FormatTime(double seconds)
             {
                 int hours = (int)(seconds / 3600);
                 int minutes = (int)((seconds % 3600) / 60);
                 int secs = (int)(seconds % 60);
-                
+
                 if (hours > 0)
                     return $"{hours}时{minutes}分";
                 else if (minutes > 0)

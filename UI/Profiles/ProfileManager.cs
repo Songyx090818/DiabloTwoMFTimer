@@ -27,9 +27,10 @@ namespace DTwoMFTimerHelper.UI.Profiles
         private List<Models.FarmingScene> farmingScenes = [];
         public Models.CharacterProfile? CurrentProfile => currentProfile;
         public Models.MFRecord? CurrentRecord => currentRecord;
-        
+
         // 当前选中的场景
-        public string CurrentScene {
+        public string CurrentScene
+        {
             get
             {
                 if (cmbScene != null)
@@ -39,7 +40,8 @@ namespace DTwoMFTimerHelper.UI.Profiles
         }
 
         // 当前选中的难度
-        public Models.GameDifficulty CurrentDifficulty {
+        public Models.GameDifficulty CurrentDifficulty
+        {
             get
             {
                 return GetSelectedDifficulty();
@@ -56,7 +58,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
         private void InitializeComponent()
         {
             SuspendLayout();
-            
+
             // 角色管理按钮
             btnCreateCharacter = new Button
             {
@@ -68,7 +70,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
                 UseVisualStyleBackColor = true
             };
             btnCreateCharacter.Click += BtnCreateCharacter_Click;
-            
+
             btnSwitchCharacter = new Button
             {
                 Location = new System.Drawing.Point(190, 30),
@@ -79,7 +81,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
                 UseVisualStyleBackColor = true
             };
             btnSwitchCharacter.Click += BtnSwitchCharacter_Click;
-            
+
             btnDeleteCharacter = new Button
             {
                 Location = new System.Drawing.Point(350, 30),
@@ -91,7 +93,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
                 Enabled = false
             };
             btnDeleteCharacter.Click += BtnDeleteCharacter_Click;
-            
+
             // 场景和难度选择
             lblScene = new Label
             {
@@ -102,7 +104,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
                 Size = new System.Drawing.Size(80, 28),
                 TabIndex = 3
             };
-            
+
             cmbScene = new ComboBox
             {
                 Location = new System.Drawing.Point(130, 100),
@@ -113,7 +115,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
                 DropDownStyle = ComboBoxStyle.DropDownList
             };
             cmbScene.SelectedIndexChanged += CmbScene_SelectedIndexChanged;
-            
+
             lblDifficulty = new Label
             {
                 AutoSize = true,
@@ -123,7 +125,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
                 Size = new System.Drawing.Size(80, 28),
                 TabIndex = 5
             };
-            
+
             cmbDifficulty = new ComboBox
             {
                 Location = new System.Drawing.Point(130, 160),
@@ -134,13 +136,13 @@ namespace DTwoMFTimerHelper.UI.Profiles
                 DropDownStyle = ComboBoxStyle.DropDownList
             };
             cmbDifficulty.SelectedIndexChanged += CmbDifficulty_SelectedIndexChanged;
-            
+
             // 添加难度选项
             foreach (Models.GameDifficulty difficulty in Enum.GetValues(typeof(Models.GameDifficulty)))
-                    cmbDifficulty.Items.Add(SceneService.GetLocalizedDifficultyName(difficulty));
+                cmbDifficulty.Items.Add(SceneService.GetLocalizedDifficultyName(difficulty));
             if (cmbDifficulty.Items.Count > 0)
                 cmbDifficulty.SelectedIndex = 2; // 默认地狱难度
-              
+
             // 计时控制按钮
             btnStartStop = new Button
             {
@@ -153,7 +155,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
                 Enabled = false
             };
             btnStartStop.Click += BtnStartStop_Click;
-            
+
             // 状态显示标签
             lblCurrentProfile = new Label
             {
@@ -164,7 +166,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
                 Size = new System.Drawing.Size(120, 28),
                 TabIndex = 10
             };
-            
+
             lblTime = new Label
             {
                 AutoSize = true,
@@ -174,7 +176,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
                 Size = new System.Drawing.Size(120, 28),
                 TabIndex = 11
             };
-            
+
             lblStats = new Label
             {
                 AutoSize = true,
@@ -184,7 +186,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
                 Size = new System.Drawing.Size(120, 28),
                 TabIndex = 12
             };
-            
+
             // ProfileManager
             AutoScaleDimensions = new System.Drawing.SizeF(13F, 28F);
             AutoScaleMode = AutoScaleMode.Font;
@@ -210,9 +212,9 @@ namespace DTwoMFTimerHelper.UI.Profiles
         private void LoadFarmingScenes()
         {
             farmingScenes = Services.SceneService.LoadFarmingSpots();
-            
+
             cmbScene?.Items.Clear();
-            
+
             if (farmingScenes.Count == 0)
             {
                 MessageBox.Show("场景列表为空，无法添加到下拉框", "场景加载警告", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -224,17 +226,17 @@ namespace DTwoMFTimerHelper.UI.Profiles
                     string displayName = SceneService.GetSceneDisplayName(scene);
                     cmbScene?.Items.Add(displayName);
                 }
-                
+
                 if (cmbScene != null && cmbScene.Items.Count > 0)
                 {
                     cmbScene.SelectedIndex = 0;
                 }
-                
+
                 // 只输出到控制台，不再显示弹窗
                 string summary = $"场景列表加载完成\n场景总数: {farmingScenes.Count}\n成功添加到下拉框: {(cmbScene != null ? cmbScene.Items.Count : 0)}";
                 WriteDebugLog(summary);
             }
-            
+
             // 尝试加载上次使用的场景、难度和角色档案
             try
             {
@@ -252,7 +254,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
                         }
                     }
                 }
-                
+
                 // 尝试加载上次使用的难度
                 if (!string.IsNullOrEmpty(settings.LastUsedDifficulty) && cmbDifficulty != null)
                 {
@@ -273,7 +275,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
                         }
                     }
                 }
-                
+
                 // 尝试加载上次使用的角色档案
                 if (!string.IsNullOrEmpty(settings.LastUsedProfile))
                 {
@@ -330,14 +332,14 @@ namespace DTwoMFTimerHelper.UI.Profiles
                 UpdateUI();
             }
         }
-        
+
         private void UpdateUI()
         {
             // 更新按钮文本
             if (btnCreateCharacter != null) btnCreateCharacter.Text = DTwoMFTimerHelper.Utils.LanguageManager.GetString("CreateCharacter");
             if (btnSwitchCharacter != null) btnSwitchCharacter.Text = DTwoMFTimerHelper.Utils.LanguageManager.GetString("SwitchCharacter");
             if (btnDeleteCharacter != null) btnDeleteCharacter.Text = DTwoMFTimerHelper.Utils.LanguageManager.GetString("DeleteCharacter");
-            
+
             // 根据是否有未完成记录设置开始按钮文本
             if (btnStartStop != null)
             {
@@ -349,7 +351,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
                 if (currentProfile != null)
                 {
                     WriteDebugLog($"当前角色: {currentProfile.Name}");
-                    
+
                     var selectedScene = GetSelectedScene();
                     if (selectedScene != null)
                     {
@@ -376,18 +378,18 @@ namespace DTwoMFTimerHelper.UI.Profiles
 
                         // 记录当前配置文件中的记录数量
                         WriteDebugLog($"当前角色记录数量: {currentProfile.Records.Count}");
-                              
+
                         // 查找同场景、同难度、未完成的记录
-                        hasIncompleteRecord = currentProfile.Records.Any(r => 
-                            r.SceneName == pureEnglishSceneName && 
-                            r.Difficulty == difficulty && 
+                        hasIncompleteRecord = currentProfile.Records.Any(r =>
+                            r.SceneName == pureEnglishSceneName &&
+                            r.Difficulty == difficulty &&
                             !r.IsCompleted);
-                        
+
                         WriteDebugLog($"是否存在未完成记录: {hasIncompleteRecord}");
-                        
+
                         // 记录第一条匹配场景和难度的记录详细信息（用于调试）
-                        var matchingRecord = currentProfile.Records.FirstOrDefault(r => 
-                            r.SceneName == pureEnglishSceneName && 
+                        var matchingRecord = currentProfile.Records.FirstOrDefault(r =>
+                            r.SceneName == pureEnglishSceneName &&
                             r.Difficulty == difficulty);
                         if (matchingRecord != null)
                         {
@@ -403,7 +405,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
                 {
                     WriteDebugLog("当前没有选择角色配置");
                 }
-                
+
                 // 根据是否有未完成记录设置按钮文本
                 if (hasIncompleteRecord)
                 {
@@ -418,7 +420,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
             }
             if (lblScene != null) lblScene.Text = LanguageManager.GetString("SelectScene");
             if (lblDifficulty != null) lblDifficulty.Text = LanguageManager.GetString("DifficultyLabel");
-            
+
             // 更新当前角色显示
             if (currentProfile != null)
             {
@@ -429,17 +431,17 @@ namespace DTwoMFTimerHelper.UI.Profiles
             {
                 if (lblCurrentProfile != null) lblCurrentProfile.Text = LanguageManager.GetString("CurrentCharacterNotSelected");
             }
-            
+
             // 隐藏时间和统计信息标签，去掉红色标注
-            if (lblTime != null) 
+            if (lblTime != null)
             {
                 lblTime.Visible = false;
             }
-            if (lblStats != null) 
+            if (lblStats != null)
             {
                 lblStats.Visible = false;
             }
-            
+
             // 更新按钮状态
             if (btnDeleteCharacter != null) btnDeleteCharacter.Enabled = currentProfile != null;
             if (btnStartStop != null) btnStartStop.Enabled = currentProfile != null;
@@ -513,7 +515,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
                 try
                 {
                     WriteDebugLog("开始切换角色...");
-                    
+
                     var selectedProfile = form.SelectedProfile;
 
                     // 验证角色数据
@@ -524,41 +526,41 @@ namespace DTwoMFTimerHelper.UI.Profiles
 
                     // 使用 ProfileService 的单例来统一管理角色切换
                     bool switchResult = ProfileService.Instance.SwitchCharacter(selectedProfile);
-                    
-            if (switchResult)
-            {
-                // 更新本地引用
-                currentProfile = selectedProfile;
-                currentRecord = null;
 
-                WriteDebugLog($"成功切换到角色: {currentProfile.Name}");
+                    if (switchResult)
+                    {
+                        // 更新本地引用
+                        currentProfile = selectedProfile;
+                        currentRecord = null;
 
-                // 更新UI显示新角色信息
-                UpdateUI();
+                        WriteDebugLog($"成功切换到角色: {currentProfile.Name}");
 
-                // 同步更新TimerControl（确保这里不会再次触发角色切换）
-                SyncTimerControl();
+                        // 更新UI显示新角色信息
+                        UpdateUI();
 
-                // 显示成功消息
-                MessageBox.Show($"已成功切换到角色 '{currentProfile.Name}'", "切换成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-            else
-            {
-                throw new InvalidOperationException("角色切换失败");
+                        // 同步更新TimerControl（确保这里不会再次触发角色切换）
+                        SyncTimerControl();
+
+                        // 显示成功消息
+                        MessageBox.Show($"已成功切换到角色 '{currentProfile.Name}'", "切换成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("角色切换失败");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LogManager.WriteErrorLog("ProfileManager", $"切换角色失败", ex);
+                    MessageBox.Show($"切换角色失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
         }
-        catch (Exception ex)
-        {
-            LogManager.WriteErrorLog("ProfileManager", $"切换角色失败", ex);
-            MessageBox.Show($"切换角色失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
-    }
-}
 
         private void BtnDeleteCharacter_Click(object? sender, EventArgs e)
         {
             if (currentProfile == null) return;
-            
+
             string confirmMsg = $"确定要删除角色: {currentProfile.Name}?";
             if (MessageBox.Show(confirmMsg, "删除角色", MessageBoxButtons.YesNo) == DialogResult.Yes)
             {
@@ -569,12 +571,63 @@ namespace DTwoMFTimerHelper.UI.Profiles
                 UpdateUI();
             }
         }
-        
+
         private void BtnStartStop_Click(object? sender, EventArgs e)
         {
-            WriteDebugLog("计时功能已移除");
+            try
+            {
+                WriteDebugLog("开始处理Farm按钮点击事件");
+
+                // 检查是否有未完成记录
+                bool hasIncompleteRecord = false;
+                if (currentProfile != null)
+                {
+                    var selectedScene = GetSelectedScene();
+                    if (selectedScene != null)
+                    {
+                        var difficulty = GetSelectedDifficulty();
+                        string sceneDisplayName = SceneService.GetSceneDisplayName(selectedScene);
+                        string pureEnglishSceneName = DTwoMFTimerHelper.Utils.LanguageManager.GetPureEnglishSceneName(sceneDisplayName);
+
+                        // 查找同场景、同难度、未完成的记录
+                        hasIncompleteRecord = currentProfile.Records.Any(r =>
+                            r.SceneName == pureEnglishSceneName &&
+                            r.Difficulty == difficulty &&
+                            !r.IsCompleted);
+                    }
+                }
+
+                WriteDebugLog($"是否存在未完成记录: {hasIncompleteRecord}");
+
+                // 根据是否有未完成记录调用不同的方法
+                if (hasIncompleteRecord)
+                {
+                    // 有未完成记录，调用ProfileService的SyncIncompleteRecordToTimer方法
+                    WriteDebugLog("调用ProfileService.SyncIncompleteRecordToTimer()");
+                    ProfileService.Instance.SyncIncompleteRecordToTimer();
+                }
+                else
+                {
+                    // 没有未完成记录，调用TimerService的Start方法
+                    WriteDebugLog("调用TimerService.Start()");
+                    TimerService.Instance.Start();
+                }
+
+                // 切换到计时Tab界面
+                if (this.FindForm() is MainForm mainForm && mainForm.TabControl != null)
+                {
+                    WriteDebugLog("切换到计时Tab界面");
+                    // 假设计时Tab是索引1
+                    mainForm.TabControl.SelectedIndex = 1;
+                }
+            }
+            catch (Exception ex)
+            {
+                LogManager.WriteErrorLog("ProfileManager", "处理Farm按钮点击事件失败", ex);
+                MessageBox.Show($"操作失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
-        
+
         // 场景选择变更事件处理
         private void CmbScene_SelectedIndexChanged(object? sender, EventArgs e)
         {
@@ -582,23 +635,23 @@ namespace DTwoMFTimerHelper.UI.Profiles
             if (cmbScene != null)
             {
                 WriteDebugLog($"场景已变更为: {cmbScene.Text}");
-                
+
                 // 同步更新ProfileService中的CurrentScene
                 if (Services.ProfileService.Instance != null)
                 {
                     Services.ProfileService.Instance.CurrentScene = cmbScene.Text;
-                    
+
                     // 同步更新TimerControl
                     SyncTimerControl();
                 }
-                
+
                 // 更新按钮文本，检查是否有未完成记录
                 UpdateUI();
             }
         }
-        
+
         private void CmbDifficulty_SelectedIndexChanged(object? sender, EventArgs e)
-        {            
+        {
             // 当难度改变时，更新ProfileService中的CurrentDifficulty
             if (currentProfile != null && cmbDifficulty != null && cmbDifficulty.SelectedIndex >= 0)
             {
@@ -606,29 +659,29 @@ namespace DTwoMFTimerHelper.UI.Profiles
                 int selectedIndex = cmbDifficulty.SelectedIndex;
                 string selectedDifficultyText = cmbDifficulty.SelectedItem?.ToString() ?? "未知";
                 WriteDebugLog($"难度索引已变更为: {selectedIndex}，显示文本: {selectedDifficultyText}");
-                
+
                 // 使用SceneService中的GetDifficultyByIndex方法获取对应的GameDifficulty枚举值
                 Models.GameDifficulty difficulty = Services.SceneService.GetDifficultyByIndex(selectedIndex);
-                
+
                 // 更新ProfileService中的CurrentDifficulty
                 if (Services.ProfileService.Instance != null)
                 {
                     Services.ProfileService.Instance.CurrentDifficulty = difficulty;
-                    
+
                     // 同步更新TimerControl
                     SyncTimerControl();
-                    
+
                     // 更新UI
                     UpdateUI();
                 }
             }
         }
-        
+
         /// <summary>
         /// 同步更新TimerControl的角色和场景信息
         /// </summary>
         private void SyncTimerControl()
-        {            
+        {
             try
             {
                 // 获取主窗口
@@ -640,7 +693,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
                 }
             }
             catch (Exception ex)
-            {                
+            {
                 LogManager.WriteErrorLog("ProfileManager", $"同步TimerControl失败", ex);
             }
         }
@@ -668,7 +721,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
                     // 查找上次使用的角色档案
                     var profile = allProfiles.FirstOrDefault(p => p.Name == lastUsedProfileName);
                     if (profile != null)
-                    {                        
+                    {
                         currentProfile = profile;
                         currentRecord = null;
                         UpdateUI();

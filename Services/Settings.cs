@@ -13,12 +13,12 @@ namespace DTwoMFTimerHelper.Services
         public string WindowPosition { get; set; } = "TopLeft";
         public bool AlwaysOnTop { get; set; } = true;
         public string Language { get; set; } = "Chinese";
-        
+
         // 角色档案设置
         public string LastUsedProfile { get; set; } = "";
         public string LastUsedScene { get; set; } = "";
         public string LastUsedDifficulty { get; set; } = "";
-        
+
         // 番茄时钟设置
         public int WorkTimeMinutes { get; set; } = 25;
         public int WorkTimeSeconds { get; set; } = 0;
@@ -26,15 +26,6 @@ namespace DTwoMFTimerHelper.Services
         public int ShortBreakSeconds { get; set; } = 0;
         public int LongBreakMinutes { get; set; } = 15;
         public int LongBreakSeconds { get; set; } = 0;
-        
-        // 未完成计时状态
-        public bool IsTimerInProgress { get; set; } = false;
-        public DateTime TimerStartTime { get; set; } = DateTime.MinValue;
-        public double TimerPausedDuration { get; set; } = 0;
-        public bool IsTimerPaused { get; set; } = false;
-        public DateTime TimerPauseStartTime { get; set; } = DateTime.MinValue;
-        public string InProgressCharacter { get; set; } = "";
-        public string InProgressScene { get; set; } = "";
     }
 
     public static class SettingsManager
@@ -43,15 +34,15 @@ namespace DTwoMFTimerHelper.Services
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "mf-time-helper",
             "config.yaml");
-        
+
         private static readonly ISerializer serializer = new SerializerBuilder()
             .WithNamingConvention(CamelCaseNamingConvention.Instance)
             .Build();
-        
+
         private static readonly IDeserializer deserializer = new DeserializerBuilder()
             .WithNamingConvention(CamelCaseNamingConvention.Instance)
             .Build();
-        
+
         // 加载设置
         public static AppSettings LoadSettings()
         {
@@ -63,7 +54,7 @@ namespace DTwoMFTimerHelper.Services
                 {
                     Directory.CreateDirectory(directory);
                 }
-                
+
                 if (File.Exists(ConfigFilePath))
                 {
                     var yaml = File.ReadAllText(ConfigFilePath);
@@ -74,11 +65,11 @@ namespace DTwoMFTimerHelper.Services
             {
                 LogManager.WriteErrorLog("SettingsManager", $"加载设置失败", ex);
             }
-            
+
             // 返回默认设置
             return new AppSettings();
         }
-        
+
         // 保存设置
         public static void SaveSettings(AppSettings settings)
         {
@@ -90,7 +81,7 @@ namespace DTwoMFTimerHelper.Services
                 {
                     Directory.CreateDirectory(directory);
                 }
-                
+
                 var yaml = serializer.Serialize(settings);
                 File.WriteAllText(ConfigFilePath, yaml);
             }
@@ -99,13 +90,13 @@ namespace DTwoMFTimerHelper.Services
                 LogManager.WriteErrorLog("SettingsManager", $"保存设置失败", ex);
             }
         }
-        
+
         // 将设置窗口的位置枚举转换为字符串
         public static string WindowPositionToString(SettingsControl.WindowPosition position)
         {
             return position.ToString();
         }
-        
+
         // 将字符串转换为设置窗口的位置枚举
         public static SettingsControl.WindowPosition StringToWindowPosition(string positionStr)
         {
@@ -115,13 +106,13 @@ namespace DTwoMFTimerHelper.Services
             }
             return SettingsControl.WindowPosition.TopLeft;
         }
-        
+
         // 将语言选项转换为字符串
         public static string LanguageToString(SettingsControl.LanguageOption language)
         {
             return language.ToString();
         }
-        
+
         // 将字符串转换为语言选项
         public static SettingsControl.LanguageOption StringToLanguage(string languageStr)
         {

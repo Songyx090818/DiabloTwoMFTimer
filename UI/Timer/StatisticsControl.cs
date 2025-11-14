@@ -83,7 +83,7 @@ namespace DTwoMFTimerHelper.UI.Timer
             // 更新属性
             this.RunCount = runCount;
             this.FastestTime = fastestTime;
-            
+
             // 计算平均时间
             if (runCount > 0 && runHistory.Count > 0)
             {
@@ -98,11 +98,11 @@ namespace DTwoMFTimerHelper.UI.Timer
             {
                 this.AverageTime = TimeSpan.Zero;
             }
-            
+
             // 更新UI
             UpdateUI();
         }
-        
+
         public void UpdateUI()
         {
             // 更新统计信息

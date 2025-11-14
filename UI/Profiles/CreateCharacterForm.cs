@@ -13,24 +13,26 @@ namespace DTwoMFTimerHelper.UI.Profiles
         private ComboBox? cmbCharacterClass;
         private Button? btnConfirm;
         private Button? btnCancel;
-        
+
         // 属性
         public string? CharacterName => txtCharacterName?.Text.Trim();
-        public CharacterClass? SelectedClass {
-            get {
+        public CharacterClass? SelectedClass
+        {
+            get
+            {
                 if (cmbCharacterClass?.SelectedItem is CharacterClass charClass)
                     return charClass;
                 return null;
             }
         }
-        
+
         public CreateCharacterForm()
         {
             InitializeComponent();
             SetupCharacterClasses();
             UpdateUI();
         }
-        
+
         private void InitializeComponent()
         {
             // 设置窗口属性
@@ -39,7 +41,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
             this.StartPosition = FormStartPosition.CenterScreen;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
-            
+
             // 初始化控件
             lblCharacterName = new Label();
             txtCharacterName = new TextBox();
@@ -47,31 +49,31 @@ namespace DTwoMFTimerHelper.UI.Profiles
             cmbCharacterClass = new ComboBox();
             btnConfirm = new Button();
             btnCancel = new Button();
-            
+
             // 设置控件位置和大小
             lblCharacterName.Location = new System.Drawing.Point(50, 30);
             lblCharacterName.Size = new System.Drawing.Size(100, 25);
-            
+
             txtCharacterName.Location = new System.Drawing.Point(150, 30);
             txtCharacterName.Size = new System.Drawing.Size(180, 25);
-            
+
             lblCharacterClass.Location = new System.Drawing.Point(50, 70);
             lblCharacterClass.Size = new System.Drawing.Size(100, 25);
-            
+
             cmbCharacterClass.Location = new System.Drawing.Point(150, 70);
             cmbCharacterClass.Size = new System.Drawing.Size(180, 25);
             cmbCharacterClass.DropDownStyle = ComboBoxStyle.DropDownList;
-            
+
             // 职业选项将在SetupCharacterClasses方法中添加
-            
+
             btnConfirm.Location = new System.Drawing.Point(120, 230);
             btnConfirm.Size = new System.Drawing.Size(80, 30);
             btnConfirm.Click += BtnConfirm_Click;
-            
+
             btnCancel.Location = new System.Drawing.Point(250, 230);
             btnCancel.Size = new System.Drawing.Size(80, 30);
             btnCancel.Click += BtnCancel_Click;
-            
+
             // 添加控件到表单
             this.Controls.Add(lblCharacterName);
             this.Controls.Add(txtCharacterName);
@@ -80,7 +82,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
             this.Controls.Add(btnConfirm);
             this.Controls.Add(btnCancel);
         }
-        
+
         private void SetupCharacterClasses()
         {
             // 添加职业选项
@@ -94,7 +96,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
                     cmbCharacterClass.SelectedIndex = 0;
             }
         }
-        
+
         public void UpdateUI()
         {
             this.Text = LanguageManager.GetString("CreateCharacter") ?? "创建";
@@ -102,26 +104,26 @@ namespace DTwoMFTimerHelper.UI.Profiles
             lblCharacterClass!.Text = LanguageManager.GetString("CharacterClass") ?? "职业:";
             btnConfirm!.Text = LanguageManager.GetString("Confirm") ?? "确认";
             btnCancel!.Text = LanguageManager.GetString("Cancel") ?? "取消";
-            
+
             // 更新职业显示名称
             if (cmbCharacterClass != null && cmbCharacterClass.Items.Count > 0)
             {
                 int selectedIndex = cmbCharacterClass.SelectedIndex;
                 cmbCharacterClass.Items.Clear();
-                
+
                 // 添加本地化的职业名称
                 foreach (CharacterClass charClass in Enum.GetValues(typeof(CharacterClass)))
-            {
-                cmbCharacterClass.Items.Add(DTwoMFTimerHelper.Utils.LanguageManager.GetLocalizedClassName(charClass));
-            }
-                
+                {
+                    cmbCharacterClass.Items.Add(DTwoMFTimerHelper.Utils.LanguageManager.GetLocalizedClassName(charClass));
+                }
+
                 if (selectedIndex >= 0 && selectedIndex < cmbCharacterClass.Items.Count)
                     cmbCharacterClass.SelectedIndex = selectedIndex;
             }
         }
-        
+
         // 使用LanguageManager中的GetLocalizedClassName方法
-        
+
         private static CharacterClass GetCharacterClassFromLocalizedName(string localizedName)
         {
             // 反向映射
@@ -132,7 +134,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
             }
             return CharacterClass.Barbarian; // 默认值
         }
-        
+
         private void BtnConfirm_Click(object? sender, EventArgs e)
         {
             // 验证输入
@@ -141,24 +143,24 @@ namespace DTwoMFTimerHelper.UI.Profiles
                 MessageBox.Show(LanguageManager.GetString("EnterCharacterName") ?? "请输入角色名称", "提示");
                 return;
             }
-            
+
             // 检查角色是否已存在
             if (DTwoMFTimerHelper.Services.DataService.FindProfileByName(CharacterName, true) != null)
             {
                 MessageBox.Show(LanguageManager.GetString("CharacterExists") ?? "该角色名称已存在", "提示");
                 return;
             }
-            
+
             this.DialogResult = DialogResult.OK;
             this.Close();
         }
-        
+
         private void BtnCancel_Click(object? sender, EventArgs e)
         {
             this.DialogResult = DialogResult.Cancel;
             this.Close();
         }
-        
+
         // 重写SelectedClass以支持本地化
         public CharacterClass? GetSelectedClass()
         {

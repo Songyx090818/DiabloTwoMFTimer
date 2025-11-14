@@ -23,7 +23,7 @@ namespace DTwoMFTimerHelper.Utils
         {
             // 只有在调试模式启用时才记录调试日志
             if (!IsDebugEnabled) return;
-            
+
             try
             {
                 // 调试日志路径

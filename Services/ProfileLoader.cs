@@ -21,13 +21,13 @@ namespace DTwoMFTimerHelper.Services
         public static List<CharacterProfile> LoadAllProfiles(bool includeHidden = false)
         {
             // 使用LogManager进行日志记录
-            
+
             LogManager.WriteDebugLog("ProfileLoader", $"开始加载所有角色档案，includeHidden={includeHidden}");
             LogManager.WriteDebugLog("ProfileLoader", $"角色档案目录路径: {ProfilesDirectory}");
             LogManager.WriteDebugLog("ProfileLoader", $"目录是否存在: {Directory.Exists(ProfilesDirectory)}");
-            
+
             var profiles = new List<CharacterProfile>();
-            
+
             try
             {
                 if (!Directory.Exists(ProfilesDirectory))
@@ -35,20 +35,20 @@ namespace DTwoMFTimerHelper.Services
                     LogManager.WriteDebugLog("ProfileLoader", "目录不存在");
                     return profiles;
                 }
-                
+
                 var files = Directory.GetFiles(ProfilesDirectory, "*.yaml");
                 LogManager.WriteDebugLog("ProfileLoader", $"找到 {files.Length} 个角色档案文件");
                 foreach (var file in files)
                 {
                     LogManager.WriteDebugLog("ProfileLoader", $"找到文件: {Path.GetFileName(file)}");
                 }
-                
+
                 foreach (var file in files)
                 {
                     try
                     {
                         LogManager.WriteDebugLog("ProfileLoader", $"正在处理文件: {Path.GetFileName(file)}");
-                        
+
                         // 检查文件是否存在且可读
                         if (!File.Exists(file))
                         {
@@ -123,14 +123,14 @@ namespace DTwoMFTimerHelper.Services
                         LogManager.WriteErrorLog("ProfileLoader", $"加载单个角色档案失败 ({file})", ex);
                     }
                 }
-                
+
                 LogManager.WriteDebugLog("ProfileLoader", $"成功加载 {profiles.Count} 个角色档案");
             }
             catch (Exception ex)
             {
                 LogManager.WriteErrorLog("ProfileLoader", $"加载角色档案失败", ex);
             }
-            
+
             return profiles;
         }
     }
