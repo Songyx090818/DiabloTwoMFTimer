@@ -185,8 +185,9 @@ namespace DTwoMFTimerHelper.Services
         /// </summary>
         /// <param name="runTime">运行时间</param>
         public void AddRunRecord(TimeSpan runTime)
-        {            // 添加到历史记录
-            RunHistory.Insert(0, runTime);
+        {            
+            // 添加到历史记录末尾，保持按StartTime升序排序
+            RunHistory.Add(runTime);
             RunCount++;
             
             // 更新最快时间

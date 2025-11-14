@@ -80,10 +80,11 @@ namespace DTwoMFTimerHelper.UI.Timer
                     lstRunHistory.Items.Add(runText);
                 }
 
-                // 确保最新记录在顶部
+                // 确保选中最后一条记录并滚动到底部
                 if (lstRunHistory.Items.Count > 0)
                 {
-                    lstRunHistory.SelectedIndex = 0;
+                    lstRunHistory.SelectedIndex = lstRunHistory.Items.Count - 1;
+                    lstRunHistory.TopIndex = lstRunHistory.Items.Count - 1;
                 }
             }
         }

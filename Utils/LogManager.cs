@@ -40,7 +40,8 @@ namespace DTwoMFTimerHelper.Utils
 
         internal static void WriteDebugLog(string v)
         {
-            throw new NotImplementedException();
+            // 调用主调试日志方法，使用默认类名
+            WriteDebugLog("Internal", v);
         }
         /// <summary>
         /// 写入错误日志
@@ -72,7 +73,8 @@ namespace DTwoMFTimerHelper.Utils
 
         internal static void WriteErrorLog(string v)
         {
-            throw new NotImplementedException();
+            // 调用主错误日志方法，使用默认类名
+            WriteErrorLog("Internal", v);
         }
     }
 }

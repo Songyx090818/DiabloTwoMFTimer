@@ -282,7 +282,8 @@ namespace DTwoMFTimerHelper.Services
                 };
 
                 if (profileService.CurrentProfile != null)
-                {                    DataService.AddMFRecord(profileService.CurrentProfile, newRecord);
+                {                    
+                    DataService.AddMFRecord(profileService.CurrentProfile, newRecord);
                     LogManager.WriteDebugLog("TimerService", $"已创建开始记录到角色档案: {currentCharacter} - {currentScene}, ACT: {actValue}, 开始时间: {_startTime}");
                 }
                 else
