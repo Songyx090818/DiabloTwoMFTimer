@@ -20,7 +20,7 @@ namespace DTwoMFTimerHelper
             Application.SetHighDpiMode(HighDpiMode.SystemAware);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            // 检查命令行参数
+            // 只在提供--debug参数时才启用调试日志
             if (args.Length > 0 && args[0].Equals("--debug", StringComparison.CurrentCultureIgnoreCase))
             {
                 Utils.LogManager.IsDebugEnabled = true;

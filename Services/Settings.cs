@@ -41,6 +41,7 @@ namespace DTwoMFTimerHelper.Services
 
         private static readonly IDeserializer deserializer = new DeserializerBuilder()
             .WithNamingConvention(CamelCaseNamingConvention.Instance)
+            .IgnoreUnmatchedProperties()
             .Build();
 
         // 加载设置

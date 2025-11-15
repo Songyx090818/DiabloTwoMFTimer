@@ -430,7 +430,7 @@ namespace DTwoMFTimerHelper.Services
 
                 if (incompleteRecord != null)
                 {
-                    LogManager.WriteDebugLog("ProfileService", $"同步未完成记录到Timer: 场景={pureEnglishSceneName}, 开始时间={incompleteRecord.StartTime}, 持续时间={incompleteRecord.DurationSeconds}秒, 计算持续时间={incompleteRecord.CalculatedDurationSeconds}秒");
+                    LogManager.WriteDebugLog("ProfileService", $"同步未完成记录到Timer: 场景={pureEnglishSceneName}, 开始时间={incompleteRecord.StartTime}, 持续时间={incompleteRecord.DurationSeconds}秒");
 
                     // 使用TimerService提供的公共方法来恢复状态，避免使用反射
                     var timerService = TimerService.Instance;

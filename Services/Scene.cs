@@ -165,9 +165,9 @@ namespace DTwoMFTimerHelper.Services
             foreach (var spot in farmingSpots)
             {
                 // 添加英文到中文的映射
-                mapping[spot.enUS] = spot.zhCN;
+                mapping[spot.EnUS] = spot.ZhCN;
                 // 添加中文到英文的映射
-                mapping[spot.zhCN] = spot.enUS;
+                mapping[spot.ZhCN] = spot.EnUS;
             }
 
             return mapping;
@@ -185,8 +185,8 @@ namespace DTwoMFTimerHelper.Services
             foreach (var spot in farmingSpots)
             {
                 // 添加英文和中文场景名称对应的ACT值
-                mapping[spot.enUS] = spot.ACT;
-                mapping[spot.zhCN] = spot.ACT;
+                mapping[spot.EnUS] = spot.ACT;
+                mapping[spot.ZhCN] = spot.ACT;
             }
 
             return mapping;

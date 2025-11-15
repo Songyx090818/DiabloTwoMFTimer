@@ -91,18 +91,18 @@ namespace DTwoMFTimerHelper.Services
                         {
                             var record = sortedRecords[i];
                             // 添加详细的初始值日志，记录record对象在赋值前的状态
-                            LogManager.WriteDebugLog("TimerHistoryService", $"[加载记录前状态] ID: {record.GetHashCode()}, StartTime: {record.StartTime}, EndTime: {(record.EndTime.HasValue ? record.EndTime.Value.ToString() : "null")}, LatestTime: {(record.LatestTime.HasValue ? record.LatestTime.Value.ToString() : "null")}, CalculatedDurationSeconds: {record.CalculatedDurationSeconds}, SceneName: {record.SceneName}");
+                            LogManager.WriteDebugLog("TimerHistoryService", $"[加载记录前状态] ID: {record.GetHashCode()}, StartTime: {record.StartTime}, EndTime: {(record.EndTime.HasValue ? record.EndTime.Value.ToString() : "null")}, LatestTime: {(record.LatestTime.HasValue ? record.LatestTime.Value.ToString() : "null")}, DurationSeconds: {record.DurationSeconds}, SceneName: {record.SceneName}");
 
                             // 手动计算正确的持续时间
                             double correctDuration;
                             LogManager.WriteDebugLog("TimerHistoryService", $"[加载记录 #{i + 1}] 开始计算持续时间");
-                            LogManager.WriteDebugLog("TimerHistoryService", $"[加载记录 #{i + 1}] StartTime: {record.StartTime}, EndTime: {record.EndTime}, LatestTime: {record.LatestTime}, CalculatedDurationSeconds: {record.CalculatedDurationSeconds}");
+                            LogManager.WriteDebugLog("TimerHistoryService", $"[加载记录 #{i + 1}] StartTime: {record.StartTime}, EndTime: {record.EndTime}, LatestTime: {record.LatestTime}, DurationSeconds: {record.DurationSeconds}");
 
-                            if (record.CalculatedDurationSeconds > 0 && record.LatestTime.HasValue && record.EndTime.HasValue)
+                            if (record.DurationSeconds > 0 && record.LatestTime.HasValue && record.EndTime.HasValue)
                             {
                                 double latestToEnd = (record.EndTime.Value - record.LatestTime.Value).TotalSeconds;
-                                correctDuration = record.CalculatedDurationSeconds + latestToEnd;
-                                LogManager.WriteDebugLog("TimerHistoryService", $"[加载记录 #{i + 1}] 计算路径: CalculatedDurationSeconds + (EndTime - LatestTime) = {record.CalculatedDurationSeconds} + {latestToEnd} = {correctDuration}秒");
+                                correctDuration = record.DurationSeconds + latestToEnd;
+                                LogManager.WriteDebugLog("TimerHistoryService", $"[加载记录 #{i + 1}] 计算路径: DurationSeconds + (EndTime - LatestTime) = {record.DurationSeconds} + {latestToEnd} = {correctDuration}秒");
                             }
                             else if (record.EndTime.HasValue)
                             {
