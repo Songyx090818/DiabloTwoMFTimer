@@ -20,6 +20,15 @@ namespace DTwoMFTimerHelper.Services
         }
         #endregion
 
+        // 历史记录数据变更事件
+        public event EventHandler? HistoryDataChanged;
+        
+        // 触发历史数据变更事件
+        private void OnHistoryDataChanged()
+        {
+            HistoryDataChanged?.Invoke(this, EventArgs.Empty);
+        }
+
         // 历史记录数据
         public List<TimeSpan> RunHistory { get; private set; }
 
@@ -145,6 +154,7 @@ namespace DTwoMFTimerHelper.Services
 
                         LogManager.WriteDebugLog("TimerHistoryService", "[加载完成] RunHistory排序后内容:");
                         LogManager.WriteDebugLog("TimerHistoryService", $"[加载完成] 运行次数: {RunCount}, 最快时间: {FastestTime}, 平均时间: {AverageTime}");
+                        OnHistoryDataChanged();
                         return true;
                     }
                 }
@@ -187,6 +197,8 @@ namespace DTwoMFTimerHelper.Services
                 FastestTime = TimeSpan.MaxValue;
                 AverageTime = TimeSpan.Zero;
             }
+            
+            OnHistoryDataChanged();
         }
 
         /// <summary>
@@ -212,6 +224,8 @@ namespace DTwoMFTimerHelper.Services
                 totalSeconds += time.TotalSeconds;
             }
             AverageTime = TimeSpan.FromSeconds(totalSeconds / RunCount);
+            
+            OnHistoryDataChanged();
         }
 
         /// <summary>
@@ -223,6 +237,8 @@ namespace DTwoMFTimerHelper.Services
             RunCount = 0;
             FastestTime = TimeSpan.MaxValue;
             AverageTime = TimeSpan.Zero;
+            
+            OnHistoryDataChanged();
         }
     }
 }

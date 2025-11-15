@@ -476,7 +476,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
                     DTwoMFTimerHelper.Models.CharacterClass charClass = (DTwoMFTimerHelper.Models.CharacterClass)selectedClass.Value;
                     WriteDebugLog($"角色职业: {charClass}");
 
-                    // 创建新角色档案
+                    // 创建新角色档案0
                     currentProfile = Services.DataService.CreateNewProfile(characterName, charClass);
 
                     // 验证创建结果
@@ -538,9 +538,6 @@ namespace DTwoMFTimerHelper.UI.Profiles
                         // 更新UI显示新角色信息
                         UpdateUI();
 
-                        // 同步更新TimerControl（确保这里不会再次触发角色切换）
-                        SyncTimerControl();
-
                         // 显示成功消息
                         MessageBox.Show($"已成功切换到角色 '{currentProfile.Name}'", "切换成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
@@ -577,41 +574,8 @@ namespace DTwoMFTimerHelper.UI.Profiles
             try
             {
                 WriteDebugLog("开始处理Farm按钮点击事件");
-
-                // 检查是否有未完成记录
-                bool hasIncompleteRecord = false;
-                if (currentProfile != null)
-                {
-                    var selectedScene = GetSelectedScene();
-                    if (selectedScene != null)
-                    {
-                        var difficulty = GetSelectedDifficulty();
-                        string sceneDisplayName = SceneService.GetSceneDisplayName(selectedScene);
-                        string pureEnglishSceneName = DTwoMFTimerHelper.Utils.LanguageManager.GetPureEnglishSceneName(sceneDisplayName);
-
-                        // 查找同场景、同难度、未完成的记录
-                        hasIncompleteRecord = currentProfile.Records.Any(r =>
-                            r.SceneName == pureEnglishSceneName &&
-                            r.Difficulty == difficulty &&
-                            !r.IsCompleted);
-                    }
-                }
-
-                WriteDebugLog($"是否存在未完成记录: {hasIncompleteRecord}");
-
-                // 根据是否有未完成记录调用不同的方法
-                if (hasIncompleteRecord)
-                {
-                    // 有未完成记录，调用ProfileService的SyncIncompleteRecordToTimer方法
-                    WriteDebugLog("调用ProfileService.SyncIncompleteRecordToTimer()");
-                    ProfileService.Instance.SyncIncompleteRecordToTimer();
-                }
-                else
-                {
-                    // 没有未完成记录，调用TimerService的Start方法
-                    WriteDebugLog("调用TimerService.Start()");
-                    TimerService.Instance.Start();
-                }
+                // 调用ProfileService的OnStartFarm方法处理开始Farm逻辑
+                ProfileService.Instance.OnStartFarm();
 
                 // 切换到计时Tab界面
                 if (this.FindForm() is MainForm mainForm && mainForm.TabControl != null)
@@ -640,9 +604,6 @@ namespace DTwoMFTimerHelper.UI.Profiles
                 if (Services.ProfileService.Instance != null)
                 {
                     Services.ProfileService.Instance.CurrentScene = cmbScene.Text;
-
-                    // 同步更新TimerControl
-                    SyncTimerControl();
                 }
 
                 // 更新按钮文本，检查是否有未完成记录
@@ -667,34 +628,9 @@ namespace DTwoMFTimerHelper.UI.Profiles
                 if (Services.ProfileService.Instance != null)
                 {
                     Services.ProfileService.Instance.CurrentDifficulty = difficulty;
-
-                    // 同步更新TimerControl
-                    SyncTimerControl();
-
-                    // 更新UI
+                    // 更新UI - TimerControl会通过事件监听自动更新
                     UpdateUI();
                 }
-            }
-        }
-
-        /// <summary>
-        /// 同步更新TimerControl的角色和场景信息
-        /// </summary>
-        private void SyncTimerControl()
-        {
-            try
-            {
-                // 获取主窗口
-                if (this.FindForm() is MainForm mainForm && mainForm.TimerControl != null)
-                {
-                    // 调用TimerControl的同步方法
-                    mainForm.TimerControl.SyncWithProfileManager();
-                    WriteDebugLog($"已同步TimerControl的角色和场景信息");
-                }
-            }
-            catch (Exception ex)
-            {
-                LogManager.WriteErrorLog("ProfileManager", $"同步TimerControl失败", ex);
             }
         }
 

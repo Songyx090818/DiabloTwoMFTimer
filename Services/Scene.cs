@@ -68,7 +68,6 @@ namespace DTwoMFTimerHelper.Services
                 LogManager.WriteDebugLog("SceneService", $"返回缓存的场景数据，共 {_cachedFarmingSpots.Count} 个场景");
                 return _cachedFarmingSpots;
             }
-
             LogManager.WriteDebugLog("SceneService", "===== 开始加载场景数据 =====");
             LogManager.WriteDebugLog("SceneService", $"尝试加载的文件路径: {FarmingSpotsPath}");
             LogManager.WriteDebugLog("SceneService", $"当前应用程序基目录: {AppDomain.CurrentDomain.BaseDirectory}");
@@ -86,7 +85,6 @@ namespace DTwoMFTimerHelper.Services
                     LogManager.WriteDebugLog("SceneService", $"成功读取文件内容，长度: {yaml.Length} 字符");
 
                     var data = sceneDeserializer.Deserialize<FarmingSpotsData>(yaml);
-
                     if (data == null)
                     {
                         LogManager.WriteDebugLog("SceneService", "反序列化失败: 数据为null");

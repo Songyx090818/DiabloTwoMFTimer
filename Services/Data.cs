@@ -285,12 +285,8 @@ namespace DTwoMFTimerHelper.Services
                 };
 
                 LogManager.WriteDebugLog("DataService", $"角色对象创建成功，现在准备保存");
-
-                // 目录检查和创建将在SaveProfile方法中完成，避免重复逻辑
-
                 // 保存配置文件
                 SaveProfile(profile);
-
                 LogManager.WriteDebugLog("DataService", $"成功创建并保存角色档案: {name}");
 
                 // 直接返回创建的profile对象，避免因文件系统缓存导致的验证失败
@@ -299,8 +295,7 @@ namespace DTwoMFTimerHelper.Services
             }
             catch (Exception ex)
             {
-                LogManager.WriteDebugLog("DataService", $"创建角色档案失败: {ex.Message}");
-                LogManager.WriteDebugLog("DataService", $"异常堆栈: {ex.StackTrace}");
+                LogManager.WriteErrorLog("DataService", $"创建角色档案失败: {ex.Message}", ex);
                 // 在所有模式下都显示详细错误信息，确保用户知道具体失败原因
                 string errorMsg = ex.InnerException != null
                     ? $"创建角色失败: {ex.Message}\n内部错误: {ex.InnerException.Message}"

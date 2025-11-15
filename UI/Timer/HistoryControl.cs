@@ -28,6 +28,8 @@ namespace DTwoMFTimerHelper.UI.Timer
             _historyService = TimerHistoryService.Instance;
             // 注册语言变更事件
             LanguageManager.OnLanguageChanged += LanguageManager_OnLanguageChanged;
+            // 订阅历史数据变更事件
+            _historyService.HistoryDataChanged += _historyService_HistoryDataChanged;
         }
 
         /// <summary>
@@ -57,6 +59,22 @@ namespace DTwoMFTimerHelper.UI.Timer
         private void ResetHistoryData()
         {
             _historyService.ResetHistoryData();
+        }
+        
+        /// <summary>
+        /// 处理历史数据变更事件
+        /// </summary>
+        private void _historyService_HistoryDataChanged(object? sender, EventArgs e)
+        {
+            // 在UI线程上更新UI
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => UpdateUI()));
+            }
+            else
+            {
+                UpdateUI();
+            }
         }
 
         public void UpdateUI()
@@ -94,6 +112,8 @@ namespace DTwoMFTimerHelper.UI.Timer
             {
                 // 取消注册语言变更事件
                 Utils.LanguageManager.OnLanguageChanged -= LanguageManager_OnLanguageChanged;
+                // 取消订阅历史数据变更事件
+                _historyService.HistoryDataChanged -= _historyService_HistoryDataChanged;
             }
             base.Dispose(disposing);
         }

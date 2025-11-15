@@ -41,7 +41,7 @@ namespace DTwoMFTimerHelper.UI.Timer
 
         #region Properties
         public bool IsTimerRunning => _timerService.IsRunning;
-        public Models.CharacterProfile? CurrentProfile
+        public static Models.CharacterProfile? CurrentProfile
         {
             get => ProfileService.Instance.CurrentProfile;
             set => ProfileService.Instance.CurrentProfile = value; // 直接设置ProfileService中的属性
@@ -51,20 +51,32 @@ namespace DTwoMFTimerHelper.UI.Timer
         #region Service Event Handlers
         private void SubscribeToServiceEvents()
         {
+            // 订阅TimerService事件
             _timerService.TimeUpdated += OnTimeUpdated;
             _timerService.TimerRunningStateChanged += OnTimerRunningStateChanged;
             _timerService.TimerPauseStateChanged += OnTimerPauseStateChanged;
             _timerService.TimerReset += OnTimerReset;
             _timerService.RunCompleted += OnRunCompleted;
+            
+            // 订阅ProfileService事件
+            ProfileService.Instance.CurrentProfileChanged += OnProfileChanged;
+            ProfileService.Instance.CurrentSceneChanged += OnSceneChanged;
+            ProfileService.Instance.CurrentDifficultyChanged += OnDifficultyChanged;
         }
 
         private void UnsubscribeFromServiceEvents()
         {
+            // 取消订阅TimerService事件
             _timerService.TimeUpdated -= OnTimeUpdated;
             _timerService.TimerRunningStateChanged -= OnTimerRunningStateChanged;
             _timerService.TimerPauseStateChanged -= OnTimerPauseStateChanged;
             _timerService.TimerReset -= OnTimerReset;
             _timerService.RunCompleted -= OnRunCompleted;
+            
+            // 取消订阅ProfileService事件
+            ProfileService.Instance.CurrentProfileChanged -= OnProfileChanged;
+            ProfileService.Instance.CurrentSceneChanged -= OnSceneChanged;
+            ProfileService.Instance.CurrentDifficultyChanged -= OnDifficultyChanged;
         }
 
         private void OnTimeUpdated(string timeString)
@@ -113,6 +125,38 @@ namespace DTwoMFTimerHelper.UI.Timer
         {
             // 可以在这里处理暂停状态的特殊UI显示
             TimerStateChanged?.Invoke(this, EventArgs.Empty);
+        }
+        
+        // ProfileService事件处理程序
+        private void OnProfileChanged(Models.CharacterProfile? profile)
+        {
+            LoadProfileHistoryData();
+            UpdateCharacterSceneInfo();
+        }
+        
+        private void OnSceneChanged(string scene)
+        {
+            LoadProfileHistoryData();
+            UpdateCharacterSceneInfo();
+        }
+        
+        private void OnDifficultyChanged(Models.GameDifficulty difficulty)
+        {
+            LoadProfileHistoryData();
+            UpdateCharacterSceneInfo();
+        }
+        
+        private void LoadProfileHistoryData()
+        {
+            if (historyControl != null)
+            {
+                var profile = ProfileService.Instance.CurrentProfile;
+                var scene = ProfileService.Instance.CurrentScene;
+                var characterName = profile?.Name ?? "";
+                var difficulty = ProfileService.Instance.CurrentDifficulty;
+                
+                historyControl.LoadProfileHistoryData(profile, scene, characterName, difficulty);
+            }
         }
 
         private void OnTimerReset()
@@ -165,23 +209,13 @@ namespace DTwoMFTimerHelper.UI.Timer
         }
 
         /// <summary>
-        /// 同步更新角色和场景信息
-        /// </summary>
-        public void SyncWithProfileManager()
-        {
-            UpdateProfileInfoFromService();
-            historyControl?.LoadProfileHistoryData(CurrentProfile, ProfileService.Instance.CurrentScene, ProfileService.Instance.CurrentProfile?.Name ?? "", ProfileService.Instance.CurrentDifficulty);
-            UpdateUI();
-            string characterName = ProfileService.Instance.CurrentProfile?.Name ?? "";
-            LogManager.WriteDebugLog("TimerControl", $"已同步角色和场景信息: {characterName} - {ProfileService.Instance.CurrentScene}");
-        }
-
-        /// <summary>
         /// 当切换到计时器Tab时调用
         /// </summary>
         public void OnTabSelected()
         {
-            SyncWithProfileManager();
+            // 初始加载数据，之后依靠事件自动更新
+            LoadProfileHistoryData();
+            UpdateUI();
             LogManager.WriteDebugLog("TimerControl", "计时器Tab被选中，已自动加载角色档案数据");
         }
 
@@ -254,35 +288,6 @@ namespace DTwoMFTimerHelper.UI.Timer
         private void UpdateCharacterSceneInfo()
         {
             characterSceneControl?.UpdateCharacterSceneInfo();
-        }
-
-        private void UpdateProfileInfoFromService()
-        {
-            // 直接使用ProfileService获取信息
-            var profileService = ProfileService.Instance;
-
-            if (profileService.CurrentProfile != null)
-            {
-                CurrentProfile = profileService.CurrentProfile;
-                // TimerService不再需要单独设置这些属性，它会直接从ProfileService获取
-
-                // 获取当前难度信息
-                var currentDifficulty = profileService.CurrentDifficulty;
-                LogManager.WriteDebugLog("TimerControl", $"同步难度信息: {currentDifficulty}");
-
-                // 确保角色场景控件也更新难度显示
-                UpdateCharacterSceneInfo();
-            }
-            else
-            {
-                LogManager.WriteDebugLog("TimerControl", "ProfileService.CurrentProfile 为 null，无法获取角色信息");
-            }
-        }
-
-        private static string GetCurrentDifficultyText()
-        {
-            var difficulty = ProfileService.Instance.CurrentDifficulty;
-            return SceneService.GetLocalizedDifficultyName(difficulty);
         }
         #endregion
 

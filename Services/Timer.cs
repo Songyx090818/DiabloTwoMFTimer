@@ -18,6 +18,11 @@ namespace DTwoMFTimerHelper.Services
         {
             _timer = new Timer(100); // 100毫秒间隔
             _timer.Elapsed += OnTimerElapsed;
+
+            // 订阅ProfileService的事件
+            var profileService = ProfileService.Instance;
+            profileService.ResetTimerRequested += OnResetTimerRequested;
+            profileService.RestoreIncompleteRecordRequested += OnRestoreIncompleteRecordRequested;
         }
         #endregion
 
@@ -240,42 +245,6 @@ namespace DTwoMFTimerHelper.Services
             }
         }
 
-        /// <summary>
-        /// 从未完成记录恢复计时器状态
-        /// </summary>
-        /// <param name="durationSeconds">已累计的持续时间（秒）</param>
-        /// <param name="recordLatestTime">记录的LatestTime时间</param>
-        public void RestoreFromIncompleteRecord()
-        {
-
-            var record = FindIncompleteRecordForCurrentScene();
-            if (record == null)
-                return;
-
-            DateTime now = DateTime.Now;
-
-            _startTime = record.StartTime;
-            _isRunning = true;
-            _isPaused = false;
-            _pausedDuration = TimeSpan.Zero;
-            // 正确的开始时间计算：当前时间 - 已运行时间 - 从LatestTime到现在的时间
-            _pauseStartTime = now - TimeSpan.FromSeconds(record.DurationSeconds);
-
-            // 启动计时器
-            _timer.Start();
-            // 立即更新显示
-            UpdateTimeDisplay();
-
-            LogManager.WriteDebugLog("TimerService",
-                $"从记录恢复计时状态: " +
-                $"已累计时间={record.DurationSeconds}秒, " +
-                $"计算出的开始时间={_startTime}, " +
-                $"当前时间={now}");
-            // 通知UI状态变化
-            TimerRunningStateChanged?.Invoke(_isRunning);
-            TimerPauseStateChanged?.Invoke(_isPaused);
-        }
-
         #region Private Methods
         private void OnTimerElapsed(object? sender, ElapsedEventArgs e)
         {
@@ -378,24 +347,6 @@ namespace DTwoMFTimerHelper.Services
         }
 
         /// <summary>
-        /// 更新记录的LatestTime
-        /// </summary>
-        private void UpdateRecordLatestTime()
-        {
-            var profileService = ProfileService.Instance;
-
-            var record = FindIncompleteRecordForCurrentScene();
-            if (record != null && !IsPaused && profileService.CurrentProfile != null)
-            {
-                record.LatestTime = DateTime.Now;
-
-                DataService.UpdateMFRecord(profileService.CurrentProfile, record);
-                LogManager.WriteDebugLog("TimerService", $"已更新未完成记录的LatestTime: 场景={profileService.CurrentScene}, 更新时间点={DateTime.Now}");
-            }
-
-        }
-
-        /// <summary>
         /// 保存记录到角色档案
         /// </summary>
         private void SaveToProfile()
@@ -479,10 +430,66 @@ namespace DTwoMFTimerHelper.Services
                 .OrderByDescending(r => r.StartTime)
                 .FirstOrDefault();
         }
+
+        /// <summary>
+        /// 处理来自ProfileService的重置定时器请求
+        /// </summary>
+        private void OnResetTimerRequested()
+        {
+            try
+            {
+                LogManager.WriteDebugLog("TimerService", "接收到重置定时器请求");
+                Reset();
+                TimerHistoryService.Instance.ResetHistoryData();
+            }
+            catch (Exception ex)
+            {
+                LogManager.WriteErrorLog("TimerService", "处理重置定时器请求时出错", ex);
+            }
+        }
+
+        /// <summary>
+        /// 处理来自ProfileService的恢复未完成记录请求
+        /// </summary>
+        private void OnRestoreIncompleteRecordRequested()
+        {
+            LogManager.WriteDebugLog("TimerService", "接收到恢复未完成记录请求");
+            var record = FindIncompleteRecordForCurrentScene();
+            if (record == null)
+                return;
+
+            DateTime now = DateTime.Now;
+
+            _startTime = record.StartTime;
+            _isRunning = true;
+            _isPaused = false;
+            _pausedDuration = TimeSpan.Zero;
+            // 正确的开始时间计算：当前时间 - 已运行时间 - 从LatestTime到现在的时间
+            _pauseStartTime = now - TimeSpan.FromSeconds(record.DurationSeconds);
+
+            // 启动计时器
+            _timer.Start();
+            // 立即更新显示
+            UpdateTimeDisplay();
+
+            LogManager.WriteDebugLog("TimerService",
+                $"从记录恢复计时状态: " +
+                $"已累计时间={record.DurationSeconds}秒, " +
+                $"计算出的开始时间={_startTime}, " +
+                $"当前时间={now}");
+            // 通知UI状态变化
+            TimerRunningStateChanged?.Invoke(_isRunning);
+            TimerPauseStateChanged?.Invoke(_isPaused);
+        }
         #endregion
 
         public void Dispose()
         {
+            // 取消订阅ProfileService的事件
+            var profileService = ProfileService.Instance;
+            profileService.ResetTimerRequested -= OnResetTimerRequested;
+            profileService.RestoreIncompleteRecordRequested -= OnRestoreIncompleteRecordRequested;
+
             _timer?.Dispose();
         }
     }
