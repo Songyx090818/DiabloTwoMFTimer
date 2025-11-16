@@ -17,17 +17,17 @@ namespace DTwoMFTimerHelper.Services
         private ProfileService()
         {
             LoadLastUsedProfile();
+            LoadLastUsedScene();
         }
         #endregion
 
         #region Events for UI Communication
-        public event Action<CharacterProfile?>? CurrentProfileChanged;
-        public event Action<string>? CurrentSceneChanged;
-        public event Action<GameDifficulty>? CurrentDifficultyChanged;
-        public event Action<bool>? HasIncompleteRecordChanged;
-        public event Action? ProfileListChanged;
-        public event Action? ResetTimerRequested;
-        public event Action? RestoreIncompleteRecordRequested;
+        public event Action<CharacterProfile?>? CurrentProfileChangedEvent;
+        public event Action<string>? CurrentSceneChangedEvent;
+        public event Action<GameDifficulty>? CurrentDifficultyChangedEvent;
+        public event Action? ProfileListChangedEvent;
+        public event Action? ResetTimerRequestedEvent;
+        public event Action? RestoreIncompleteRecordRequestedEvent;
         #endregion
 
         #region Properties
@@ -40,7 +40,7 @@ namespace DTwoMFTimerHelper.Services
                 if (_currentProfile != value)
                 {
                     _currentProfile = value;
-                    CurrentProfileChanged?.Invoke(value);
+                    CurrentProfileChangedEvent?.Invoke(value);
 
                     // 保存到设置
                     if (value != null)
@@ -65,15 +65,12 @@ namespace DTwoMFTimerHelper.Services
                 if (_currentScene != englishSceneName)
                 {
                     _currentScene = englishSceneName;
-                    CurrentSceneChanged?.Invoke(englishSceneName);
+                    CurrentSceneChangedEvent?.Invoke(englishSceneName);
 
                     // 保存到设置
                     var settings = SettingsManager.LoadSettings();
                     settings.LastUsedScene = englishSceneName;
                     SettingsManager.SaveSettings(settings);
-
-                    // // 检查是否有未完成记录，只在切换时执行一次
-                    // CheckIncompleteRecord();
                 }
             }
         }
@@ -87,15 +84,12 @@ namespace DTwoMFTimerHelper.Services
                 if (_currentDifficulty != value)
                 {
                     _currentDifficulty = value;
-                    CurrentDifficultyChanged?.Invoke(value);
+                    CurrentDifficultyChangedEvent?.Invoke(value);
 
                     // 保存到设置
                     var settings = SettingsManager.LoadSettings();
                     settings.LastUsedDifficulty = value.ToString();
                     SettingsManager.SaveSettings(settings);
-
-                    // 检查是否有未完成记录，只在切换时执行一次
-                    // CheckIncompleteRecord();
                 }
             }
         }
@@ -135,7 +129,7 @@ namespace DTwoMFTimerHelper.Services
 
                 // 设置为当前角色
                 CurrentProfile = profile;
-                ProfileListChanged?.Invoke();
+                ProfileListChangedEvent?.Invoke();
 
                 return profile;
             }
@@ -151,29 +145,18 @@ namespace DTwoMFTimerHelper.Services
         /// </summary>
         public bool SwitchCharacter(CharacterProfile profile)
         {
-            try
+            LogManager.WriteDebugLog("ProfileService", $"开始切换角色到: {profile.Name}");
+
+            // 验证角色数据
+            if (profile == null || string.IsNullOrWhiteSpace(profile.Name))
             {
-                LogManager.WriteDebugLog("ProfileService", $"开始切换角色到: {profile.Name}");
-
-                // 验证角色数据
-                if (profile == null || string.IsNullOrWhiteSpace(profile.Name))
-                {
-                    LogManager.WriteDebugLog("ProfileService", "无效的角色数据");
-                    return false;
-                }
-
-                CurrentProfile = profile;
-                LogManager.WriteDebugLog("ProfileService", $"成功切换到角色: {profile.Name}");
-
-                // 检查是否有未完成记录，只在切换时执行一次
-                // CheckIncompleteRecord();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                LogManager.WriteErrorLog("ProfileService", $"切换角色失败", ex);
+                LogManager.WriteDebugLog("ProfileService", "无效的角色数据");
                 return false;
             }
+
+            CurrentProfile = profile;
+            LogManager.WriteDebugLog("ProfileService", $"成功切换到角色: {profile.Name}");
+            return true;
         }
 
         /// <summary>
@@ -181,28 +164,20 @@ namespace DTwoMFTimerHelper.Services
         /// </summary>
         public bool DeleteCharacter(CharacterProfile profile)
         {
-            try
+            LogManager.WriteDebugLog("ProfileService", $"开始删除角色: {profile.Name}");
+            DataService.DeleteProfile(profile);
+            // 如果删除的是当前角色，清空当前角色
+            if (CurrentProfile?.Name == profile.Name)
             {
-                LogManager.WriteDebugLog("ProfileService", $"开始删除角色: {profile.Name}");
-                DataService.DeleteProfile(profile);
-                // 如果删除的是当前角色，清空当前角色
-                if (CurrentProfile?.Name == profile.Name)
-                {
-                    CurrentProfile = null;
-                }
-
-                ProfileListChanged?.Invoke();
-                // 触发重置定时器事件
-                ResetTimerRequested?.Invoke();
-                LogManager.WriteDebugLog("ProfileService", $"成功删除角色: {profile.Name}");
-
-                return true;
+                CurrentProfile = null;
             }
-            catch (Exception ex)
-            {
-                LogManager.WriteErrorLog("ProfileService", $"删除角色失败", ex);
-                return false;
-            }
+
+            ProfileListChangedEvent?.Invoke();
+            // 触发重置定时器事件
+            ResetTimerRequestedEvent?.Invoke();
+            LogManager.WriteDebugLog("ProfileService", $"成功删除角色: {profile.Name}");
+
+            return true;
         }
 
         /// <summary>
@@ -311,23 +286,20 @@ namespace DTwoMFTimerHelper.Services
         }
 
         /// <summary>
-        /// 将未完成记录同步到TimerService
-        /// </summary>
-        /// <summary>
         /// 处理开始Farm操作
         /// </summary>
-        public void OnStartFarm()
+        public void HandleStartFarm()
         {
             // 触发重置定时器事件
-            ResetTimerRequested?.Invoke();
+            ResetTimerRequestedEvent?.Invoke();
             // 检查是否有未完成记录
             bool hasIncompleteRecord = HasIncompleteRecord();
             // 根据是否有未完成记录调用不同的方法
             if (hasIncompleteRecord)
             {
                 // 触发恢复未完成记录事件
-                LogManager.WriteDebugLog("ProfileService", "触发RestoreIncompleteRecordRequested事件");
-                RestoreIncompleteRecordRequested?.Invoke();
+                LogManager.WriteDebugLog("ProfileService", "触发RestoreIncompleteRecordRequestedEvent事件");
+                RestoreIncompleteRecordRequestedEvent?.Invoke();
             }
             else
             {
@@ -345,33 +317,22 @@ namespace DTwoMFTimerHelper.Services
         private void LoadLastUsedProfile()
         {
             LogManager.WriteDebugLog("ProfileService", "LoadLastUsedProfile 开始执行");
-            try
+            var settings = SettingsManager.LoadSettings();
+            string lastUsedProfileName = settings.LastUsedProfile;
+            LogManager.WriteDebugLog("ProfileService", $"从配置文件加载设置: LastUsedProfile={lastUsedProfileName}");
+            if (!string.IsNullOrWhiteSpace(lastUsedProfileName))
             {
-                var settings = SettingsManager.LoadSettings();
-                string lastUsedProfileName = settings.LastUsedProfile;
-                LogManager.WriteDebugLog("ProfileService", $"从配置文件加载设置: LastUsedProfile={lastUsedProfileName}");
-                if (!string.IsNullOrWhiteSpace(lastUsedProfileName))
+                LogManager.WriteDebugLog("ProfileService", $"尝试加载上次使用的角色档案: {lastUsedProfileName}");
+                var profile = FindProfileByName(lastUsedProfileName);
+                if (profile != null)
                 {
-                    LogManager.WriteDebugLog("ProfileService", $"尝试加载上次使用的角色档案: {lastUsedProfileName}");
-                    var profile = FindProfileByName(lastUsedProfileName);
-                    if (profile != null)
-                    {
-                        CurrentProfile = profile;
-                        LogManager.WriteDebugLog("ProfileService", $"成功加载上次使用的角色档案: {lastUsedProfileName}");
-                    }
-                    else
-                    {
-                        LogManager.WriteDebugLog("ProfileService", $"未找到上次使用的角色档案: {lastUsedProfileName}");
-                    }
-                }
-                else
-                {
-                    LogManager.WriteDebugLog("ProfileService", "没有保存的上次使用角色档案");
+                    CurrentProfile = profile;
+                    LogManager.WriteDebugLog("ProfileService", $"成功加载上次使用的角色档案: {lastUsedProfileName}");
                 }
             }
-            catch (Exception ex)
+            else
             {
-                LogManager.WriteErrorLog("ProfileService", $"加载上次使用角色档案失败", ex);
+                LogManager.WriteDebugLog("ProfileService", "没有保存的上次使用角色档案");
             }
         }
 
@@ -380,24 +341,17 @@ namespace DTwoMFTimerHelper.Services
         /// </summary>
         private void LoadLastUsedScene()
         {
-            try
+            var settings = SettingsManager.LoadSettings();
+            if (!string.IsNullOrEmpty(settings.LastUsedScene))
             {
-                var settings = SettingsManager.LoadSettings();
-                if (!string.IsNullOrEmpty(settings.LastUsedScene))
-                {
-                    CurrentScene = settings.LastUsedScene;
-                }
-
-                // 加载上次使用的难度
-                if (!string.IsNullOrEmpty(settings.LastUsedDifficulty) &&
-                    Enum.TryParse<GameDifficulty>(settings.LastUsedDifficulty, out var difficulty))
-                {
-                    CurrentDifficulty = difficulty;
-                }
+                CurrentScene = settings.LastUsedScene;
             }
-            catch (Exception ex)
+
+            // 加载上次使用的难度
+            if (!string.IsNullOrEmpty(settings.LastUsedDifficulty) &&
+                Enum.TryParse<GameDifficulty>(settings.LastUsedDifficulty, out var difficulty))
             {
-                LogManager.WriteErrorLog("ProfileService", $"加载上次使用场景失败", ex);
+                CurrentDifficulty = difficulty;
             }
         }
         #endregion

@@ -21,17 +21,17 @@ namespace DTwoMFTimerHelper.Services
 
             // 订阅ProfileService的事件
             var profileService = ProfileService.Instance;
-            profileService.ResetTimerRequested += OnResetTimerRequested;
-            profileService.RestoreIncompleteRecordRequested += OnRestoreIncompleteRecordRequested;
+            profileService.ResetTimerRequestedEvent += OnResetTimerRequested;
+            profileService.RestoreIncompleteRecordRequestedEvent += OnRestoreIncompleteRecordRequested;
         }
         #endregion
 
         #region Events for UI Communication
-        public event Action<string>? TimeUpdated;
-        public event Action<bool>? TimerRunningStateChanged;
-        public event Action<bool>? TimerPauseStateChanged;
-        public event Action? TimerReset;
-        public event Action<TimeSpan>? RunCompleted;
+        public event Action<string>? TimeUpdatedEvent;
+        public event Action<bool>? TimerRunningStateChangedEvent;
+        public event Action<bool>? TimerPauseStateChangedEvent;
+        public event Action? TimerResetEvent;
+        public event Action<TimeSpan>? RunCompletedEvent;
         #endregion
 
         private readonly Timer _timer;
@@ -66,7 +66,7 @@ namespace DTwoMFTimerHelper.Services
             // 创建开始记录
             CreateStartRecord();
 
-            TimerRunningStateChanged?.Invoke(true);
+            TimerRunningStateChangedEvent?.Invoke(true);
             UpdateTimeDisplay();
         }
 
@@ -92,13 +92,13 @@ namespace DTwoMFTimerHelper.Services
             if (_startTime != DateTime.MinValue)
             {
                 TimeSpan runTime = GetElapsedTime(); // 使用GetElapsedTime()确保计算一致性
-                RunCompleted?.Invoke(runTime);
+                RunCompletedEvent?.Invoke(runTime);
 
                 // 保存记录到角色档案
                 SaveToProfile();
             }
 
-            TimerRunningStateChanged?.Invoke(false);
+            TimerRunningStateChangedEvent?.Invoke(false);
             _isRunning = false;
             _isPaused = false;
 
@@ -159,7 +159,7 @@ namespace DTwoMFTimerHelper.Services
                 // 更新未完成记录 - 使用当前状态计算持续时间
                 UpdateIncompleteRecord();
                 UpdateTimeDisplay();
-                TimerPauseStateChanged?.Invoke(true);
+                TimerPauseStateChangedEvent?.Invoke(true);
             }
         }
 
@@ -178,7 +178,7 @@ namespace DTwoMFTimerHelper.Services
                 // 重新启动计时器
                 _timer.Start();
 
-                TimerPauseStateChanged?.Invoke(false);
+                TimerPauseStateChangedEvent?.Invoke(false);
                 UpdateTimeDisplay();
             }
         }
@@ -193,7 +193,7 @@ namespace DTwoMFTimerHelper.Services
             _pausedDuration = TimeSpan.Zero;
             _pauseStartTime = DateTime.MinValue;
 
-            TimerReset?.Invoke();
+            TimerResetEvent?.Invoke();
         }
 
         /// <summary>
@@ -230,7 +230,7 @@ namespace DTwoMFTimerHelper.Services
         /// <summary>
         /// 在应用程序关闭时保存状态
         /// </summary>
-        public void OnApplicationClosing()
+        public void HandleApplicationClosing()
         {
             if (_isRunning)
             {
@@ -254,7 +254,7 @@ namespace DTwoMFTimerHelper.Services
         private void UpdateTimeDisplay()
         {
             string timeString = GetFormattedTime();
-            TimeUpdated?.Invoke(timeString);
+            TimeUpdatedEvent?.Invoke(timeString);
         }
 
         /// <summary>
@@ -478,8 +478,8 @@ namespace DTwoMFTimerHelper.Services
                 $"计算出的开始时间={_startTime}, " +
                 $"当前时间={now}");
             // 通知UI状态变化
-            TimerRunningStateChanged?.Invoke(_isRunning);
-            TimerPauseStateChanged?.Invoke(_isPaused);
+            TimerRunningStateChangedEvent?.Invoke(_isRunning);
+            TimerPauseStateChangedEvent?.Invoke(_isPaused);
         }
         #endregion
 
@@ -487,8 +487,8 @@ namespace DTwoMFTimerHelper.Services
         {
             // 取消订阅ProfileService的事件
             var profileService = ProfileService.Instance;
-            profileService.ResetTimerRequested -= OnResetTimerRequested;
-            profileService.RestoreIncompleteRecordRequested -= OnRestoreIncompleteRecordRequested;
+            profileService.ResetTimerRequestedEvent -= OnResetTimerRequested;
+            profileService.RestoreIncompleteRecordRequestedEvent -= OnRestoreIncompleteRecordRequested;
 
             _timer?.Dispose();
         }

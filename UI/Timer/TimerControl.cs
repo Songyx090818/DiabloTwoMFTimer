@@ -52,31 +52,31 @@ namespace DTwoMFTimerHelper.UI.Timer
         private void SubscribeToServiceEvents()
         {
             // 订阅TimerService事件
-            _timerService.TimeUpdated += OnTimeUpdated;
-            _timerService.TimerRunningStateChanged += OnTimerRunningStateChanged;
-            _timerService.TimerPauseStateChanged += OnTimerPauseStateChanged;
-            _timerService.TimerReset += OnTimerReset;
-            _timerService.RunCompleted += OnRunCompleted;
-            
+            _timerService.TimeUpdatedEvent += OnTimeUpdated;
+            _timerService.TimerRunningStateChangedEvent += OnTimerRunningStateChanged;
+            _timerService.TimerPauseStateChangedEvent += OnTimerPauseStateChanged;
+            _timerService.TimerResetEvent += OnTimerReset;
+            _timerService.RunCompletedEvent += OnRunCompleted;
+
             // 订阅ProfileService事件
-            ProfileService.Instance.CurrentProfileChanged += OnProfileChanged;
-            ProfileService.Instance.CurrentSceneChanged += OnSceneChanged;
-            ProfileService.Instance.CurrentDifficultyChanged += OnDifficultyChanged;
+            ProfileService.Instance.CurrentProfileChangedEvent += OnProfileChanged;
+            ProfileService.Instance.CurrentSceneChangedEvent += OnSceneChanged;
+            ProfileService.Instance.CurrentDifficultyChangedEvent += OnDifficultyChanged;
         }
 
         private void UnsubscribeFromServiceEvents()
         {
             // 取消订阅TimerService事件
-            _timerService.TimeUpdated -= OnTimeUpdated;
-            _timerService.TimerRunningStateChanged -= OnTimerRunningStateChanged;
-            _timerService.TimerPauseStateChanged -= OnTimerPauseStateChanged;
-            _timerService.TimerReset -= OnTimerReset;
-            _timerService.RunCompleted -= OnRunCompleted;
-            
+            _timerService.TimeUpdatedEvent -= OnTimeUpdated;
+            _timerService.TimerRunningStateChangedEvent -= OnTimerRunningStateChanged;
+            _timerService.TimerPauseStateChangedEvent -= OnTimerPauseStateChanged;
+            _timerService.TimerResetEvent -= OnTimerReset;
+            _timerService.RunCompletedEvent -= OnRunCompleted;
+
             // 取消订阅ProfileService事件
-            ProfileService.Instance.CurrentProfileChanged -= OnProfileChanged;
-            ProfileService.Instance.CurrentSceneChanged -= OnSceneChanged;
-            ProfileService.Instance.CurrentDifficultyChanged -= OnDifficultyChanged;
+            ProfileService.Instance.CurrentProfileChangedEvent -= OnProfileChanged;
+            ProfileService.Instance.CurrentSceneChangedEvent -= OnSceneChanged;
+            ProfileService.Instance.CurrentDifficultyChangedEvent -= OnDifficultyChanged;
         }
 
         private void OnTimeUpdated(string timeString)
@@ -126,26 +126,26 @@ namespace DTwoMFTimerHelper.UI.Timer
             // 可以在这里处理暂停状态的特殊UI显示
             TimerStateChanged?.Invoke(this, EventArgs.Empty);
         }
-        
+
         // ProfileService事件处理程序
         private void OnProfileChanged(Models.CharacterProfile? profile)
         {
             LoadProfileHistoryData();
             UpdateCharacterSceneInfo();
         }
-        
+
         private void OnSceneChanged(string scene)
         {
             LoadProfileHistoryData();
             UpdateCharacterSceneInfo();
         }
-        
+
         private void OnDifficultyChanged(Models.GameDifficulty difficulty)
         {
             LoadProfileHistoryData();
             UpdateCharacterSceneInfo();
         }
-        
+
         private void LoadProfileHistoryData()
         {
             if (historyControl != null)
@@ -154,7 +154,7 @@ namespace DTwoMFTimerHelper.UI.Timer
                 var scene = ProfileService.Instance.CurrentScene;
                 var characterName = profile?.Name ?? "";
                 var difficulty = ProfileService.Instance.CurrentDifficulty;
-                
+
                 historyControl.LoadProfileHistoryData(profile, scene, characterName, difficulty);
             }
         }
@@ -203,7 +203,7 @@ namespace DTwoMFTimerHelper.UI.Timer
         /// <summary>
         /// 重置计时器
         /// </summary>
-        public void ResetTimerExternally()
+        public void HandleExternalReset()
         {
             _timerService.Reset();
         }
@@ -211,7 +211,7 @@ namespace DTwoMFTimerHelper.UI.Timer
         /// <summary>
         /// 当切换到计时器Tab时调用
         /// </summary>
-        public void OnTabSelected()
+        public void HandleTabSelected()
         {
             // 初始加载数据，之后依靠事件自动更新
             LoadProfileHistoryData();
@@ -222,9 +222,9 @@ namespace DTwoMFTimerHelper.UI.Timer
         /// <summary>
         /// 在应用程序关闭时调用
         /// </summary>
-        public void OnApplicationClosing()
+        public void HandleApplicationClosing()
         {
-            _timerService.OnApplicationClosing();
+            _timerService.HandleApplicationClosing();
         }
         #endregion
 

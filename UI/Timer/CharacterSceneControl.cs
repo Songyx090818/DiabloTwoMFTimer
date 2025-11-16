@@ -18,9 +18,9 @@ namespace DTwoMFTimerHelper.UI.Timer
             // 注册语言变更事件
             Utils.LanguageManager.OnLanguageChanged += LanguageManager_OnLanguageChanged;
             // 注册ProfileService事件
-            ProfileService.Instance.CurrentProfileChanged += OnProfileChanged;
-            ProfileService.Instance.CurrentSceneChanged += OnSceneChanged;
-            ProfileService.Instance.CurrentDifficultyChanged += OnDifficultyChanged;
+            ProfileService.Instance.CurrentProfileChangedEvent += OnProfileChanged;
+            ProfileService.Instance.CurrentSceneChangedEvent += OnSceneChanged;
+            ProfileService.Instance.CurrentDifficultyChangedEvent += OnDifficultyChanged;
         }
 
         protected override void Dispose(bool disposing)
@@ -29,9 +29,9 @@ namespace DTwoMFTimerHelper.UI.Timer
             {                // 取消注册语言变更事件
                 Utils.LanguageManager.OnLanguageChanged -= LanguageManager_OnLanguageChanged;
                 // 取消注册ProfileService事件
-                ProfileService.Instance.CurrentProfileChanged -= OnProfileChanged;
-                ProfileService.Instance.CurrentSceneChanged -= OnSceneChanged;
-                ProfileService.Instance.CurrentDifficultyChanged -= OnDifficultyChanged;
+                ProfileService.Instance.CurrentProfileChangedEvent -= OnProfileChanged;
+                ProfileService.Instance.CurrentSceneChangedEvent -= OnSceneChanged;
+                ProfileService.Instance.CurrentDifficultyChangedEvent -= OnDifficultyChanged;
             }
             base.Dispose(disposing);
         }

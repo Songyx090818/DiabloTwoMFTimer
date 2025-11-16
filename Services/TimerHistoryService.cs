@@ -22,7 +22,7 @@ namespace DTwoMFTimerHelper.Services
 
         // 历史记录数据变更事件
         public event EventHandler? HistoryDataChanged;
-        
+
         // 触发历史数据变更事件
         private void OnHistoryDataChanged()
         {
@@ -197,7 +197,7 @@ namespace DTwoMFTimerHelper.Services
                 FastestTime = TimeSpan.MaxValue;
                 AverageTime = TimeSpan.Zero;
             }
-            
+
             OnHistoryDataChanged();
         }
 
@@ -224,7 +224,7 @@ namespace DTwoMFTimerHelper.Services
                 totalSeconds += time.TotalSeconds;
             }
             AverageTime = TimeSpan.FromSeconds(totalSeconds / RunCount);
-            
+
             OnHistoryDataChanged();
         }
 
@@ -237,7 +237,7 @@ namespace DTwoMFTimerHelper.Services
             RunCount = 0;
             FastestTime = TimeSpan.MaxValue;
             AverageTime = TimeSpan.Zero;
-            
+
             OnHistoryDataChanged();
         }
     }

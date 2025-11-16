@@ -574,8 +574,8 @@ namespace DTwoMFTimerHelper.UI.Profiles
             try
             {
                 WriteDebugLog("开始处理Farm按钮点击事件");
-                // 调用ProfileService的OnStartFarm方法处理开始Farm逻辑
-                ProfileService.Instance.OnStartFarm();
+                // 调用ProfileService的HandleStartFarm方法处理开始Farm逻辑
+                ProfileService.Instance.HandleStartFarm();
 
                 // 切换到计时Tab界面
                 if (this.FindForm() is MainForm mainForm && mainForm.TabControl != null)

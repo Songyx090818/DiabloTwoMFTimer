@@ -310,7 +310,7 @@ namespace DTwoMFTimerHelper.UI
             // 当切换到计时器标签页时，调用OnTabSelected方法以加载角色档案数据
             if (tabControl != null && tabControl.SelectedIndex == 1 && timerControl != null)
             {
-                timerControl.OnTabSelected();
+                timerControl.HandleTabSelected();
             }
         }
 
@@ -463,7 +463,7 @@ namespace DTwoMFTimerHelper.UI
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             // 程序关闭时保存计时器状态
-            timerControl?.OnApplicationClosing();
+            timerControl?.HandleApplicationClosing();
             // 程序关闭时注销热键
             UnregisterHotKeys();
             base.OnFormClosing(e);
