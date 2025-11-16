@@ -461,16 +461,15 @@ namespace DTwoMFTimerHelper.Services
         /// </summary>
         private void OnRestoreIncompleteRecordRequested()
         {
+            Reset();
             LogManager.WriteDebugLog("TimerService", "接收到恢复未完成记录请求");
             var record = FindIncompleteRecordForCurrentScene();
             if (record == null)
                 return;
 
-            DateTime now = DateTime.Now;
-
-            _startTime = record.StartTime;
             _isRunning = true;
             _isPaused = true;
+            _startTime = record.StartTime;
             _pausedDuration = TimeSpan.FromSeconds(record.DurationSeconds);
 
             // 立即更新显示
@@ -479,8 +478,7 @@ namespace DTwoMFTimerHelper.Services
             LogManager.WriteDebugLog("TimerService",
                 $"从记录恢复计时状态: " +
                 $"已累计时间={record.DurationSeconds}秒, " +
-                $"计算出的开始时间={_startTime}, " +
-                $"当前时间={now}");
+                $"开始时间={_startTime}");
             // 通知UI状态变化
             TimerRunningStateChangedEvent?.Invoke(_isRunning);
             TimerPauseStateChangedEvent?.Invoke(_isPaused);

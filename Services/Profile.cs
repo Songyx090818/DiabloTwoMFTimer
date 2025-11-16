@@ -18,6 +18,7 @@ namespace DTwoMFTimerHelper.Services
         {
             LoadLastUsedProfile();
             LoadLastUsedScene();
+            RestoreIncompleteRecordRequestedEvent?.Invoke();
         }
         #endregion
 
@@ -48,6 +49,7 @@ namespace DTwoMFTimerHelper.Services
                         var settings = SettingsManager.LoadSettings();
                         settings.LastUsedProfile = value.Name;
                         SettingsManager.SaveSettings(settings);
+                        RestoreIncompleteRecordRequestedEvent?.Invoke();
                     }
                 }
             }
@@ -71,6 +73,7 @@ namespace DTwoMFTimerHelper.Services
                     var settings = SettingsManager.LoadSettings();
                     settings.LastUsedScene = englishSceneName;
                     SettingsManager.SaveSettings(settings);
+                    RestoreIncompleteRecordRequestedEvent?.Invoke();
                 }
             }
         }
@@ -90,6 +93,7 @@ namespace DTwoMFTimerHelper.Services
                     var settings = SettingsManager.LoadSettings();
                     settings.LastUsedDifficulty = value.ToString();
                     SettingsManager.SaveSettings(settings);
+                    RestoreIncompleteRecordRequestedEvent?.Invoke();
                 }
             }
         }
@@ -290,17 +294,13 @@ namespace DTwoMFTimerHelper.Services
         /// </summary>
         public void HandleStartFarm()
         {
-            // 触发重置定时器事件
-            ResetTimerRequestedEvent?.Invoke();
             // 检查是否有未完成记录
             bool hasIncompleteRecord = HasIncompleteRecord();
             // 根据是否有未完成记录调用不同的方法
             if (hasIncompleteRecord)
             {
-                // 触发恢复未完成记录事件
-                LogManager.WriteDebugLog("ProfileService", "触发RestoreIncompleteRecordRequestedEvent事件");
-                RestoreIncompleteRecordRequestedEvent?.Invoke();
-                TimerService.Instance.Resume();
+                // 没有未完成记录事件触发，直接恢复计时器
+                TimerService.Instance.TogglePause();
             }
             else
             {

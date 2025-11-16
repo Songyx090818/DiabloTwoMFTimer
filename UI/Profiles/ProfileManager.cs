@@ -476,7 +476,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
                     DTwoMFTimerHelper.Models.CharacterClass charClass = (DTwoMFTimerHelper.Models.CharacterClass)selectedClass.Value;
                     WriteDebugLog($"角色职业: {charClass}");
 
-                    // 创建新角色档案0
+                    // 创建新角色档案
                     currentProfile = Services.DataService.CreateNewProfile(characterName, charClass);
 
                     // 验证创建结果

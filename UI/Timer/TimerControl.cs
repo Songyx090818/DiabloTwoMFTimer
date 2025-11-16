@@ -213,8 +213,6 @@ namespace DTwoMFTimerHelper.UI.Timer
         /// </summary>
         public void HandleTabSelected()
         {
-            _timerService.Reset();
-            _timerService.RestoreIncompleteRecord();
             LoadProfileHistoryData();
             UpdateUI();
         }
