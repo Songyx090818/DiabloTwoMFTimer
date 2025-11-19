@@ -49,6 +49,7 @@ namespace DTwoMFTimerHelper.Services
         bool LoadProfileHistoryData(CharacterProfile? profile, string scene, string characterName, GameDifficulty difficulty);
 
         void AddRunRecord(TimeSpan runTime);
+        bool DeleteHistoryRecordByIndex(CharacterProfile? profile, string scene, GameDifficulty difficulty, int index);
         void UpdateHistory(List<TimeSpan> runHistory);
     }
 
@@ -58,7 +59,6 @@ namespace DTwoMFTimerHelper.Services
         {
             RunHistory = [];
         }
-
 
         // 使用更具体的事件参数
         public event EventHandler<HistoryChangedEventArgs>? HistoryDataChanged;
@@ -85,6 +85,78 @@ namespace DTwoMFTimerHelper.Services
         public TimeSpan AverageTime { get; private set; } = TimeSpan.Zero;
 
         /// <summary>
+        /// 获取符合条件的场景记录
+        /// </summary>
+        /// <param name="profile">角色档案</param>
+        /// <param name="scene">场景名称</param>
+        /// <param name="difficulty">游戏难度</param>
+        /// <returns>符合条件的记录列表</returns>
+        private List<MFRecord> GetSceneRecords(CharacterProfile? profile, string scene, GameDifficulty difficulty)
+        {
+            if (profile == null || string.IsNullOrEmpty(scene))
+                return [];
+
+            // 使用LanguageManager获取纯英文场景名称进行匹配
+            string pureEnglishSceneName = LanguageManager.GetPureEnglishSceneName(scene);
+
+            // 过滤条件：匹配场景名称、已完成、指定难度
+            return profile.Records.Where(r =>
+                r.SceneName.Equals(pureEnglishSceneName, StringComparison.OrdinalIgnoreCase) &&
+                r.IsCompleted &&
+                r.Difficulty == difficulty).ToList();
+        }
+
+        /// <summary>
+        /// 根据索引删除历史记录
+        /// </summary>
+        /// <param name="profile">角色档案</param>
+        /// <param name="scene">场景名称</param>
+        /// <param name="difficulty">游戏难度</param>
+        /// <param name="index">要删除的记录索引</param>
+        /// <returns>是否删除成功</returns>
+        public bool DeleteHistoryRecordByIndex(CharacterProfile? profile, string scene, GameDifficulty difficulty, int index)
+        {
+            if (profile == null || string.IsNullOrEmpty(scene) || index < 0)
+                return false;
+
+            try
+            {                // 获取符合条件的场景记录
+                var sceneRecords = GetSceneRecords(profile, scene, difficulty);
+
+                // 按StartTime升序排序，与RunHistory的构建方式保持一致
+                var sortedRecords = sceneRecords.OrderBy(r => r.StartTime).ToList();
+
+                // 检查索引是否有效
+                if (index >= sortedRecords.Count)
+                    return false;
+
+                // 获取要删除的记录
+                var recordToDelete = sortedRecords[index];
+
+                // 从CharacterProfile的Records列表中删除
+                bool removedFromProfile = profile.Records.Remove(recordToDelete);
+
+                // 从当前加载的RunHistory列表中删除对应的时间记录
+                var timeSpan = TimeSpan.FromSeconds(recordToDelete.DurationSeconds);
+                bool removedFromRunHistory = RunHistory.Remove(timeSpan);
+
+                // 如果有一个删除成功，则触发历史数据变更事件
+                if (removedFromProfile || removedFromRunHistory)
+                {
+                    OnHistoryDataChanged(HistoryChangeType.FullRefresh, null);
+                    LogManager.WriteDebugLog("TimerHistoryService", $"根据索引删除记录成功: 索引={index}, 场景 '{recordToDelete.SceneName}', 耗时 '{timeSpan}'");
+                }
+
+                return removedFromProfile;
+            }
+            catch (Exception ex)
+            {
+                LogManager.WriteDebugLog("TimerHistoryService", $"根据索引删除记录时出错: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
         /// 从角色档案加载特定场景的历史数据
         /// </summary>
         /// <param name="profile">角色档案</param>
@@ -104,18 +176,14 @@ namespace DTwoMFTimerHelper.Services
                 LogManager.WriteDebugLog("TimerHistoryService", $"调试 - 当前场景名称: '{scene}'");
                 LogManager.WriteDebugLog("TimerHistoryService", $"调试 - 档案总记录数: {profile.Records.Count}");
 
-                // 从角色档案中过滤出同场景记录
                 // 使用LanguageManager获取纯英文场景名称进行匹配
                 string pureEnglishSceneName = LanguageManager.GetPureEnglishSceneName(scene);
 
                 // 日志记录当前匹配的场景名称
                 LogManager.WriteDebugLog("TimerHistoryService", $"匹配场景名称: '{pureEnglishSceneName}'");
 
-                // 修改过滤条件，只匹配相同场景名称，添加难度匹配
-                var sceneRecords = profile.Records.Where(r =>
-                    r.SceneName.Equals(pureEnglishSceneName, StringComparison.OrdinalIgnoreCase) &&
-                    r.IsCompleted &&
-                    r.Difficulty == difficulty).ToList();
+                // 使用封装的方法获取符合条件的记录
+                var sceneRecords = GetSceneRecords(profile, scene, difficulty);
 
                 LogManager.WriteDebugLog("TimerHistoryService", $"从角色档案中加载了 {sceneRecords.Count} 条记录: {characterName} - {pureEnglishSceneName}, 难度: {difficulty}");
 

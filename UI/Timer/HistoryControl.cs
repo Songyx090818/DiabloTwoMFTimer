@@ -22,6 +22,10 @@ namespace DTwoMFTimerHelper.UI.Timer
         private int _displayStartIndex = 0; // 当前显示的起始索引
         private bool _isLoading = false; // 是否正在加载数据
         private Label? _loadingIndicator; // 加载状态指示器
+        private CharacterProfile? _currentProfile = null;
+        private string? _currentCharacterName = null;
+        private string? _currentScene = null;
+        private GameDifficulty _currentDifficulty = GameDifficulty.Hell;
 
         public int RunCount => _historyService.RunCount;
         public TimeSpan FastestTime => _historyService.FastestTime;
@@ -53,6 +57,48 @@ namespace DTwoMFTimerHelper.UI.Timer
         }
 
         /// <summary>
+        /// 删除选中的运行记录
+        /// </summary>
+        public async Task<bool> DeleteSelectedRecordAsync()
+        {
+            if (lstRunHistory == null || lstRunHistory.SelectedIndex == -1 || _currentProfile == null)
+                return false;
+
+            try
+            {
+                _isLoading = true;
+                // 获取实际的历史记录索引
+                int actualIndex = _displayStartIndex + lstRunHistory.SelectedIndex;
+
+                // 检查索引是否有效
+                if (actualIndex >= 0 && actualIndex < _historyService.RunHistory.Count && _currentScene != null)
+                {
+                    // 直接调用新方法，根据索引删除记录
+                    bool deleteSuccess = _historyService.DeleteHistoryRecordByIndex(
+                        _currentProfile,
+                        _currentScene,
+                        _currentDifficulty,
+                        actualIndex);
+
+                    if (deleteSuccess)
+                    {                         // 保存到YAML文件 - SaveProfile方法只需要profile参数
+                        Services.DataService.SaveProfile(_currentProfile);
+
+                        // 更新显示起始索引，确保它在有效范围内
+                        _displayStartIndex = Math.Max(0, Math.Min(_displayStartIndex, _historyService.RunHistory.Count - 1));
+                        await UpdateUIAsync();
+                        return true;
+                    }
+                }
+                return false;
+            }
+            finally
+            {
+                _isLoading = false;
+            }
+        }
+
+        /// <summary>
         /// 从角色档案加载特定场景的历史数据（异步分页加载）
         /// </summary>
         public async Task<bool> LoadProfileHistoryDataAsync(
@@ -77,6 +123,12 @@ namespace DTwoMFTimerHelper.UI.Timer
 
             try
             {
+                // 保存当前配置信息，用于后续保存操作
+                _currentProfile = profile;
+                _currentCharacterName = characterName;
+                _currentScene = scene;
+                _currentDifficulty = difficulty;
+
                 bool result = _historyService.LoadProfileHistoryData(profile, scene, characterName, difficulty);
                 if (result)
                 {
@@ -112,6 +164,12 @@ namespace DTwoMFTimerHelper.UI.Timer
         /// </summary>
         public bool LoadProfileHistoryData(CharacterProfile? profile, string scene, string characterName, GameDifficulty difficulty)
         {
+            // 保存当前配置信息，用于后续保存操作
+            _currentProfile = profile;
+            _currentCharacterName = characterName;
+            _currentScene = scene;
+            _currentDifficulty = difficulty;
+
             bool result = _historyService.LoadProfileHistoryData(profile, scene, characterName, difficulty);
             if (result)
             {
@@ -138,10 +196,17 @@ namespace DTwoMFTimerHelper.UI.Timer
             if (currentHistory == null)
                 return;
 
-            int currentCount = currentHistory.Count;
-            int displayCount = Math.Min(currentCount - _displayStartIndex, PageSize);
+            // 在异步任务前创建副本，避免并发修改问题
+            var historyCopy = currentHistory.ToList();
+            int currentCount = historyCopy.Count;
 
-            // 异步处理数据格式化，添加边界检查
+            // 重新计算_displayStartIndex，确保它在有效范围内
+            _displayStartIndex = Math.Max(0, Math.Min(_displayStartIndex, currentCount - 1));
+
+            int displayCount = Math.Min(currentCount - _displayStartIndex, PageSize);
+            if (displayCount < 0) displayCount = 0;
+
+            // 异步处理数据格式化，使用副本数据避免索引越界
             var itemsToAdd = await Task.Run(() =>
             {
                 var items = new List<string>(displayCount);
@@ -149,9 +214,9 @@ namespace DTwoMFTimerHelper.UI.Timer
                 for (int i = _displayStartIndex; i < _displayStartIndex + displayCount; i++)
                 {
                     // 添加严格的边界检查，确保索引有效
-                    if (i >= 0 && i < currentCount)
+                    if (i >= 0 && i < historyCopy.Count)
                     {
-                        var time = currentHistory[i];
+                        var time = historyCopy[i];
                         string timeFormatted = FormatTime(time);
                         string runText = GetRunText(i + 1, timeFormatted);
                         items.Add(runText);
@@ -585,17 +650,9 @@ namespace DTwoMFTimerHelper.UI.Timer
             if (disposing)
             {
                 // 安全地移除事件订阅
-                try
-                {
-                    LanguageManager.OnLanguageChanged -= LanguageManager_OnLanguageChanged;
-                }
-                catch { }
+                LanguageManager.OnLanguageChanged -= LanguageManager_OnLanguageChanged;
 
-                try
-                {
-                    _historyService.HistoryDataChanged -= OnHistoryDataChanged;
-                }
-                catch { }
+                _historyService.HistoryDataChanged -= OnHistoryDataChanged;
 
                 // 移除鼠标滚轮事件订阅
                 if (lstRunHistory != null)

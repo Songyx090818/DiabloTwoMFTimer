@@ -59,9 +59,11 @@ namespace DTwoMFTimerHelper.Services
 
         private const int HOTKEY_ID_STARTSTOP = 1;
         private const int HOTKEY_ID_PAUSE = 2;
+        private const int HOTKEY_ID_DELETE_HISTORY = 3;
 
         private Keys _currentStartStopHotkey = Keys.Q | Keys.Alt;
         private Keys _currentPauseHotkey = Keys.Space | Keys.Control;
+        private Keys _currentDeleteHistoryHotkey = Keys.D | Keys.Control;
 
         [DllImport("user32.dll")]
         private static extern bool RegisterHotKey(IntPtr hWnd, int id, int fsModifiers, int vk);
@@ -154,6 +156,15 @@ namespace DTwoMFTimerHelper.Services
                     case HOTKEY_ID_PAUSE:
                         SetActiveTabPage(Models.TabPage.Timer);
                         _timerControl?.TogglePause();
+                        break;
+                    case HOTKEY_ID_DELETE_HISTORY:
+                        if (_timerControl != null && _mainForm != null &&
+                        _mainForm.TabControl != null &&
+                         _mainForm.TabControl.SelectedIndex == (int)Models.TabPage.Timer)
+                        {
+                            // 异步调用删除选中记录的方法
+                            _ = _timerControl.DeleteSelectedRecordAsync();
+                        }
                         break;
                 }
             }
@@ -342,6 +353,7 @@ namespace DTwoMFTimerHelper.Services
 
             RegisterHotKey(_currentStartStopHotkey, HOTKEY_ID_STARTSTOP);
             RegisterHotKey(_currentPauseHotkey, HOTKEY_ID_PAUSE);
+            RegisterHotKey(_currentDeleteHistoryHotkey, HOTKEY_ID_DELETE_HISTORY);
         }
 
         private void UnregisterHotKeys()
@@ -350,6 +362,7 @@ namespace DTwoMFTimerHelper.Services
             {
                 UnregisterHotKey(_mainForm.Handle, HOTKEY_ID_STARTSTOP);
                 UnregisterHotKey(_mainForm.Handle, HOTKEY_ID_PAUSE);
+                UnregisterHotKey(_mainForm.Handle, HOTKEY_ID_DELETE_HISTORY);
             }
         }
 

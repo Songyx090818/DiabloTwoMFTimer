@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
+using System.Threading.Tasks;
 using DTwoMFTimerHelper.Services;
 using DTwoMFTimerHelper.Utils;
 
@@ -227,6 +228,19 @@ namespace DTwoMFTimerHelper.UI.Timer
         public void HandleApplicationClosing()
         {
             _timerService.HandleApplicationClosing();
+        }
+
+        /// <summary>
+        /// 删除选中的历史记录
+        /// </summary>
+        /// <returns>是否删除成功</returns>
+        public async Task<bool> DeleteSelectedRecordAsync()
+        {
+            if (historyControl != null)
+            {
+                return await historyControl.DeleteSelectedRecordAsync();
+            }
+            return false;
         }
         #endregion
 
