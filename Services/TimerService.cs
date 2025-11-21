@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Timers;
+using System.Windows.Forms;
 using DTwoMFTimerHelper.Models;
 using DTwoMFTimerHelper.Utils;
 
@@ -71,7 +72,7 @@ namespace DTwoMFTimerHelper.Services {
         public TimerService(IProfileService profileService, ITimerHistoryService historyService) {
             _profileService = profileService;
             _historyService = historyService;
-            _timer = new Timer(100); // 100毫秒间隔
+            _timer = new System.Timers.Timer(100); // 100毫秒间隔
             _timer.Elapsed += OnTimerElapsed;
             // 监听 ProfileService 的事件
             _profileService.CurrentProfileChangedEvent += OnProfileChanged;
@@ -87,7 +88,7 @@ namespace DTwoMFTimerHelper.Services {
         public event Action<TimeSpan>? RunCompletedEvent;
         #endregion
 
-        private readonly Timer _timer;
+        private readonly System.Timers.Timer _timer;
         private DateTime _startTime = DateTime.MinValue;
         private TimeSpan _pausedDuration = TimeSpan.Zero;
         private DateTime _pauseStartTime = DateTime.MinValue;
@@ -402,6 +403,9 @@ namespace DTwoMFTimerHelper.Services {
                 DataService.AddMFRecord(_profileService.CurrentProfile, newRecord);
                 LogManager.WriteDebugLog("TimerService", $"[添加新记录] {currentCharacter} - {currentScene}, ACT: {actValue}, 难度: {difficulty}, 开始时间: {_startTime}, 结束时间: {DateTime.Now}, DurationSeconds: {newRecord.DurationSeconds}");
             }
+
+            // 保存数据后生成并复制房间名称
+            GenerateAndCopyRoomName();
         }
 
         /// <summary>
@@ -497,6 +501,39 @@ namespace DTwoMFTimerHelper.Services {
             RestoreIncompleteRecord();
         }
         #endregion
+
+        /// <summary>
+        /// 生成房间名称并复制到剪贴板
+        /// 格式: {档案角色命}{场景名}{TimerHistoryService.RunCount+1}
+        /// </summary>
+        private void GenerateAndCopyRoomName() {
+            try {
+                string characterName = _profileService.CurrentProfile?.Name ?? "";
+                string sceneName = _profileService.CurrentScene ?? "";
+                int runCount = _historyService.RunCount + 1;
+
+                if (string.IsNullOrEmpty(characterName) || string.IsNullOrEmpty(sceneName)) {
+                    LogManager.WriteDebugLog("TimerService", "无法生成房间名称：角色名或场景名为空");
+                    return;
+                }
+
+                // 使用场景shortName
+                string sceneShortName = SceneService.GetSceneShortName(sceneName);
+                if (string.IsNullOrEmpty(sceneShortName)) {
+                    sceneShortName = "UnknownScene";
+                }
+
+                // 生成房间名称
+                string roomName = $"{characterName}{sceneShortName}{runCount}";
+
+                // 复制到剪贴板
+                Clipboard.SetText(roomName);
+                LogManager.WriteDebugLog("TimerService", $"已生成并复制房间名称到剪贴板: {roomName}");
+            }
+            catch (Exception ex) {
+                LogManager.WriteDebugLog("TimerService", $"生成房间名称时出错: {ex.Message}");
+            }
+        }
 
         public void Dispose() {
             _profileService.CurrentProfileChangedEvent -= OnProfileChanged;

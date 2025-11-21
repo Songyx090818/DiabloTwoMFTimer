@@ -2,66 +2,86 @@ farmingSpots:
   - ACT: 1
     enUS: "Countess"
     zhCN: "女伯爵"
+    shortName: "Coun"
   - ACT: 1
     enUS: "Pit"
     zhCN: "深坑"
+    shortName: "Pit"
   - ACT: 1
     enUS: "Andariel"
     zhCN: "安达利尔"
+    shortName: "Andi"
   - ACT: 1
     enUS: "The Secret Cow Level"
     zhCN: "神秘的奶牛关"
+    shortName: "Cow"
   - ACT: 2
     enUS: "Stony Tomb"
     zhCN: "石制古墓"
+    shortName: "ST"
   - ACT: 2
     enUS: "Ancient Tunnels"
     zhCN: "古代水道"
+    shortName: "AT"
   - ACT: 2
     enUS: "Summoner & Arcane Sanctuary"
     zhCN: "召唤者与神秘避难所"
+    shortName: "Summon"
   - ACT: 3
     enUS: "Arachnid Lair"
     zhCN: "蜘蛛巢穴"
   - ACT: 3
     enUS: "Lower Kurast Super Chest"
     zhCN: "库拉斯特下层超级箱子"
+    shortName: "LK"
   - ACT: 3
     enUS: "Temples"
     zhCN: "神殿"
+    shortName: "Temple"
   - ACT: 3
     enUS: "Travincal"
     zhCN: "崔凡克"
+    shortName: "Trav"
   - ACT: 3
     enUS: "Mephisto"
     zhCN: "墨菲斯托"
+    shortName: "Meph"
   - ACT: 4
     enUS: "City of the Damned"
     zhCN: "诅咒之城"
+    shortName: "CD"
   - ACT: 4
     enUS: "River of Flame"
     zhCN: "火焰之河"
+    shortName: "ROF"
   - ACT: 4
     enUS: "Chaos Sanctuary & Diablo"
     zhCN: "混沌避难所与迪亚波罗"
+    shortName: "DRun"
   - ACT: 5
     enUS: "Eldritch & Shenk"
     zhCN: "艾德崔奇与沈克"
+    shortName: "ES"
   - ACT: 5    
     enUS: "Thresh Socket"
     zhCN: "碎骨者"
+    shortName: "TS"
   - ACT: 5
     enUS: "Pindleskin"
     zhCN: "暴躁外皮"
+    shortName: "PS"
   - ACT: 5
     enUS: "Drifter Cavern"
     zhCN: "漂流洞穴"
   - ACT: 5
     enUS: "Icy Cellar"
     zhCN: "冰冻地窖"
+    shortName: "IC"
   - ACT: 5
     enUS: "Nihlathak"
     zhCN: "尼拉塞克"
+    shortName: "Nihl"
   - ACT: 5
     enUS: "Worldstone Keep & Baal"
     zhCN: "世界之石要塞与巴尔"
+    shortName: "Baal"

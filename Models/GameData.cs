@@ -101,6 +101,8 @@ namespace DTwoMFTimerHelper.Models
         public string EnUS { get; set; } = string.Empty;
         [YamlDotNet.Serialization.YamlMember(Alias = "zhCN")]
         public string ZhCN { get; set; } = string.Empty;
+        [YamlDotNet.Serialization.YamlMember(Alias = "shortName")]
+        public string ShortName { get; set; } = string.Empty;
 
         // 根据当前语言获取场景名称
         public string GetSceneName(string language)
