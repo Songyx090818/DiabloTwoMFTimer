@@ -10,15 +10,24 @@ namespace DTwoMFTimerHelper.UI.Timer {
         // 服务层引用
         private readonly ITimerService? _timerService;
         private readonly IProfileService? _profileService;
+        private AntdUI.LabelTime labelTime1;
         private readonly ITimerHistoryService? _historyService;
         public TimerControl() {
             InitializeComponent();
+            System.Drawing.Drawing2D.GraphicsPath path = new System.Drawing.Drawing2D.GraphicsPath();
+            // 向路径中添加一个椭圆 (因为长宽相等，所以是正圆)
+            path.AddEllipse(0, 0, btnStatusIndicator.Width, btnStatusIndicator.Height);
+            // 设置控件的 Region 属性，这样只有圆内的部分可见
+            btnStatusIndicator.Region = new System.Drawing.Region(path);
         }
 
         public TimerControl(IProfileService profileService, ITimerService timerService, ITimerHistoryService historyService) : this() {
             _timerService = timerService;
             _profileService = profileService;
             _historyService = historyService;
+
+            characterSceneControl?.Initialize(_profileService);
+            historyControl?.Initialize(_historyService);
 
             // 订阅服务事件
             SubscribeToServiceEvents();
@@ -30,13 +39,13 @@ namespace DTwoMFTimerHelper.UI.Timer {
         }
 
         // 组件引用
-        private StatisticsControl? statisticsControl;
-        private HistoryControl? historyControl;
-        private CharacterSceneControl? characterSceneControl;
+        private StatisticsControl statisticsControl;
+        private HistoryControl historyControl;
+        private CharacterSceneControl characterSceneControl;
 
         // 控件字段定义
-        private Button? btnStatusIndicator;
-        private Label? lblTimeDisplay;
+        private Label btnStatusIndicator;
+        private Label lblTimeDisplay;
 
         // 事件
         public event EventHandler? TimerStateChanged;
@@ -52,6 +61,7 @@ namespace DTwoMFTimerHelper.UI.Timer {
 
         #region Service Event Handlers
         private void SubscribeToServiceEvents() {
+            if (_timerService == null || _profileService == null) return; // ✅ 新增检查
             // 订阅TimerService事件
             _timerService.TimeUpdatedEvent += OnTimeUpdated;
             _timerService.TimerRunningStateChangedEvent += OnTimerRunningStateChanged;
@@ -66,6 +76,7 @@ namespace DTwoMFTimerHelper.UI.Timer {
         }
 
         private void UnsubscribeFromServiceEvents() {
+            if (_timerService == null || _profileService == null) return; // ✅ 新增检查
             // 取消订阅TimerService事件
             _timerService.TimeUpdatedEvent -= OnTimeUpdated;
             _timerService.TimerRunningStateChangedEvent -= OnTimerRunningStateChanged;
@@ -80,24 +91,15 @@ namespace DTwoMFTimerHelper.UI.Timer {
         }
 
         private void OnTimeUpdated(string timeString) {
-            if (_timerService == null) return; // ✅ 新增检查
+            if (_timerService == null) return;
+
+            // 线程安全检查
             if (lblTimeDisplay != null && lblTimeDisplay.InvokeRequired) {
                 lblTimeDisplay.Invoke(new Action<string>(OnTimeUpdated), timeString);
             }
             else if (lblTimeDisplay != null) {
+                // 仅仅更新文本，不再创建新字体对象，性能极佳
                 lblTimeDisplay.Text = timeString;
-
-                // 根据时间长度调整字体大小
-                var elapsed = _timerService.GetElapsedTime();
-                if (elapsed.Hours > 9) {
-                    lblTimeDisplay.Font = new Font("Microsoft YaHei UI", 24F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(134)));
-                }
-                else if (elapsed.Hours > 0) {
-                    lblTimeDisplay.Font = new Font("Microsoft YaHei UI", 28F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(134)));
-                }
-                else {
-                    lblTimeDisplay.Font = new Font("Microsoft YaHei UI", 30F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(134)));
-                }
             }
         }
 
@@ -144,14 +146,13 @@ namespace DTwoMFTimerHelper.UI.Timer {
                 historyControl.LoadProfileHistoryData(profile, scene, characterName, difficulty);
             }
         }
-
         private void OnTimerReset() {
             if (lblTimeDisplay != null && lblTimeDisplay.InvokeRequired) {
                 lblTimeDisplay.Invoke(new Action(OnTimerReset));
             }
             else if (lblTimeDisplay != null) {
-                lblTimeDisplay.Font = new Font("Microsoft YaHei UI", 30F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(134)));
-                lblTimeDisplay.Text = "00:00:00:0";
+                // 只要重置文字即可，不用管字体了
+                lblTimeDisplay.Text = "00:00:00.0";
             }
 
             UpdateStatistics();
@@ -269,73 +270,86 @@ namespace DTwoMFTimerHelper.UI.Timer {
 
         #region UI Initialization
         private void InitializeComponent() {
-            // 状态指示按钮
-            btnStatusIndicator = new Button {
-                Enabled = false,
-                FlatStyle = FlatStyle.Flat,
-                Size = new Size(16, 16),
-                Location = new Point(15, 45),
-                Name = "btnStatusIndicator",
-                TabIndex = 0,
-                TabStop = false,
-                BackColor = Color.Red,
-                FlatAppearance = { BorderSize = 0 }
-            };
-
-            // 主要计时显示标签
-            lblTimeDisplay = new Label {
-                AutoSize = false,
-                Font = new Font("Microsoft YaHei UI", 30F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(134))),
-                Location = new Point(15, 30),
-                Name = "lblTimeDisplay",
-                Size = new Size(290, 64),
-                TextAlign = ContentAlignment.MiddleCenter,
-                TabIndex = 1,
-                Text = "00:00:00:0"
-            };
-
-            // 初始化统计信息控件
-            statisticsControl = new StatisticsControl {
-                Location = new Point(5, 100),
-                Name = "statisticsControl",
-                Size = new Size(290, 75),
-                TabIndex = 5,
-                Parent = this
-            };
-
-            // 初始化历史记录控件
-            historyControl = new HistoryControl(_historyService) {
-                Location = new Point(15, 170),
-                Name = "historyControl",
-                Size = new Size(290, 90),
-                TabIndex = 3,
-                Parent = this
-            };
-
-            // 初始化角色场景信息组件
-            characterSceneControl = new CharacterSceneControl(_profileService) {
-                Location = new Point(15, 270),
-                Name = "characterSceneControl",
-                Size = new Size(290, 40),
-                TabIndex = 4
-            };
-
+            btnStatusIndicator = new Label();
+            lblTimeDisplay = new Label();
+            statisticsControl = new StatisticsControl();
+            historyControl = new HistoryControl();
+            characterSceneControl = new CharacterSceneControl();
+            labelTime1 = new AntdUI.LabelTime();
             SuspendLayout();
-
-            // TimerControl - 主控件设置
-            AutoScaleDimensions = new SizeF(9F, 20F);
+            // 
+            // btnStatusIndicator
+            // 
+            btnStatusIndicator.Location = new Point(20, 12);
+            btnStatusIndicator.Margin = new Padding(6);
+            btnStatusIndicator.Name = "btnStatusIndicator";
+            btnStatusIndicator.Size = new Size(24, 24);
+            btnStatusIndicator.TabIndex = 0;
+            // 
+            // lblTimeDisplay
+            // 
+            lblTimeDisplay.AutoSize = true;
+            lblTimeDisplay.Font = new Font("Microsoft YaHei UI", 28F, FontStyle.Regular, GraphicsUnit.Point, 134);
+            lblTimeDisplay.Location = new Point(30, 46);
+            lblTimeDisplay.Margin = new Padding(6, 0, 6, 0);
+            lblTimeDisplay.Name = "lblTimeDisplay";
+            lblTimeDisplay.Size = new Size(303, 86);
+            lblTimeDisplay.TabIndex = 1;
+            lblTimeDisplay.Text = "00:00:00";
+            lblTimeDisplay.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // statisticsControl
+            // 
+            statisticsControl.AverageTime = TimeSpan.Parse("00:00:00");
+            statisticsControl.FastestTime = TimeSpan.Parse("00:00:00");
+            statisticsControl.Location = new Point(9, 140);
+            statisticsControl.Margin = new Padding(9, 8, 9, 8);
+            statisticsControl.Name = "statisticsControl";
+            statisticsControl.RunCount = 0;
+            statisticsControl.Size = new Size(605, 116);
+            statisticsControl.TabIndex = 2;
+            // 
+            // historyControl
+            // 
+            historyControl.Location = new Point(9, 272);
+            historyControl.Margin = new Padding(9, 8, 9, 8);
+            historyControl.Name = "historyControl";
+            historyControl.Size = new Size(421, 117);
+            historyControl.TabIndex = 3;
+            // 
+            // characterSceneControl
+            // 
+            characterSceneControl.Location = new Point(9, 392);
+            characterSceneControl.Margin = new Padding(6);
+            characterSceneControl.Name = "characterSceneControl";
+            characterSceneControl.Size = new Size(605, 80);
+            characterSceneControl.TabIndex = 4;
+            // 
+            // labelTime1
+            // 
+            labelTime1.Location = new Point(53, 3);
+            labelTime1.Name = "labelTime1";
+            labelTime1.ShowTime = false;
+            labelTime1.Size = new Size(135, 40);
+            labelTime1.TabIndex = 5;
+            labelTime1.Text = "labelTime1";
+            // 
+            // TimerControl
+            // 
+            AutoScaleDimensions = new SizeF(13F, 28F);
             AutoScaleMode = AutoScaleMode.Font;
-            Controls.Add(btnStatusIndicator);
-            Controls.Add(lblTimeDisplay);
-            Controls.Add(statisticsControl);
-            Controls.Add(historyControl);
+            Controls.Add(labelTime1);
             Controls.Add(characterSceneControl);
+            Controls.Add(historyControl);
+            Controls.Add(statisticsControl);
+            Controls.Add(lblTimeDisplay);
+            Controls.Add(btnStatusIndicator);
+            Margin = new Padding(6);
             Name = "TimerControl";
-            Size = new Size(320, 320);
+            Size = new Size(667, 627);
             ResumeLayout(false);
             PerformLayout();
         }
-
         protected override void Dispose(bool disposing) {
             if (disposing) {
                 UnsubscribeFromServiceEvents();

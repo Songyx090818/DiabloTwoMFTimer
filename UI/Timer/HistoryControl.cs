@@ -13,7 +13,8 @@ namespace DTwoMFTimerHelper.UI.Timer {
         private ListBox? lstRunHistory;
 
         // 历史记录服务
-        private readonly ITimerHistoryService? _historyService;
+        private ITimerHistoryService? _historyService;
+        private bool _isInitialized = false; // 用于防止重复订阅
 
         // 分页相关变量
         private const int PageSize = 20; // 每页显示20条记录
@@ -37,8 +38,12 @@ namespace DTwoMFTimerHelper.UI.Timer {
         public HistoryControl() {
             InitializeComponent();
         }
-        public HistoryControl(ITimerHistoryService historyService) : this() {
+
+        public void Initialize(ITimerHistoryService historyService) {
+            if (_isInitialized || historyService == null) return;
+
             _historyService = historyService;
+            _isInitialized = true;
 
             LanguageManager.OnLanguageChanged += LanguageManager_OnLanguageChanged;
             _historyService.HistoryDataChanged += OnHistoryDataChanged;

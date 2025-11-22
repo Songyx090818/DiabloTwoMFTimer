@@ -8,9 +8,9 @@ namespace DTwoMFTimerHelper.UI.Timer
 {
     public partial class StatisticsControl : UserControl
     {
-        private Label? lblRunCount;
-        private Label? lblFastestTime;
-        private Label? lblAverageTime;
+        private Label lblRunCount;
+        private Label lblFastestTime;
+        private Label lblAverageTime;
 
         // 统计数据属性
         public int RunCount
@@ -33,53 +33,57 @@ namespace DTwoMFTimerHelper.UI.Timer
             Utils.LanguageManager.OnLanguageChanged += LanguageManager_OnLanguageChanged;
         }
 
-        private void InitializeComponent()
-        {
-            // 运行次数显示
-            lblRunCount = new Label
-            {
-                AutoSize = false,
-                Font = new Font("Microsoft YaHei UI", 12F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(134))),
-                Location = new Point(0, 0),
-                Name = "lblRunCount",
-                Size = new Size(290, 21),
-                TextAlign = ContentAlignment.MiddleLeft,
-                TabIndex = 0,
-                Text = "--- Run count 0 (0) ---",
-                Parent = this
-            };
-
-            // 最快时间显示
-            lblFastestTime = new Label
-            {
-                AutoSize = true,
-                Font = new Font("Microsoft YaHei UI", 10F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(134))),
-                Location = new Point(0, 25),
-                Name = "lblFastestTime",
-                Size = new Size(120, 19),
-                TabIndex = 1,
-                Text = "Fastest time: --:--:--.-",
-                Parent = this
-            };
-
-            // 平均时间显示
-            lblAverageTime = new Label
-            {
-                AutoSize = true,
-                Font = new Font("Microsoft YaHei UI", 10F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(134))),
-                Location = new Point(0, 45),
-                Name = "lblAverageTime",
-                Size = new Size(125, 19),
-                TabIndex = 2,
-                Text = "Average time: --:--:--.-",
-                Parent = this
-            };
-
-            // 控件设置
-            AutoScaleDimensions = new SizeF(9F, 20F);
+        private void InitializeComponent() {
+            lblRunCount = new Label();
+            lblFastestTime = new Label();
+            lblAverageTime = new Label();
+            SuspendLayout();
+            // 
+            // lblRunCount
+            // 
+            lblRunCount.Font = new Font("Microsoft YaHei UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 134);
+            lblRunCount.Location = new Point(0, 0);
+            lblRunCount.Margin = new Padding(4, 0, 4, 0);
+            lblRunCount.Name = "lblRunCount";
+            lblRunCount.Size = new Size(419, 35);
+            lblRunCount.TabIndex = 0;
+            lblRunCount.Text = "--- Run count 0 ---";
+            lblRunCount.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // lblFastestTime
+            // 
+            lblFastestTime.AutoSize = true;
+            lblFastestTime.Font = new Font("Microsoft YaHei UI", 10F, FontStyle.Regular, GraphicsUnit.Point, 134);
+            lblFastestTime.Location = new Point(0, 42);
+            lblFastestTime.Margin = new Padding(4, 0, 4, 0);
+            lblFastestTime.Name = "lblFastestTime";
+            lblFastestTime.Size = new Size(253, 31);
+            lblFastestTime.TabIndex = 1;
+            lblFastestTime.Text = "Fastest time: --:--:--.-";
+            // 
+            // lblAverageTime
+            // 
+            lblAverageTime.AutoSize = true;
+            lblAverageTime.Font = new Font("Microsoft YaHei UI", 10F, FontStyle.Regular, GraphicsUnit.Point, 134);
+            lblAverageTime.Location = new Point(0, 77);
+            lblAverageTime.Margin = new Padding(4, 0, 4, 0);
+            lblAverageTime.Name = "lblAverageTime";
+            lblAverageTime.Size = new Size(268, 31);
+            lblAverageTime.TabIndex = 2;
+            lblAverageTime.Text = "Average time: --:--:--.-";
+            // 
+            // StatisticsControl
+            // 
+            AutoScaleDimensions = new SizeF(13F, 28F);
             AutoScaleMode = AutoScaleMode.Font;
-            Size = new Size(290, 75);
+            Controls.Add(lblAverageTime);
+            Controls.Add(lblFastestTime);
+            Controls.Add(lblRunCount);
+            Margin = new Padding(4, 4, 4, 4);
             Name = "StatisticsControl";
+            Size = new Size(419, 119);
+            ResumeLayout(false);
+            PerformLayout();
         }
 
         private void LanguageManager_OnLanguageChanged(object? sender, EventArgs e)
@@ -118,11 +122,11 @@ namespace DTwoMFTimerHelper.UI.Timer
             if (lblRunCount != null)
             {
                 // 使用多语言显示运行次数
-                string runCountText = Utils.LanguageManager.GetString("RunCount", RunCount, RunCount);
+                string runCountText = Utils.LanguageManager.GetString("RunCount", RunCount);
                 if (string.IsNullOrEmpty(runCountText) || runCountText == "RunCount")
                 {
                     // 如果未找到翻译，使用默认格式
-                    runCountText = $"--- 运行次数 {RunCount} ({RunCount}) ---";
+                    runCountText = $"--- 运行次数 {RunCount} ---";
                 }
                 else
                 {

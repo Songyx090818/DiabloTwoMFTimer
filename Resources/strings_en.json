@@ -76,7 +76,7 @@
   "Warning": "Warning",
   "NoCharactersAvailable": "No character profiles available. Please create a character first.",
   "Information": "Information",
-  "RunCount": "Run count {{0}} ({{1}})",
+  "RunCount": "Run count {{0}}",
   "FastestTime": "Fastest time: {{0}}",
   "FastestTimePlaceholder": "Fastest time: --:--:--.-",
   "AverageTime": "Average time: {{0}}",
