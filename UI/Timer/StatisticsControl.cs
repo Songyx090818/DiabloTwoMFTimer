@@ -8,9 +8,9 @@ namespace DTwoMFTimerHelper.UI.Timer
 {
     public partial class StatisticsControl : UserControl
     {
-        private Label lblRunCount;
-        private Label lblFastestTime;
-        private Label lblAverageTime;
+        private Label lblRunCount = null!;
+        private Label lblFastestTime = null!;
+        private Label lblAverageTime = null!;
 
         // 统计数据属性
         public int RunCount

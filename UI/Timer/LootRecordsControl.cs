@@ -8,10 +8,10 @@ using DTwoMFTimerHelper.UI;
 
 namespace DTwoMFTimerHelper.UI.Timer {
     public partial class LootRecordsControl : UserControl {
-        private System.ComponentModel.IContainer components;
-        private Panel lootPanel;
-        private ListView lootListView;
-        private List<LootRecord> _lootRecords = new List<LootRecord>();
+        private System.ComponentModel.IContainer components = null!;
+        private Panel lootPanel = null!;
+        private ListView lootListView = null!;
+        private List<LootRecord> _lootRecords = new();
 
         // Loot记录属性
         public List<LootRecord> LootRecords {

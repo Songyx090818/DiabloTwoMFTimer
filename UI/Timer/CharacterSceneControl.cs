@@ -31,8 +31,8 @@ namespace DTwoMFTimerHelper.UI.Timer {
             UpdateUI();
         }
 
-        private Label lblCharacterDisplay;
-        private Label lblSceneDisplay;
+        private Label lblCharacterDisplay = null!;
+        private Label lblSceneDisplay = null!;
 
         protected override void Dispose(bool disposing) {
             if (_profileService == null)

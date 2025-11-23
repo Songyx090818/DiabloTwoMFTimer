@@ -18,15 +18,15 @@ namespace DTwoMFTimerHelper.UI.Settings {
         public event EventHandler<HotkeyChangedEventArgs>? PauseHotkeyChanged;
 
         // 控件引用
-        private TabControl tabControl;
-        private TabPage tabPageGeneral;
-        private TabPage tabPageHotkeys;
-        private Button btnConfirmSettings;
-        private Panel panelBottom; // 用于放置按钮的底部面板
+        private TabControl tabControl = null!;
+        private TabPage tabPageGeneral = null!;
+        private TabPage tabPageHotkeys = null!;
+        private Button btnConfirmSettings = null!;
+        private Panel panelBottom = null!; // 用于放置按钮的底部面板
 
         // 子组件引用
-        private GeneralSettingsControl generalSettings;
-        private HotkeySettingsControl hotkeySettings;
+        private GeneralSettingsControl generalSettings = null!;
+        private HotkeySettingsControl hotkeySettings = null!;
 
         public SettingsControl() {
             InitializeComponent();

@@ -17,19 +17,19 @@ namespace DTwoMFTimerHelper.UI.Timer {
         private readonly PomodoroTimerService? _pomodoroTimerService;
 
         // 组件引用 (这里去掉初始化，统一在 InitializeComponent 中处理)
-        private StatisticsControl statisticsControl;
-        private HistoryControl historyControl;
-        private CharacterSceneControl characterSceneControl;
-        private LootRecordsControl lootRecordsControl;
+        private StatisticsControl? statisticsControl;
+        private HistoryControl? historyControl;
+        private CharacterSceneControl? characterSceneControl;
+        private LootRecordsControl? lootRecordsControl;
 
         // private PomodoroDisplayControl pomodoroDisplayControl;
-        private AntdUI.LabelTime labelTime1; // 如果这是第三方控件，请确保引用正确
+        private AntdUI.LabelTime labelTime1 = null!; // 如果这是第三方控件，请确保引用正确
 
         // 控件字段定义
-        private Label btnStatusIndicator;
-        private Button toggleLootButton;
-        private PomodoroTimeDisplayLabel pomodoroTime;
-        private Label lblTimeDisplay;
+        private Label btnStatusIndicator = null!;
+        private Button toggleLootButton = null!;
+        private PomodoroTimeDisplayLabel pomodoroTime = null!;
+        private Label lblTimeDisplay = null!;
 
         public TimerControl() {
             InitializeComponent();
@@ -37,10 +37,9 @@ namespace DTwoMFTimerHelper.UI.Timer {
             // 设置圆形指示器
             // 建议放在构造函数末尾，确保控件尺寸已初始化
             if (btnStatusIndicator != null) {
-                using (System.Drawing.Drawing2D.GraphicsPath path = new System.Drawing.Drawing2D.GraphicsPath()) {
-                    path.AddEllipse(0, 0, btnStatusIndicator.Width, btnStatusIndicator.Height);
-                    btnStatusIndicator.Region = new System.Drawing.Region(path);
-                }
+                using System.Drawing.Drawing2D.GraphicsPath path = new();
+                path.AddEllipse(0, 0, btnStatusIndicator.Width, btnStatusIndicator.Height);
+                btnStatusIndicator.Region = new System.Drawing.Region(path);
             }
         }
 
@@ -415,7 +414,7 @@ namespace DTwoMFTimerHelper.UI.Timer {
             toggleLootButton.TabIndex = 7;
             toggleLootButton.Text = "ShowLoot";
             toggleLootButton.UseVisualStyleBackColor = true;
-            toggleLootButton.Click += toggleLootButton_Click;
+            toggleLootButton.Click += ToggleLootButton_Click;
             // 
             // pomodoroTime
             // 
@@ -457,7 +456,7 @@ namespace DTwoMFTimerHelper.UI.Timer {
         }
         #endregion
 
-        private void toggleLootButton_Click(object sender, EventArgs e) {
+        private void ToggleLootButton_Click(object? sender, EventArgs e) {
             if (lootRecordsControl != null) {
                 // 确保状态正确切换
                 lootRecordsControl.Visible = !lootRecordsControl.Visible;

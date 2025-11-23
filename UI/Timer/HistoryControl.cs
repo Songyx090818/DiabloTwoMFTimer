@@ -10,8 +10,8 @@ using DTwoMFTimerHelper.Services;
 
 namespace DTwoMFTimerHelper.UI.Timer {
     public partial class HistoryControl : UserControl {
-        private System.Windows.Forms.ListBox lstRunHistory;
-        private System.Windows.Forms.Label _loadingIndicator;
+        private System.Windows.Forms.ListBox lstRunHistory = null!;
+        private System.Windows.Forms.Label _loadingIndicator = null!;
 
         private ITimerHistoryService? _historyService;
         private bool _isInitialized = false;
@@ -20,10 +20,8 @@ namespace DTwoMFTimerHelper.UI.Timer {
         private int _displayStartIndex = 0;
         private bool _isLoading = false;
         private bool _isProcessingHistoryChange = false;
-        private bool _isFirstLoad = true; // 【新增】标记首次加载
 
         private CharacterProfile? _currentProfile = null;
-        private string? _currentCharacterName = null;
         private string? _currentScene = null;
         private GameDifficulty _currentDifficulty = GameDifficulty.Hell;
 
@@ -152,7 +150,6 @@ namespace DTwoMFTimerHelper.UI.Timer {
 
             try {
                 _currentProfile = profile;
-                _currentCharacterName = characterName;
                 _currentScene = scene;
                 _currentDifficulty = difficulty;
 
@@ -170,7 +167,7 @@ namespace DTwoMFTimerHelper.UI.Timer {
             finally {
                 _isLoading = false;
                 ShowLoadingIndicator(false);
-                _isFirstLoad = false;
+                // 初始化完成
             }
         }
 

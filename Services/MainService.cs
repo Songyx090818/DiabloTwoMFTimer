@@ -38,14 +38,12 @@ namespace DTwoMFTimerHelper.Services {
         private TimerControl? _timerControl;
         private SettingsControl? _settingsControl;
         private AppSettings? _appSettings;
-        private bool _disposed = false;
 
         // 热键相关
         private const int WM_HOTKEY = 0x0312;
         private const int MOD_ALT = 0x0001;
         private const int MOD_CONTROL = 0x0002;
         private const int MOD_SHIFT = 0x0004;
-        private const int MOD_WIN = 0x0008;
 
         private const int HOTKEY_ID_STARTSTOP = 1;
         private const int HOTKEY_ID_PAUSE = 2;
@@ -149,9 +147,8 @@ namespace DTwoMFTimerHelper.Services {
                         SetActiveTabPage(Models.TabPage.Timer);
                         // 显示掉落记录弹窗
                         if (_mainForm != null) {
-                            using (var lootForm = new UI.Timer.RecordLootForm(_profileService, _timerHistoryService)) {
-                                lootForm.ShowDialog(_mainForm);
-                            }
+                            using var lootForm = new UI.Timer.RecordLootForm(_profileService, _timerHistoryService);
+                            lootForm.ShowDialog(_mainForm);
                         }
                         break;
                 }
@@ -284,6 +281,7 @@ namespace DTwoMFTimerHelper.Services {
             RegisterHotKey(_currentPauseHotkey, HOTKEY_ID_PAUSE);
             RegisterHotKey(_currentDeleteHistoryHotkey, HOTKEY_ID_DELETE_HISTORY);
             RegisterHotKey(_currentRecordLootHotkey, HOTKEY_ID_RECORD_LOOT);
+            // 不再注册删除历史和记录战利品的热键，因为它们未被使用
         }
 
         private void UnregisterHotKeys() {

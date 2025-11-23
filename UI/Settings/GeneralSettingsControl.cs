@@ -6,14 +6,18 @@ using DTwoMFTimerHelper.Services; // 假设存在
 
 namespace DTwoMFTimerHelper.UI.Settings {
     public class GeneralSettingsControl : UserControl {
-        private GroupBox? groupBoxPosition;
-        private GroupBox? groupBoxLanguage;
-        private RadioButton? radioTopLeft, radioTopCenter, radioTopRight;
-        private RadioButton? radioBottomLeft, radioBottomCenter, radioBottomRight;
-        private RadioButton? chineseRadioButton, englishRadioButton;
-        private CheckBox? alwaysOnTopCheckBox;
-        private Label? alwaysOnTopLabel;
-
+        private GroupBox groupBoxPosition = null!;
+        private GroupBox groupBoxLanguage = null!;
+        private RadioButton radioTopLeft = null!;
+        private RadioButton radioTopCenter = null!;
+        private RadioButton radioTopRight = null!;
+        private RadioButton radioBottomLeft = null!;
+        private RadioButton radioBottomCenter = null!;
+        private RadioButton radioBottomRight = null!;
+        private RadioButton chineseRadioButton = null!;
+        private RadioButton englishRadioButton = null!;
+        private CheckBox alwaysOnTopCheckBox = null!;
+        private Label alwaysOnTopLabel = null!;
         public GeneralSettingsControl() {
             InitializeComponent();
         }
@@ -195,7 +199,6 @@ namespace DTwoMFTimerHelper.UI.Settings {
                 return chineseRadioButton.Checked ? SettingsControl.LanguageOption.Chinese : SettingsControl.LanguageOption.English;
             }
         }
-
         public bool IsAlwaysOnTop => alwaysOnTopCheckBox?.Checked ?? false;
     }
 }

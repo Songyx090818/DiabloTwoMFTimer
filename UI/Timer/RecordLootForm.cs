@@ -23,7 +23,7 @@ namespace DTwoMFTimerHelper.UI.Timer {
             txtLootName.Focus();
         }
 
-        private void btnSave_Click(object sender, EventArgs e) {
+        private void btnSave_Click(object? sender, EventArgs e) {
             if (string.IsNullOrWhiteSpace(txtLootName.Text)) {
                 MessageBox.Show(LanguageManager.GetString("EnterLootNameMessage"),
                 LanguageManager.GetString("NotificationTitle"),
@@ -32,12 +32,12 @@ namespace DTwoMFTimerHelper.UI.Timer {
             }
 
             // 创建新的掉落记录
-            int runCount = _timerHistoryService.RunCount;
+            int runCount = _timerHistoryService?.RunCount ?? 0;
             if (chkPreviousRun.Checked) {
                 runCount = Math.Max(0, runCount - 1);
             }
 
-            string sceneName = _profileService.CurrentScene ?? "";
+            string sceneName = _profileService?.CurrentScene ?? "";
 
             var lootRecord = new LootRecord {
                 Name = txtLootName.Text.Trim(),
@@ -47,7 +47,7 @@ namespace DTwoMFTimerHelper.UI.Timer {
             };
 
             // 将掉落记录添加到当前角色档案中
-            var currentProfile = _profileService.CurrentProfile;
+            var currentProfile = _profileService?.CurrentProfile;
             if (currentProfile != null) {
                 currentProfile.LootRecords.Add(lootRecord);
                 Services.DataService.SaveProfile(currentProfile); // 保存修改
@@ -57,7 +57,7 @@ namespace DTwoMFTimerHelper.UI.Timer {
             Close();
         }
 
-        private void btnCancel_Click(object sender, EventArgs e) {
+        private void btnCancel_Click(object? sender, EventArgs e) {
             DialogResult = DialogResult.Cancel;
             Close();
         }
@@ -141,10 +141,10 @@ namespace DTwoMFTimerHelper.UI.Timer {
 
         }
 
-        private System.Windows.Forms.TextBox? txtLootName;
-        private System.Windows.Forms.Label? label1;
-        private System.Windows.Forms.CheckBox? chkPreviousRun;
-        private System.Windows.Forms.Button? btnSave;
-        private System.Windows.Forms.Button? btnCancel;
+        private System.Windows.Forms.TextBox txtLootName = null!;
+        private System.Windows.Forms.Label label1 = null!;
+        private System.Windows.Forms.CheckBox chkPreviousRun = null!;
+        private System.Windows.Forms.Button btnSave = null!;
+        private System.Windows.Forms.Button btnCancel = null!;
     }
 }

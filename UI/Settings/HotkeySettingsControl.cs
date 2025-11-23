@@ -19,7 +19,7 @@ namespace DTwoMFTimerHelper.UI.Settings {
         private bool isSettingHotkey = false;
         private string currentHotkeySetting = string.Empty;
 
-        public event EventHandler<SettingsControl.HotkeyChangedEventArgs>? HotkeyChanged; // 可选：如果需要实时预览
+        // HotkeyChanged事件已移除，因为未被使用
 
         public HotkeySettingsControl() {
             InitializeComponent();
