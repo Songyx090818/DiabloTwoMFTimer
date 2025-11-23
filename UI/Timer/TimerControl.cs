@@ -4,6 +4,8 @@ using System.Windows.Forms;
 using System.Threading.Tasks;
 using DTwoMFTimerHelper.Services;
 using DTwoMFTimerHelper.UI;
+using DTwoMFTimerHelper.UI.Settings;
+using DTwoMFTimerHelper.UI.Pomodoro;
 using DTwoMFTimerHelper.Utils;
 
 namespace DTwoMFTimerHelper.UI.Timer {
@@ -12,17 +14,21 @@ namespace DTwoMFTimerHelper.UI.Timer {
         private readonly ITimerService? _timerService;
         private readonly IProfileService? _profileService;
         private readonly ITimerHistoryService? _historyService;
+        private readonly PomodoroTimerService? _pomodoroTimerService;
 
         // 组件引用 (这里去掉初始化，统一在 InitializeComponent 中处理)
         private StatisticsControl statisticsControl;
         private HistoryControl historyControl;
         private CharacterSceneControl characterSceneControl;
         private LootRecordsControl lootRecordsControl;
+
+        // private PomodoroDisplayControl pomodoroDisplayControl;
         private AntdUI.LabelTime labelTime1; // 如果这是第三方控件，请确保引用正确
 
         // 控件字段定义
         private Label btnStatusIndicator;
         private Button toggleLootButton;
+        private PomodoroTimeDisplayLabel pomodoroTime;
         private Label lblTimeDisplay;
 
         public TimerControl() {
@@ -54,6 +60,17 @@ namespace DTwoMFTimerHelper.UI.Timer {
             LanguageManager.OnLanguageChanged += LanguageManager_OnLanguageChanged;
         }
 
+        /// <summary>
+        /// 重载构造函数，用于注入番茄计时器服务
+        /// </summary>
+        /// <param name="profileService"></param>
+        /// <param name="timerService"></param>
+        /// <param name="historyService"></param>
+        /// <param name="pomodoroTimerService"></param>
+        public TimerControl(IProfileService profileService, ITimerService timerService, ITimerHistoryService historyService, PomodoroTimerService pomodoroTimerService) : this(profileService, timerService, historyService) {
+            _pomodoroTimerService = pomodoroTimerService;
+        }
+
         // 2. 【关键修复】重写 OnLoad 方法
         protected override void OnLoad(EventArgs e) {
             base.OnLoad(e);
@@ -67,6 +84,13 @@ namespace DTwoMFTimerHelper.UI.Timer {
                 InitializeLootRecordsVisibility();
                 // 更新界面状态
                 UpdateUI();
+            }
+
+            // 确保番茄计时器显示正确的值（即使设置是在绑定后加载的）
+            if (_pomodoroTimerService != null && pomodoroTime != null) {
+                // 强制更新显示，确保显示设置的值而不是默认值
+                // 这里我们通过重新绑定服务来触发更新
+                pomodoroTime.BindService(_pomodoroTimerService);
             }
         }
 
@@ -87,6 +111,11 @@ namespace DTwoMFTimerHelper.UI.Timer {
 
         // 事件
         public event EventHandler? TimerStateChanged;
+
+        /// <summary>
+        /// 获取番茄时间显示控件实例
+        /// </summary>
+        // public PomodoroDisplayControl? PomodoroDisplay => pomodoroDisplayControl;
 
         public bool IsTimerRunning => _timerService?.IsRunning ?? false;
 
@@ -311,11 +340,12 @@ namespace DTwoMFTimerHelper.UI.Timer {
             lootRecordsControl = new LootRecordsControl();
             labelTime1 = new AntdUI.LabelTime();
             toggleLootButton = new Button();
+            pomodoroTime = new PomodoroTimeDisplayLabel();
             SuspendLayout();
             // 
             // btnStatusIndicator
             // 
-            btnStatusIndicator.Location = new Point(20, 19);
+            btnStatusIndicator.Location = new Point(15, 19);
             btnStatusIndicator.Margin = new Padding(6);
             btnStatusIndicator.Name = "btnStatusIndicator";
             btnStatusIndicator.Size = new Size(24, 24);
@@ -341,7 +371,7 @@ namespace DTwoMFTimerHelper.UI.Timer {
             statisticsControl.Margin = new Padding(9, 8, 9, 8);
             statisticsControl.Name = "statisticsControl";
             statisticsControl.RunCount = 0;
-            statisticsControl.Size = new Size(605, 116);
+            statisticsControl.Size = new Size(421, 116);
             statisticsControl.TabIndex = 2;
             // 
             // historyControl
@@ -362,16 +392,15 @@ namespace DTwoMFTimerHelper.UI.Timer {
             // 
             // lootRecordsControl
             // 
-            var height = UISizeConstants.LootRecordsControlHeight;
             lootRecordsControl.Location = new Point(9, 495);
             lootRecordsControl.Margin = new Padding(9, 8, 9, 8);
             lootRecordsControl.Name = "lootRecordsControl";
-            lootRecordsControl.Size = new Size(421, height);
+            lootRecordsControl.Size = new Size(421, 100);
             lootRecordsControl.TabIndex = 6;
             // 
             // labelTime1
             // 
-            labelTime1.Location = new Point(65, 9);
+            labelTime1.Location = new Point(60, 9);
             labelTime1.Name = "labelTime1";
             labelTime1.ShowTime = false;
             labelTime1.Size = new Size(135, 40);
@@ -384,14 +413,26 @@ namespace DTwoMFTimerHelper.UI.Timer {
             toggleLootButton.Name = "toggleLootButton";
             toggleLootButton.Size = new Size(131, 40);
             toggleLootButton.TabIndex = 7;
-            toggleLootButton.Text = Utils.LanguageManager.GetString("ShowLoot", "显示掉落");
+            toggleLootButton.Text = "ShowLoot";
             toggleLootButton.UseVisualStyleBackColor = true;
             toggleLootButton.Click += toggleLootButton_Click;
+            // 
+            // pomodoroTime
+            // 
+            pomodoroTime.AutoSize = true;
+            pomodoroTime.Font = new Font("微软雅黑", 16F, FontStyle.Bold);
+            pomodoroTime.Location = new Point(299, 9);
+            pomodoroTime.Name = "pomodoroTime";
+            pomodoroTime.ShowMilliseconds = false;
+            pomodoroTime.Size = new Size(125, 50);
+            pomodoroTime.TabIndex = 8;
+            pomodoroTime.Text = "00:00";
             // 
             // TimerControl
             // 
             AutoScaleDimensions = new SizeF(13F, 28F);
             AutoScaleMode = AutoScaleMode.Font;
+            Controls.Add(pomodoroTime);
             Controls.Add(toggleLootButton);
             Controls.Add(lootRecordsControl);
             Controls.Add(labelTime1);
@@ -422,6 +463,9 @@ namespace DTwoMFTimerHelper.UI.Timer {
                 lootRecordsControl.Visible = !lootRecordsControl.Visible;
                 bool isVisible = lootRecordsControl.Visible;
 
+                // 加载应用设置
+                var settings = Services.SettingsManager.LoadSettings();
+
                 // 更新按钮文本
                 toggleLootButton.Text = isVisible ? Utils.LanguageManager.GetString("HideLoot", "隐藏掉落") : Utils.LanguageManager.GetString("ShowLoot", "显示掉落");
 
@@ -434,10 +478,21 @@ namespace DTwoMFTimerHelper.UI.Timer {
                 if (this.ParentForm != null) {
                     int newFormHeight = this.ParentForm.ClientSize.Height + heightChange;
                     this.ParentForm.ClientSize = new Size(this.ParentForm.ClientSize.Width, newFormHeight);
+
+                    // 如果窗口位置设置为下方，重新应用窗口位置以保持在底部
+                    var windowPosition = SettingsControl.WindowPosition.BottomLeft; // 默认位置
+                    if (!string.IsNullOrEmpty(settings.WindowPosition)) {
+                        windowPosition = Services.SettingsManager.StringToWindowPosition(settings.WindowPosition);
+                    }
+
+                    if (windowPosition == SettingsControl.WindowPosition.BottomLeft ||
+                        windowPosition == SettingsControl.WindowPosition.BottomCenter ||
+                        windowPosition == SettingsControl.WindowPosition.BottomRight) {
+                        SettingsControl.MoveWindowToPosition(this.ParentForm, windowPosition);
+                    }
                 }
 
                 // 更新应用设置的ShowLoot设置
-                var settings = Services.SettingsManager.LoadSettings();
                 settings.ShowLoot = isVisible;
                 Services.SettingsManager.SaveSettings(settings);
             }

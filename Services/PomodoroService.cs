@@ -19,7 +19,7 @@ namespace DTwoMFTimerHelper.Services {
         private TimerState _previousState = TimerState.Work; // 记录之前的状态
         private readonly System.Windows.Forms.Timer _timer;
         private readonly ITimerService? _timerService; // 引用计时器服务
-        
+
         // 标记是否在休息前暂停了计时器
         private bool _timerWasPausedBeforeBreak = false;
 
@@ -28,7 +28,7 @@ namespace DTwoMFTimerHelper.Services {
 
         public PomodoroTimerService() : this(null) {
         }
-        
+
         public PomodoroTimerService(ITimerService? timerService) {
             _timerService = timerService;
             Settings = new TimeSettings();
@@ -62,6 +62,16 @@ namespace DTwoMFTimerHelper.Services {
             OnTimerStateChanged();
         }
 
+        public void LoadSettings(IAppSettings appSettings) {
+            Settings.WorkTimeMinutes = appSettings.WorkTimeMinutes;
+            Settings.WorkTimeSeconds = appSettings.WorkTimeSeconds;
+            Settings.ShortBreakMinutes = appSettings.ShortBreakMinutes;
+            Settings.ShortBreakSeconds = appSettings.ShortBreakSeconds;
+            Settings.LongBreakMinutes = appSettings.LongBreakMinutes;
+            Settings.LongBreakSeconds = appSettings.LongBreakSeconds;
+            Reset();
+        }
+
         public void SkipBreak() {
             if (_currentState != TimerState.Work) {
                 // 如果跳过休息，也需要检查是否需要恢复计时器
@@ -71,7 +81,7 @@ namespace DTwoMFTimerHelper.Services {
                     }
                     _timerWasPausedBeforeBreak = false;
                 }
-                
+
                 _previousState = _currentState;
                 _currentState = TimerState.Work;
                 _timeLeft = GetWorkTime();
@@ -105,7 +115,7 @@ namespace DTwoMFTimerHelper.Services {
 
                     // 触发完成事件
                     PomodoroCompleted?.Invoke(this, new PomodoroCompletedEventArgs(_completedPomodoros));
-                    
+
                     // 如果有计时器服务，检查并暂停计时器
                     if (_timerService != null) {
                         _timerWasPausedBeforeBreak = _timerService.IsPaused;
@@ -134,7 +144,7 @@ namespace DTwoMFTimerHelper.Services {
                         // 重置标记
                         _timerWasPausedBeforeBreak = false;
                     }
-                    
+
                     // 自动开始下一个工作周期
                     _currentState = TimerState.Work;
                     _timeLeft = GetWorkTime();

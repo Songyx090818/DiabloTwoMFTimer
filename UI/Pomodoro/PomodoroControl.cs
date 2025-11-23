@@ -1,226 +1,133 @@
 using System;
-using System.Drawing;
 using System.Windows.Forms;
 using DTwoMFTimerHelper.Services;
 using DTwoMFTimerHelper.Utils;
 
 namespace DTwoMFTimerHelper.UI.Pomodoro {
     public partial class PomodoroControl : UserControl {
-        private readonly PomodoroTimerService _timerService;
+        // 注意：这里我们声明为可空，因为无参构造函数中它尚未赋值
+        // 但在运行时使用带参构造后，它将不为空
+        private PomodoroTimerService? _timerService;
         private BreakForm? _breakForm;
 
-        // UI控件
-        private Button? btnPomodoroReset;
-        private Button? btnStartPomodoro;
-        private Button? btnPomodoroSettings;
-        private Label? lblPomodoroTime;
-        private Label? lblPomodoroCount;
-
-        public PomodoroControl(PomodoroTimerService timerService) {
-            _timerService = timerService;
+        // 1. 无参构造函数 (用于 VS 设计器预览)
+        public PomodoroControl() {
             InitializeComponent();
+        }
 
-            // 初始化计时器服务
+        // 2. 依赖注入构造函数 (实际运行时使用)
+        public PomodoroControl(PomodoroTimerService timerService) : this() {
+            _timerService = timerService;
+
+            // 加载设置并刷新一次静态UI
+            LoadSettings();
+            // --- 关键点：将 Service 绑定给子组件 ---
+            // TimerDisplayLabel 会自己处理时间更新，主控件不用管了
+            lblPomodoroTime.BindService(_timerService);
+
+            // --- 订阅主控件关心的事件 (按钮状态、弹窗) ---
+            SubscribeEvents();
+
+            UpdateUI();
+        }
+
+        private void SubscribeEvents() {
+            if (_timerService == null) return;
             _timerService.TimerStateChanged += TimerService_TimerStateChanged;
             _timerService.PomodoroCompleted += TimerService_PomodoroCompleted;
             _timerService.BreakStarted += TimerService_BreakStarted;
             _timerService.BreakSkipped += TimerService_BreakSkipped;
-            _timerService.TimeUpdated += TimerService_TimeUpdated;
-
-            // 从配置文件加载设置
-            LoadSettings();
-            UpdateUI();
+            // 注意：不需要订阅 TimeUpdated，那是 Label 的事
         }
 
-        private void InitializeComponent() {
-            btnPomodoroReset = new Button();
-            btnStartPomodoro = new Button();
-            lblPomodoroTime = new Label();
-            lblPomodoroCount = new Label();
-            btnPomodoroSettings = new Button();
-            SuspendLayout();
-            // 
-            // btnPomodoroReset
-            // 
-            btnPomodoroReset.Location = new Point(28, 376);
-            btnPomodoroReset.Margin = new Padding(6);
-            btnPomodoroReset.Name = "btnPomodoroReset";
-            btnPomodoroReset.Size = new Size(205, 75);
-            btnPomodoroReset.TabIndex = 4;
-            btnPomodoroReset.UseVisualStyleBackColor = true;
-            btnPomodoroReset.Click += BtnPomodoroReset_Click;
-            // 
-            // btnStartPomodoro
-            // 
-            btnStartPomodoro.Location = new Point(28, 168);
-            btnStartPomodoro.Margin = new Padding(6);
-            btnStartPomodoro.Name = "btnStartPomodoro";
-            btnStartPomodoro.Size = new Size(205, 75);
-            btnStartPomodoro.TabIndex = 2;
-            btnStartPomodoro.UseVisualStyleBackColor = true;
-            btnStartPomodoro.Click += BtnStartPomodoro_Click;
-            // 
-            // lblPomodoroTime
-            // 
-            lblPomodoroTime.AutoSize = true;
-            lblPomodoroTime.Font = new Font("微软雅黑", 16F);
-            lblPomodoroTime.Location = new Point(40, 32);
-            lblPomodoroTime.Margin = new Padding(6, 0, 6, 0);
-            lblPomodoroTime.Name = "lblPomodoroTime";
-            lblPomodoroTime.Size = new Size(203, 50);
-            lblPomodoroTime.TabIndex = 0;
-            lblPomodoroTime.Text = "25:00:00:0";
-            // 
-            // lblPomodoroCount
-            // 
-            lblPomodoroCount.AutoSize = true;
-            lblPomodoroCount.Font = new Font("微软雅黑", 10F);
-            lblPomodoroCount.Location = new Point(69, 102);
-            lblPomodoroCount.Margin = new Padding(6, 0, 6, 0);
-            lblPomodoroCount.Name = "lblPomodoroCount";
-            lblPomodoroCount.Size = new Size(124, 31);
-            lblPomodoroCount.TabIndex = 1;
-            lblPomodoroCount.Text = "0个大番茄";
-            // 
-            // btnPomodoroSettings
-            // 
-            btnPomodoroSettings.Location = new Point(28, 277);
-            btnPomodoroSettings.Margin = new Padding(6);
-            btnPomodoroSettings.Name = "btnPomodoroSettings";
-            btnPomodoroSettings.Size = new Size(205, 75);
-            btnPomodoroSettings.TabIndex = 3;
-            btnPomodoroSettings.UseVisualStyleBackColor = true;
-            btnPomodoroSettings.Click += BtnPomodoroSettings_Click;
-            // 
-            // PomodoroControl
-            // 
-            AutoScaleDimensions = new SizeF(13F, 28F);
-            AutoScaleMode = AutoScaleMode.Font;
-            Controls.Add(lblPomodoroCount);
-            Controls.Add(btnPomodoroSettings);
-            Controls.Add(btnPomodoroReset);
-            Controls.Add(btnStartPomodoro);
-            Controls.Add(lblPomodoroTime);
-            Margin = new Padding(6);
-            Name = "PomodoroControl";
-            Size = new Size(549, 562);
-            ResumeLayout(false);
-            PerformLayout();
-        }
-
-        private void LoadSettings() {
-            var settings = SettingsManager.LoadSettings();
-            if (settings != null) {
-                _timerService.Settings.WorkTimeMinutes = settings.WorkTimeMinutes;
-                _timerService.Settings.WorkTimeSeconds = settings.WorkTimeSeconds;
-                _timerService.Settings.ShortBreakMinutes = settings.ShortBreakMinutes;
-                _timerService.Settings.ShortBreakSeconds = settings.ShortBreakSeconds;
-                _timerService.Settings.LongBreakMinutes = settings.LongBreakMinutes;
-                _timerService.Settings.LongBreakSeconds = settings.LongBreakSeconds;
-
-                // 重置计时器以应用新的设置
-                _timerService.Reset();
+        // 清理资源：重写 OnHandleDestroyed 或 Dispose 来取消订阅
+        protected override void OnHandleDestroyed(EventArgs e) {
+            if (_timerService != null) {
+                _timerService.TimerStateChanged -= TimerService_TimerStateChanged;
+                _timerService.PomodoroCompleted -= TimerService_PomodoroCompleted;
+                _timerService.BreakStarted -= TimerService_BreakStarted;
+                _timerService.BreakSkipped -= TimerService_BreakSkipped;
             }
+            base.OnHandleDestroyed(e);
         }
 
-        private void SaveSettings() {
-            var settings = SettingsManager.LoadSettings();
-            if (settings != null) {
-                settings.WorkTimeMinutes = _timerService.Settings.WorkTimeMinutes;
-                settings.WorkTimeSeconds = _timerService.Settings.WorkTimeSeconds;
-                settings.ShortBreakMinutes = _timerService.Settings.ShortBreakMinutes;
-                settings.ShortBreakSeconds = _timerService.Settings.ShortBreakSeconds;
-                settings.LongBreakMinutes = _timerService.Settings.LongBreakMinutes;
-                settings.LongBreakSeconds = _timerService.Settings.LongBreakSeconds;
-                SettingsManager.SaveSettings(settings);
-            }
-        }
+        #region 事件处理
 
         private void TimerService_TimerStateChanged(object? sender, TimerStateChangedEventArgs e) {
+            // Service 可能在后台线程触发，必须 Invoke
+            if (InvokeRequired) {
+                BeginInvoke(new Action(UpdateUI));
+                return;
+            }
             UpdateUI();
-        }
-
-        private void TimerService_PomodoroCompleted(object? sender, PomodoroCompletedEventArgs e) {
-            // 可以在这里处理番茄完成后的逻辑
         }
 
         private void TimerService_BreakStarted(object? sender, BreakStartedEventArgs e) {
+            if (InvokeRequired) {
+                BeginInvoke(new Action(() => ShowBreakForm(e.BreakType)));
+                return;
+            }
             ShowBreakForm(e.BreakType);
         }
 
-        private void TimerService_BreakSkipped(object? sender, EventArgs e) {
-            // 跳过休息的逻辑已经在服务层处理
+        private void TimerService_PomodoroCompleted(object? sender, PomodoroCompletedEventArgs e) {
+            // 如果需要在番茄钟完成时播放音效或弹通知，写在这里
         }
 
-        private void TimerService_TimeUpdated(object? sender, EventArgs e) {
-            UpdateTimeDisplay();
+        private void TimerService_BreakSkipped(object? sender, EventArgs e) {
+            // 跳过休息的逻辑
         }
+
+        #endregion
+
+        #region UI 更新逻辑
 
         private void UpdateUI() {
-            if (InvokeRequired) {
-                Invoke(new Action(UpdateUI));
-                return;
-            }
+            if (_timerService == null) return;
 
-            btnStartPomodoro!.Text = _timerService.IsRunning ?
-                LanguageManager.GetString("PausePomodoro") :
-                LanguageManager.GetString("StartPomodoro");
-            btnPomodoroReset!.Text = LanguageManager.GetString("ResetPomodoro");
-            btnPomodoroSettings!.Text = LanguageManager.GetString("Settings") ?? "设置";
+            // 更新按钮文字
+            btnStartPomodoro.Text = _timerService.IsRunning ?
+                (LanguageManager.GetString("PausePomodoro") ?? "暂停") :
+                (LanguageManager.GetString("StartPomodoro") ?? "开始");
 
-            UpdateTimeDisplay();
+            btnPomodoroReset.Text = LanguageManager.GetString("ResetPomodoro") ?? "重置";
+            btnPomodoroSettings.Text = LanguageManager.GetString("Settings") ?? "设置";
+
+            // 更新计数显示
             UpdateCountDisplay();
         }
 
-        private void UpdateTimeDisplay() {
-            if (InvokeRequired) {
-                Invoke(new Action(UpdateTimeDisplay));
-                return;
-            }
-
-            var timeLeft = _timerService.TimeLeft;
-            string formattedTime = string.Format("{0:00}:{1:00}:{2}",
-                timeLeft.Minutes,
-                timeLeft.Seconds,
-                timeLeft.Milliseconds / 100);
-
-            lblPomodoroTime!.Text = formattedTime;
-
-            // 根据状态设置颜色
-            lblPomodoroTime.ForeColor = _timerService.CurrentState == TimerState.Work ?
-                Color.Black : Color.Green;
-        }
-
         private void UpdateCountDisplay() {
+            if (_timerService == null) return;
+
             int completed = _timerService.CompletedPomodoros;
             int bigPomodoros = completed / 4;
             int smallPomodoros = completed % 4;
 
-            string countText;
-            if (smallPomodoros == 0) {
-                countText = $"{bigPomodoros}个大番茄";
-            }
-            else {
-                countText = $"{bigPomodoros}个大番茄，{smallPomodoros}个小番茄";
-            }
+            string countText = smallPomodoros == 0
+                ? $"{bigPomodoros}个大番茄"
+                : $"{bigPomodoros}个大番茄，{smallPomodoros}个小番茄";
 
-            lblPomodoroCount!.Text = countText;
+            lblPomodoroCount.Text = countText;
         }
 
-        private void BtnStartPomodoro_Click(object? sender, EventArgs e) {
-            if (_timerService.IsRunning) {
-                _timerService.Pause();
-            }
-            else {
-                _timerService.Start();
-            }
+        #endregion
+
+        #region 按钮点击与交互
+
+        private void BtnStartPomodoro_Click(object sender, EventArgs e) {
+            if (_timerService == null) return;
+            if (_timerService.IsRunning) _timerService.Pause();
+            else _timerService.Start();
         }
 
-        private void BtnPomodoroReset_Click(object? sender, EventArgs e) {
-            _timerService.Reset();
+        private void BtnPomodoroReset_Click(object sender, EventArgs e) {
+            _timerService?.Reset();
         }
 
-        private void BtnPomodoroSettings_Click(object? sender, EventArgs e) {
+        private void BtnPomodoroSettings_Click(object sender, EventArgs e) {
+            if (_timerService == null) return;
+
             using var settingsForm = new PomodoroSettingsForm(
                 _timerService.Settings.WorkTimeMinutes,
                 _timerService.Settings.WorkTimeSeconds,
@@ -230,6 +137,7 @@ namespace DTwoMFTimerHelper.UI.Pomodoro {
                 _timerService.Settings.LongBreakSeconds);
 
             if (settingsForm.ShowDialog(this.FindForm()) == DialogResult.OK) {
+                // 更新 Service 配置
                 _timerService.Settings.WorkTimeMinutes = settingsForm.WorkTimeMinutes;
                 _timerService.Settings.WorkTimeSeconds = settingsForm.WorkTimeSeconds;
                 _timerService.Settings.ShortBreakMinutes = settingsForm.ShortBreakMinutes;
@@ -243,6 +151,8 @@ namespace DTwoMFTimerHelper.UI.Pomodoro {
         }
 
         private void ShowBreakForm(BreakType breakType) {
+            if (_timerService == null) return;
+
             if (_breakForm != null && !_breakForm.IsDisposed) {
                 _breakForm.Close();
             }
@@ -251,8 +161,39 @@ namespace DTwoMFTimerHelper.UI.Pomodoro {
             _breakForm.Show(this.FindForm());
         }
 
+        #endregion
+
+        #region 设置加载/保存
+        private void LoadSettings() {
+            if (_timerService == null) return;
+            var settings = SettingsManager.LoadSettings();
+            if (settings != null) {
+                _timerService.Settings.WorkTimeMinutes = settings.WorkTimeMinutes;
+                _timerService.Settings.WorkTimeSeconds = settings.WorkTimeSeconds;
+                _timerService.Settings.ShortBreakMinutes = settings.ShortBreakMinutes;
+                _timerService.Settings.ShortBreakSeconds = settings.ShortBreakSeconds;
+                _timerService.Settings.LongBreakMinutes = settings.LongBreakMinutes;
+                _timerService.Settings.LongBreakSeconds = settings.LongBreakSeconds;
+                _timerService.Reset();
+            }
+        }
+
+        private void SaveSettings() {
+            if (_timerService == null) return;
+            var settings = SettingsManager.LoadSettings() ?? new AppSettings(); // 假设有 AppSettings 类
+            settings.WorkTimeMinutes = _timerService.Settings.WorkTimeMinutes;
+            settings.WorkTimeSeconds = _timerService.Settings.WorkTimeSeconds;
+            settings.ShortBreakMinutes = _timerService.Settings.ShortBreakMinutes;
+            settings.ShortBreakSeconds = _timerService.Settings.ShortBreakSeconds;
+            settings.LongBreakMinutes = _timerService.Settings.LongBreakMinutes;
+            settings.LongBreakSeconds = _timerService.Settings.LongBreakSeconds;
+            SettingsManager.SaveSettings(settings);
+        }
+
         public void RefreshUI() {
             UpdateUI();
         }
+
+        #endregion
     }
 }
