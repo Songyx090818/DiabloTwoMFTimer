@@ -48,6 +48,11 @@
   "DifficultyNormal": "普通",
   "DifficultyNightmare": "恶梦",
   "DifficultyHell": "地狱",
+  "LootRecords": "掉落记录",
+  "LootName": "物品名称",
+  "SceneName": "场景",
+  "RunCount": "运行次数",
+  "DropTime": "掉落时间",
   "CreateCharacter": "创建",
   "SwitchCharacter": "切换",
   "DeleteCharacter": "删除",
@@ -88,5 +93,7 @@
   "AverageTime": "平均时间: {{0}}",
   "AverageTimePlaceholder": "平均时间: --:--:--.-",
   "RunNumber": "第{{0}}次: {{1}}",
-  "ContinueFarm": "继续 Farm"
+  "ContinueFarm": "继续 Farm",
+  "ShowLoot": "显示掉落",
+  "HideLoot": "隐藏掉落"
 }

@@ -48,6 +48,11 @@
   "DifficultyNormal": "Normal",
   "DifficultyNightmare": "Nightmare",
   "DifficultyHell": "Hell",
+  "LootRecords": "Loot Records",
+  "LootName": "Item Name",
+  "SceneName": "Scene",
+  "RunCount": "Run Count",
+  "DropTime": "Drop Time",
   "DifficultyUnknown": "Unknown",
   "CreateCharacter": "Create Character Profile",
   "SwitchCharacter": "Switch Character Profile",
@@ -89,5 +94,7 @@
   "AverageTime": "Average time: {{0}}",
   "AverageTimePlaceholder": "Average time: --:--:--.-",
   "RunNumber": "Run {{0}}: {{1}}",
-  "ContinueFarm": "Continue Farm"
+  "ContinueFarm": "Continue Farm",
+  "ShowLoot": "Show Loot",
+  "HideLoot": "Hide Loot"
 }

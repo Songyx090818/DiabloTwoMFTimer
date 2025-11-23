@@ -69,7 +69,7 @@ namespace DTwoMFTimerHelper.UI
             tabControl.Margin = new Padding(6);
             tabControl.Name = "tabControl";
             tabControl.SelectedIndex = 0;
-            tabControl.Size = new Size(894, 878);
+            tabControl.Size = new Size(894, 813);
             tabControl.TabIndex = 1;
             tabControl.SelectedIndexChanged += TabControl_SelectedIndexChanged;
 
@@ -105,7 +105,7 @@ namespace DTwoMFTimerHelper.UI
             // MainForm
             AutoScaleDimensions = new SizeF(13F, 28F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(894, 878);
+            ClientSize = new Size(894, 950);
             Controls.Add(tabControl);
             Margin = new Padding(6);
             Name = "MainForm";
