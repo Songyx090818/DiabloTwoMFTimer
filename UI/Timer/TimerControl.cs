@@ -475,14 +475,14 @@ namespace DTwoMFTimerHelper.UI.Timer {
         }
         #endregion
 
-        private void ToggleLootButton_Click(object? sender, EventArgs e) {
+        /// <summary>
+        /// 设置掉落记录控件的可见性，并调整相关UI元素
+        /// </summary>
+        /// <param name="isVisible">是否可见</param>
+        public void SetLootRecordsVisible(bool isVisible) {
             if (lootRecordsControl != null) {
-                // 确保状态正确切换
-                lootRecordsControl.Visible = !lootRecordsControl.Visible;
-                bool isVisible = lootRecordsControl.Visible;
-
-                // 加载应用设置
-                var settings = Services.SettingsManager.LoadSettings();
+                // 设置可见性
+                lootRecordsControl.Visible = isVisible;
 
                 // 更新按钮文本
                 toggleLootButton.Text = isVisible ? Utils.LanguageManager.GetString("HideLoot", "隐藏掉落") : Utils.LanguageManager.GetString("ShowLoot", "显示掉落");
@@ -498,6 +498,7 @@ namespace DTwoMFTimerHelper.UI.Timer {
                     this.ParentForm.ClientSize = new Size(this.ParentForm.ClientSize.Width, newFormHeight);
 
                     // 如果窗口位置设置为下方，重新应用窗口位置以保持在底部
+                    var settings = Services.SettingsManager.LoadSettings();
                     var windowPosition = SettingsControl.WindowPosition.BottomLeft; // 默认位置
                     if (!string.IsNullOrEmpty(settings.WindowPosition)) {
                         windowPosition = Services.SettingsManager.StringToWindowPosition(settings.WindowPosition);
@@ -509,8 +510,19 @@ namespace DTwoMFTimerHelper.UI.Timer {
                         SettingsControl.MoveWindowToPosition(this.ParentForm, windowPosition);
                     }
                 }
+            }
+        }
 
-                // 更新应用设置的TimerShowLootDrops设置
+        private void ToggleLootButton_Click(object? sender, EventArgs e) {
+            if (lootRecordsControl != null) {
+                // 切换可见性
+                bool isVisible = !lootRecordsControl.Visible;
+
+                // 调用封装的方法
+                SetLootRecordsVisible(isVisible);
+
+                // 更新应用设置
+                var settings = Services.SettingsManager.LoadSettings();
                 settings.TimerShowLootDrops = isVisible;
                 Services.SettingsManager.SaveSettings(settings);
             }

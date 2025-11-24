@@ -400,8 +400,16 @@ namespace DTwoMFTimerHelper.Services {
                 SettingsManager.SaveSettings(_appSettings);
             }
 
-            // 应用设置到UI
+            // 应用掉落记录显示设置到UI
+            if (_timerControl != null) {
+                _timerControl.SetLootRecordsVisible(e.ShowLootDrops);
+            }
+
+            // 更新UI
             UpdateUI();
+
+            // 跳转到计时界面
+            SetActiveTabPage(Models.TabPage.Timer);
         }
 
 
