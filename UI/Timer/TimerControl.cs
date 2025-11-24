@@ -523,6 +523,7 @@ namespace DTwoMFTimerHelper.UI.Timer {
 
                 // 更新应用设置
                 var settings = Services.SettingsManager.LoadSettings();
+
                 settings.TimerShowLootDrops = isVisible;
                 Services.SettingsManager.SaveSettings(settings);
             }

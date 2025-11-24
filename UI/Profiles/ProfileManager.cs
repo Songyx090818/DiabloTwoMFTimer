@@ -475,8 +475,8 @@ namespace DTwoMFTimerHelper.UI.Profiles {
                 currentRecord = null;
                 UpdateUI();
 
-                // 显示成功消息
-                MessageBox.Show($"角色 '{characterName}' 创建成功！", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                // 显示成功提示
+                Utils.Toast.Success($"角色 '{characterName}' 创建成功！");
             }
         }
 
@@ -511,8 +511,8 @@ namespace DTwoMFTimerHelper.UI.Profiles {
                     // 更新UI显示新角色信息
                     UpdateUI();
 
-                    // 显示成功消息
-                    MessageBox.Show($"已成功切换到角色 '{currentProfile.Name}'", "切换成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    // 显示成功提示
+                    Utils.Toast.Success($"已成功切换到角色 '{currentProfile.Name}'");
                 }
                 else {
                     throw new InvalidOperationException("角色切换失败");

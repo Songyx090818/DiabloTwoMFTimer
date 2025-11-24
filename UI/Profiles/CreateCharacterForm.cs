@@ -3,10 +3,8 @@ using System.Windows.Forms;
 using DTwoMFTimerHelper.Models;
 using DTwoMFTimerHelper.Utils;
 
-namespace DTwoMFTimerHelper.UI.Profiles
-{
-    public class CreateCharacterForm : Form
-    {
+namespace DTwoMFTimerHelper.UI.Profiles {
+    public class CreateCharacterForm : Form {
         private Label? lblCharacterName;
         private TextBox? txtCharacterName;
         private Label? lblCharacterClass;
@@ -16,25 +14,21 @@ namespace DTwoMFTimerHelper.UI.Profiles
 
         // 属性
         public string? CharacterName => txtCharacterName?.Text.Trim();
-        public CharacterClass? SelectedClass
-        {
-            get
-            {
+        public CharacterClass? SelectedClass {
+            get {
                 if (cmbCharacterClass?.SelectedItem is CharacterClass charClass)
                     return charClass;
                 return null;
             }
         }
 
-        public CreateCharacterForm()
-        {
+        public CreateCharacterForm() {
             InitializeComponent();
             SetupCharacterClasses();
             UpdateUI();
         }
 
-        private void InitializeComponent()
-        {
+        private void InitializeComponent() {
             // 设置窗口属性
             this.Text = "创建角色档案";
             this.Size = new System.Drawing.Size(450, 350);
@@ -83,13 +77,10 @@ namespace DTwoMFTimerHelper.UI.Profiles
             this.Controls.Add(btnCancel);
         }
 
-        private void SetupCharacterClasses()
-        {
+        private void SetupCharacterClasses() {
             // 添加职业选项
-            if (cmbCharacterClass != null)
-            {
-                foreach (CharacterClass charClass in Enum.GetValues(typeof(CharacterClass)))
-                {
+            if (cmbCharacterClass != null) {
+                foreach (CharacterClass charClass in Enum.GetValues(typeof(CharacterClass))) {
                     cmbCharacterClass.Items.Add(charClass);
                 }
                 if (cmbCharacterClass.Items.Count > 0)
@@ -97,8 +88,7 @@ namespace DTwoMFTimerHelper.UI.Profiles
             }
         }
 
-        public void UpdateUI()
-        {
+        public void UpdateUI() {
             this.Text = LanguageManager.GetString("CreateCharacter") ?? "创建";
             lblCharacterName!.Text = LanguageManager.GetString("CharacterName") ?? "角色名称:";
             lblCharacterClass!.Text = LanguageManager.GetString("CharacterClass") ?? "职业:";
@@ -106,14 +96,12 @@ namespace DTwoMFTimerHelper.UI.Profiles
             btnCancel!.Text = LanguageManager.GetString("Cancel") ?? "取消";
 
             // 更新职业显示名称
-            if (cmbCharacterClass != null && cmbCharacterClass.Items.Count > 0)
-            {
+            if (cmbCharacterClass != null && cmbCharacterClass.Items.Count > 0) {
                 int selectedIndex = cmbCharacterClass.SelectedIndex;
                 cmbCharacterClass.Items.Clear();
 
                 // 添加本地化的职业名称
-                foreach (CharacterClass charClass in Enum.GetValues(typeof(CharacterClass)))
-                {
+                foreach (CharacterClass charClass in Enum.GetValues(typeof(CharacterClass))) {
                     cmbCharacterClass.Items.Add(DTwoMFTimerHelper.Utils.LanguageManager.GetLocalizedClassName(charClass));
                 }
 
@@ -124,30 +112,27 @@ namespace DTwoMFTimerHelper.UI.Profiles
 
         // 使用LanguageManager中的GetLocalizedClassName方法
 
-        private static CharacterClass GetCharacterClassFromLocalizedName(string localizedName)
-        {
+        private static CharacterClass GetCharacterClassFromLocalizedName(string localizedName) {
             // 反向映射
-            foreach (CharacterClass charClass in Enum.GetValues(typeof(CharacterClass)))
-            {
+            foreach (CharacterClass charClass in Enum.GetValues(typeof(CharacterClass))) {
                 if (DTwoMFTimerHelper.Utils.LanguageManager.GetLocalizedClassName(charClass).Equals(localizedName))
                     return charClass;
             }
             return CharacterClass.Barbarian; // 默认值
         }
 
-        private void BtnConfirm_Click(object? sender, EventArgs e)
-        {
+        private void BtnConfirm_Click(object? sender, EventArgs e) {
             // 验证输入
-            if (string.IsNullOrEmpty(CharacterName))
-            {
-                MessageBox.Show(LanguageManager.GetString("EnterCharacterName") ?? "请输入角色名称", "提示");
+            if (string.IsNullOrEmpty(CharacterName)) {
+                // 显示错误提示
+                Utils.Toast.Info(LanguageManager.GetString("EnterCharacterName") ?? "请输入角色名称");
                 return;
             }
 
             // 检查角色是否已存在
-            if (DTwoMFTimerHelper.Services.DataService.FindProfileByName(CharacterName) != null)
-            {
-                MessageBox.Show(LanguageManager.GetString("CharacterExists") ?? "该角色名称已存在", "提示");
+            if (DTwoMFTimerHelper.Services.DataService.FindProfileByName(CharacterName) != null) {
+                // 显示错误提示
+                Utils.Toast.Warning(LanguageManager.GetString("CharacterExists") ?? "该角色名称已存在");
                 return;
             }
 
@@ -155,17 +140,14 @@ namespace DTwoMFTimerHelper.UI.Profiles
             this.Close();
         }
 
-        private void BtnCancel_Click(object? sender, EventArgs e)
-        {
+        private void BtnCancel_Click(object? sender, EventArgs e) {
             this.DialogResult = DialogResult.Cancel;
             this.Close();
         }
 
         // 重写SelectedClass以支持本地化
-        public CharacterClass? GetSelectedClass()
-        {
-            if (cmbCharacterClass?.SelectedItem != null)
-            {
+        public CharacterClass? GetSelectedClass() {
+            if (cmbCharacterClass?.SelectedItem != null) {
                 string localizedName = cmbCharacterClass.SelectedItem.ToString()!;
                 return GetCharacterClassFromLocalizedName(localizedName);
             }

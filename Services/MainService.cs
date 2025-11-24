@@ -388,7 +388,8 @@ namespace DTwoMFTimerHelper.Services {
             RegisterHotkeys();
 
             // 可选：提示用户保存成功
-            // MessageBox.Show("设置已保存", "提示");
+            // 显示成功提示
+            Utils.Toast.Success(Utils.LanguageManager.GetString("SuccessSettingsChanged", "设置修改成功"));
         }
 
         private void OnTimerSettingsChanged(object? sender, SettingsControl.TimerSettingsChangedEventArgs e) {

@@ -28,9 +28,8 @@ namespace DTwoMFTimerHelper.UI.Timer {
 
         private void btnSave_Click(object? sender, EventArgs e) {
             if (string.IsNullOrWhiteSpace(txtLootName.Text)) {
-                MessageBox.Show(LanguageManager.GetString("EnterLootNameMessage"),
-                LanguageManager.GetString("NotificationTitle"),
-                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                // 显示错误提示
+                Utils.Toast.Warning(LanguageManager.GetString("EnterLootNameMessage") ?? "请输入掉落名称");
                 return;
             }
 

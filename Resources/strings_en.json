@@ -106,5 +106,6 @@
   "RunNumber": "Run {{0}}: {{1}}",
   "ContinueFarm": "Continue Farm",
   "ShowLoot": "Show Loot",
-  "HideLoot": "Hide Loot"
+  "HideLoot": "Hide Loot",
+  "SuccessSettingsChanged": "Settings modified successfully"
 }
