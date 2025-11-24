@@ -163,6 +163,8 @@ namespace DTwoMFTimerHelper.Services {
                         // 显示掉落记录弹窗
                         if (_mainForm != null) {
                             using var lootForm = new UI.Timer.RecordLootForm(_profileService, _timerHistoryService);
+                            // 订阅掉落记录保存成功事件
+                            lootForm.LootRecordSaved += OnLootRecordSaved;
                             lootForm.ShowDialog(_mainForm);
                         }
                         break;
@@ -190,6 +192,14 @@ namespace DTwoMFTimerHelper.Services {
         /// 刷新UI
         /// </summary>
         public void RefreshUI() {
+            UpdateUI();
+        }
+
+        /// <summary>
+        /// 当掉落记录保存成功时触发的事件处理程序
+        /// </summary>
+        private void OnLootRecordSaved(object? sender, EventArgs e) {
+            // 刷新UI以显示新添加的掉落记录
             UpdateUI();
         }
 

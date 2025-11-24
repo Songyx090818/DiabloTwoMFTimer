@@ -70,26 +70,30 @@ namespace DTwoMFTimerHelper.UI.Timer {
             _pomodoroTimerService = pomodoroTimerService;
         }
 
-        // 2. 【关键修复】重写 OnLoad 方法
         protected override void OnLoad(EventArgs e) {
             base.OnLoad(e);
 
-            // 在这里加载数据，此时控件已经创建完成
             if (!DesignMode && _profileService != null) {
-                // 加载历史数据
                 LoadProfileHistoryData();
 
                 // 根据角色档案的ShowLoot设置初始化掉落记录控件的可见性
                 InitializeLootRecordsVisibility();
+                // 根据设置初始化番茄时间显示
+                InitializePomodoroVisibility();
                 // 更新界面状态
                 UpdateUI();
             }
 
-            // 确保番茄计时器显示正确的值（即使设置是在绑定后加载的）
             if (_pomodoroTimerService != null && pomodoroTime != null) {
-                // 强制更新显示，确保显示设置的值而不是默认值
-                // 这里我们通过重新绑定服务来触发更新
                 pomodoroTime.BindService(_pomodoroTimerService);
+            }
+        }
+
+        private void InitializePomodoroVisibility() {
+            if (pomodoroTime != null) {
+                // 根据应用设置的TimerShowPomodoro设置初始化番茄时间控件的可见性
+                var settings = Services.SettingsManager.LoadSettings();
+                pomodoroTime.Visible = settings.TimerShowPomodoro;
             }
         }
 
@@ -159,6 +163,8 @@ namespace DTwoMFTimerHelper.UI.Timer {
             }
         }
 
+
+
         private void OnTimerRunningStateChanged(bool isRunning) {
             if (btnStatusIndicator != null && btnStatusIndicator.InvokeRequired) {
                 btnStatusIndicator.Invoke(new Action<bool>(OnTimerRunningStateChanged), isRunning);
@@ -167,9 +173,13 @@ namespace DTwoMFTimerHelper.UI.Timer {
                 btnStatusIndicator.BackColor = isRunning ? Color.Green : Color.Red;
             }
 
+            // 番茄时钟同步启动逻辑现在在PomodoroTimerService中处理
+
             TimerStateChanged?.Invoke(this, EventArgs.Empty);
             UpdateStatistics();
         }
+
+
 
         private void OnTimerPauseStateChanged(bool isPaused) {
             TimerStateChanged?.Invoke(this, EventArgs.Empty);
@@ -183,8 +193,9 @@ namespace DTwoMFTimerHelper.UI.Timer {
             UpdateCharacterSceneInfo();
 
             // 更新掉落记录
-            if (lootRecordsControl != null && profile != null) {
-                lootRecordsControl.UpdateLootRecords(profile.LootRecords);
+            if (lootRecordsControl != null && profile != null && _profileService != null) {
+                string currentScene = _profileService.CurrentScene ?? string.Empty;
+                lootRecordsControl.UpdateLootRecords(profile.LootRecords, currentScene);
                 // 重新初始化控件可见性（现在基于应用设置而非角色档案）
                 InitializeLootRecordsVisibility();
             }
@@ -215,7 +226,8 @@ namespace DTwoMFTimerHelper.UI.Timer {
 
                 // 2. 更新掉落记录
                 if (lootRecordsControl != null && profile != null) {
-                    lootRecordsControl.UpdateLootRecords(profile.LootRecords);
+                    string currentScene = _profileService.CurrentScene ?? string.Empty;
+                    lootRecordsControl.UpdateLootRecords(profile.LootRecords, currentScene);
                 }
             }
         }
@@ -293,6 +305,12 @@ namespace DTwoMFTimerHelper.UI.Timer {
                 }
             }
 
+            // 根据设置更新番茄时间显示
+            if (pomodoroTime != null) {
+                var settings = Services.SettingsManager.LoadSettings();
+                pomodoroTime.Visible = settings.TimerShowPomodoro;
+            }
+
             UpdateStatistics();
             UpdateCharacterSceneInfo();
             UpdateLootRecords();
@@ -323,7 +341,8 @@ namespace DTwoMFTimerHelper.UI.Timer {
 
         private void UpdateLootRecords() {
             if (lootRecordsControl != null && _profileService != null && _profileService.CurrentProfile != null) {
-                lootRecordsControl.UpdateLootRecords(_profileService.CurrentProfile.LootRecords);
+                string currentScene = _profileService.CurrentScene ?? string.Empty;
+                lootRecordsControl.UpdateLootRecords(_profileService.CurrentProfile.LootRecords, currentScene);
             }
         }
         #endregion

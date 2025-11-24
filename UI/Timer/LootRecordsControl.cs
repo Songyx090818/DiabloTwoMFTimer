@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using System.Linq;
 using DTwoMFTimerHelper.Models;
 using DTwoMFTimerHelper.UI;
+using DTwoMFTimerHelper.Utils;
 
 namespace DTwoMFTimerHelper.UI.Timer {
     public partial class LootRecordsControl : UserControl {
@@ -12,12 +13,22 @@ namespace DTwoMFTimerHelper.UI.Timer {
         private Panel lootPanel = null!;
         private ListView lootListView = null!;
         private List<LootRecord> _lootRecords = new();
+        private string _currentScene = string.Empty;
 
         // Loot记录属性
         public List<LootRecord> LootRecords {
             get { return _lootRecords; }
             set {
                 _lootRecords = value;
+                UpdateLootRecordsDisplay();
+            }
+        }
+
+        // 当前场景属性，用于过滤掉落记录
+        public string CurrentScene {
+            get { return _currentScene; }
+            set {
+                _currentScene = value;
                 UpdateLootRecordsDisplay();
             }
         }
@@ -71,13 +82,27 @@ namespace DTwoMFTimerHelper.UI.Timer {
             UpdateLootRecordsDisplay();
         }
 
+        // 更新掉落记录并设置当前场景
+        public void UpdateLootRecords(List<LootRecord> lootRecords, string currentScene) {
+            this._lootRecords = lootRecords;
+            this._currentScene = currentScene;
+            UpdateLootRecordsDisplay();
+        }
+
         private void UpdateLootRecordsDisplay() {
             // 清空现有项
             lootListView.Items.Clear();
-            
+
+            // 获取要显示的记录：如果指定了场景，则只显示该场景的记录，否则显示所有记录
+            var recordsToDisplay = string.IsNullOrEmpty(_currentScene)
+                ? _lootRecords
+                : _lootRecords.Where(r => r.SceneName == _currentScene);
+
             // 添加数据项，按掉落时间降序排列
-            foreach (var record in _lootRecords.OrderByDescending(r => r.DropTime)) {
-                lootListView.Items.Add($"第{record.RunCount}次:{record.Name}");
+            foreach (var record in recordsToDisplay.OrderByDescending(r => r.DropTime)) {
+                // 使用国际化格式字符串显示掉落记录
+                string format = LanguageManager.GetString("RunNumber");
+                lootListView.Items.Add(string.Format(format, record.RunCount, record.Name));
             }
         }
 

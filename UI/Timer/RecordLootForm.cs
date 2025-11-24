@@ -9,6 +9,9 @@ namespace DTwoMFTimerHelper.UI.Timer {
         private readonly IProfileService? _profileService;
         private readonly ITimerHistoryService? _timerHistoryService;
 
+        // 定义事件，当掉落记录保存成功时触发
+        public event EventHandler? LootRecordSaved;
+
         public RecordLootForm(IProfileService? profileService, ITimerHistoryService? timerHistoryService) {
             InitializeComponent();
 
@@ -52,6 +55,9 @@ namespace DTwoMFTimerHelper.UI.Timer {
                 currentProfile.LootRecords.Add(lootRecord);
                 Services.DataService.SaveProfile(currentProfile); // 保存修改
             }
+
+            // 触发记录保存成功事件
+            OnLootRecordSaved(EventArgs.Empty);
 
             DialogResult = DialogResult.OK;
             Close();
@@ -146,5 +152,21 @@ namespace DTwoMFTimerHelper.UI.Timer {
         private System.Windows.Forms.CheckBox chkPreviousRun = null!;
         private System.Windows.Forms.Button btnSave = null!;
         private System.Windows.Forms.Button btnCancel = null!;
+
+        // 触发LootRecordSaved事件的保护方法
+        protected virtual void OnLootRecordSaved(EventArgs e) {
+            LootRecordSaved?.Invoke(this, e);
+        }
+
+        // 捕获Esc键按下事件，关闭窗口
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData) {
+            // 检查是否按下了Esc键
+            if (keyData == Keys.Escape) {
+                DialogResult = DialogResult.Cancel;
+                Close();
+                return true; // 表示已处理该按键
+            }
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
     }
 }

@@ -35,6 +35,29 @@ namespace DTwoMFTimerHelper.Services {
             _timer = new System.Windows.Forms.Timer { Interval = 100 };
             _timer.Tick += Timer_Tick;
             InitializeTimer();
+
+            // 订阅计时器服务的事件
+            if (_timerService != null) {
+                _timerService.TimerRunningStateChangedEvent += OnTimerRunningStateChanged;
+                _timerService.TimerPauseStateChangedEvent += OnTimerPauseStateChanged;
+            }
+        }
+
+        private void TriggerStartFromTimer() {
+            if (!_isRunning && _timerService != null && _timerService.IsRunning) {
+                Start();
+            }
+        }
+
+        // 处理计时器运行状态变化事件
+        private void OnTimerRunningStateChanged(bool isRunning) {
+            // 当计时器开启时，如果番茄时钟启动则启动番茄时钟（如果番茄时钟已经开启则不处理）
+            TriggerStartFromTimer();
+        }
+
+        // 处理计时器暂停状态变化事件
+        private void OnTimerPauseStateChanged(bool isPaused) {
+            TriggerStartFromTimer();
         }
 
         public void Start() {
