@@ -4,6 +4,7 @@ using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 using DTwoMFTimerHelper.UI.Settings;
 using DTwoMFTimerHelper.Utils;
+using System.Windows.Forms;
 
 namespace DTwoMFTimerHelper.Services {
     public interface IAppSettings {
@@ -73,9 +74,14 @@ namespace DTwoMFTimerHelper.Services {
         public int ShortBreakSeconds { get; set; } = 0;
         public int LongBreakMinutes { get; set; } = 15;
         public int LongBreakSeconds { get; set; } = 0;
-        
+
         // 界面设置
         public bool ShowLoot { get; set; } = false; // 是否显示掉落记录
+
+        public Keys HotkeyStartOrNext { get; set; } = Keys.Q | Keys.Alt;
+        public Keys HotkeyPause { get; set; } = Keys.Space | Keys.Control;
+        public Keys HotkeyDeleteHistory { get; set; } = Keys.D | Keys.Control;
+        public Keys HotkeyRecordLoot { get; set; } = Keys.A | Keys.Alt;
     }
 
     public static class SettingsManager {

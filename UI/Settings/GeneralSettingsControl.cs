@@ -1,23 +1,24 @@
 using System;
 using System.Windows.Forms;
 using System.Drawing;
-using DTwoMFTimerHelper.Utils; // 假设存在
-using DTwoMFTimerHelper.Services; // 假设存在
+using DTwoMFTimerHelper.Utils;
+using DTwoMFTimerHelper.Services;
 
 namespace DTwoMFTimerHelper.UI.Settings {
     public class GeneralSettingsControl : UserControl {
-        private GroupBox groupBoxPosition = null!;
-        private GroupBox groupBoxLanguage = null!;
-        private RadioButton radioTopLeft = null!;
-        private RadioButton radioTopCenter = null!;
-        private RadioButton radioTopRight = null!;
-        private RadioButton radioBottomLeft = null!;
-        private RadioButton radioBottomCenter = null!;
-        private RadioButton radioBottomRight = null!;
-        private RadioButton chineseRadioButton = null!;
-        private RadioButton englishRadioButton = null!;
-        private CheckBox alwaysOnTopCheckBox = null!;
-        private Label alwaysOnTopLabel = null!;
+        private GroupBox? groupBoxPosition;
+        private GroupBox? groupBoxLanguage;
+        private RadioButton? radioTopLeft;
+        private RadioButton? radioTopCenter;
+        private RadioButton? radioTopRight;
+        private RadioButton? radioBottomLeft;
+        private RadioButton? radioBottomCenter;
+        private RadioButton? radioBottomRight;
+        private RadioButton? chineseRadioButton;
+        private RadioButton? englishRadioButton;
+        private CheckBox? alwaysOnTopCheckBox;
+        private Label? alwaysOnTopLabel;
+
         public GeneralSettingsControl() {
             InitializeComponent();
         }
@@ -56,51 +57,65 @@ namespace DTwoMFTimerHelper.UI.Settings {
             // 
             // radioTopLeft
             // 
-            radioTopLeft.Location = new Point(0, 0);
+            radioTopLeft.AutoSize = true;
+            radioTopLeft.Checked = true;
+            radioTopLeft.Location = new Point(15, 25);
             radioTopLeft.Name = "radioTopLeft";
-            radioTopLeft.Size = new Size(104, 24);
+            radioTopLeft.Size = new Size(79, 32);
             radioTopLeft.TabIndex = 0;
+            radioTopLeft.TabStop = true;
+            radioTopLeft.Text = "左上";
             // 
             // radioTopCenter
             // 
-            radioTopCenter.Location = new Point(0, 0);
+            radioTopCenter.AutoSize = true;
+            radioTopCenter.Location = new Point(110, 25);
             radioTopCenter.Name = "radioTopCenter";
-            radioTopCenter.Size = new Size(104, 24);
+            radioTopCenter.Size = new Size(79, 32);
             radioTopCenter.TabIndex = 1;
+            radioTopCenter.Text = "上中";
             // 
             // radioTopRight
             // 
-            radioTopRight.Location = new Point(0, 0);
+            radioTopRight.AutoSize = true;
+            radioTopRight.Location = new Point(205, 25);
             radioTopRight.Name = "radioTopRight";
-            radioTopRight.Size = new Size(104, 24);
+            radioTopRight.Size = new Size(79, 32);
             radioTopRight.TabIndex = 2;
+            radioTopRight.Text = "右上";
             // 
             // radioBottomLeft
             // 
-            radioBottomLeft.Location = new Point(0, 0);
+            radioBottomLeft.AutoSize = true;
+            radioBottomLeft.Location = new Point(15, 60);
             radioBottomLeft.Name = "radioBottomLeft";
-            radioBottomLeft.Size = new Size(104, 24);
+            radioBottomLeft.Size = new Size(79, 32);
             radioBottomLeft.TabIndex = 3;
+            radioBottomLeft.Text = "左下";
             // 
             // radioBottomCenter
             // 
-            radioBottomCenter.Location = new Point(0, 0);
+            radioBottomCenter.AutoSize = true;
+            radioBottomCenter.Location = new Point(110, 60);
             radioBottomCenter.Name = "radioBottomCenter";
-            radioBottomCenter.Size = new Size(104, 24);
+            radioBottomCenter.Size = new Size(79, 32);
             radioBottomCenter.TabIndex = 4;
+            radioBottomCenter.Text = "下中";
             // 
             // radioBottomRight
             // 
-            radioBottomRight.Location = new Point(0, 0);
+            radioBottomRight.AutoSize = true;
+            radioBottomRight.Location = new Point(205, 60);
             radioBottomRight.Name = "radioBottomRight";
-            radioBottomRight.Size = new Size(104, 24);
+            radioBottomRight.Size = new Size(79, 32);
             radioBottomRight.TabIndex = 5;
+            radioBottomRight.Text = "右下";
             // 
             // groupBoxLanguage
             // 
             groupBoxLanguage.Controls.Add(chineseRadioButton);
             groupBoxLanguage.Controls.Add(englishRadioButton);
-            groupBoxLanguage.Location = new Point(8, 144);
+            groupBoxLanguage.Location = new Point(8, 125);
             groupBoxLanguage.Name = "groupBoxLanguage";
             groupBoxLanguage.Size = new Size(300, 70);
             groupBoxLanguage.TabIndex = 1;
@@ -109,31 +124,38 @@ namespace DTwoMFTimerHelper.UI.Settings {
             // 
             // chineseRadioButton
             // 
-            chineseRadioButton.Location = new Point(0, 0);
+            chineseRadioButton.AutoSize = true;
+            chineseRadioButton.Checked = true;
+            chineseRadioButton.Location = new Point(15, 30);
             chineseRadioButton.Name = "chineseRadioButton";
-            chineseRadioButton.Size = new Size(104, 24);
+            chineseRadioButton.Size = new Size(117, 32);
             chineseRadioButton.TabIndex = 0;
+            chineseRadioButton.TabStop = true;
+            chineseRadioButton.Text = "Chinese";
             // 
             // englishRadioButton
             // 
-            englishRadioButton.Location = new Point(0, 0);
+            englishRadioButton.AutoSize = true;
+            englishRadioButton.Location = new Point(155, 30);
             englishRadioButton.Name = "englishRadioButton";
-            englishRadioButton.Size = new Size(104, 24);
+            englishRadioButton.Size = new Size(110, 32);
             englishRadioButton.TabIndex = 1;
+            englishRadioButton.Text = "English";
             // 
             // alwaysOnTopCheckBox
             // 
+            alwaysOnTopCheckBox.AutoSize = true;
             alwaysOnTopCheckBox.Checked = true;
             alwaysOnTopCheckBox.CheckState = CheckState.Checked;
-            alwaysOnTopCheckBox.Location = new Point(130, 242);
+            alwaysOnTopCheckBox.Location = new Point(134, 212);
             alwaysOnTopCheckBox.Name = "alwaysOnTopCheckBox";
-            alwaysOnTopCheckBox.Size = new Size(104, 24);
+            alwaysOnTopCheckBox.Size = new Size(22, 21);
             alwaysOnTopCheckBox.TabIndex = 3;
             // 
             // alwaysOnTopLabel
             // 
             alwaysOnTopLabel.AutoSize = true;
-            alwaysOnTopLabel.Location = new Point(8, 242);
+            alwaysOnTopLabel.Location = new Point(23, 208);
             alwaysOnTopLabel.Name = "alwaysOnTopLabel";
             alwaysOnTopLabel.Size = new Size(96, 28);
             alwaysOnTopLabel.TabIndex = 2;
@@ -147,58 +169,96 @@ namespace DTwoMFTimerHelper.UI.Settings {
             Controls.Add(alwaysOnTopLabel);
             Controls.Add(alwaysOnTopCheckBox);
             Name = "GeneralSettingsControl";
-            Size = new Size(388, 406);
+            Size = new Size(320, 280);
             groupBoxPosition.ResumeLayout(false);
+            groupBoxPosition.PerformLayout();
             groupBoxLanguage.ResumeLayout(false);
+            groupBoxLanguage.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
 
-        private void SetupRadio(RadioButton rb, string text, int x, int y, bool isChecked = false) {
-            rb.Text = text;
-            rb.Location = new Point(x, y);
-            rb.AutoSize = true;
-            rb.Checked = isChecked;
+        public void LoadSettings(AppSettings settings) {
+            if (this.InvokeRequired) { this.Invoke(new Action<AppSettings>(LoadSettings), settings); return; }
+
+            // 1. 设置“总在最前”
+            if (alwaysOnTopCheckBox != null) {
+                alwaysOnTopCheckBox.Checked = settings.AlwaysOnTop;
+            }
+
+            // 2. 设置语言 (使用 SettingsManager 的转换逻辑)
+            if (groupBoxLanguage != null) {
+                var langOption = SettingsManager.StringToLanguage(settings.Language);
+                if (langOption == SettingsControl.LanguageOption.English) {
+                    englishRadioButton!.Checked = true;
+                }
+                else {
+                    chineseRadioButton!.Checked = true;
+                }
+            }
+
+            // 3. 设置窗口位置 (使用 SettingsManager 的转换逻辑)
+            if (groupBoxPosition != null) {
+                var position = SettingsManager.StringToWindowPosition(settings.WindowPosition);
+                switch (position) {
+                    case SettingsControl.WindowPosition.TopLeft: radioTopLeft!.Checked = true; break;
+                    case SettingsControl.WindowPosition.TopCenter: radioTopCenter!.Checked = true; break;
+                    case SettingsControl.WindowPosition.TopRight: radioTopRight!.Checked = true; break;
+                    case SettingsControl.WindowPosition.BottomLeft: radioBottomLeft!.Checked = true; break;
+                    case SettingsControl.WindowPosition.BottomCenter: radioBottomCenter!.Checked = true; break;
+                    case SettingsControl.WindowPosition.BottomRight: radioBottomRight!.Checked = true; break;
+                    default: radioTopLeft!.Checked = true; break;
+                }
+            }
         }
 
         public void RefreshUI() {
+            // 运行时动态更新文本
             if (this.InvokeRequired) { this.Invoke(new Action(RefreshUI)); return; }
 
-            groupBoxPosition!.Text = LanguageManager.GetString("WindowPosition");
-            radioTopLeft!.Text = LanguageManager.GetString("TopLeft");
-            radioTopCenter!.Text = LanguageManager.GetString("TopCenter");
-            radioTopRight!.Text = LanguageManager.GetString("TopRight");
-            radioBottomLeft!.Text = LanguageManager.GetString("BottomLeft");
-            radioBottomCenter!.Text = LanguageManager.GetString("BottomCenter");
-            radioBottomRight!.Text = LanguageManager.GetString("BottomRight");
+            // 再次检查以防万一
+            if (groupBoxPosition == null) return;
 
-            groupBoxLanguage!.Text = LanguageManager.GetString("Language");
-            chineseRadioButton!.Text = LanguageManager.GetString("Chinese");
-            englishRadioButton!.Text = LanguageManager.GetString("English");
+            try {
+                // 这里的 try-catch 是为了防止 Design 模式下偶然调用 LanguageManager 报错
+                groupBoxPosition.Text = LanguageManager.GetString("WindowPosition");
+                radioTopLeft!.Text = LanguageManager.GetString("TopLeft");
+                radioTopCenter!.Text = LanguageManager.GetString("TopCenter");
+                radioTopRight!.Text = LanguageManager.GetString("TopRight");
+                radioBottomLeft!.Text = LanguageManager.GetString("BottomLeft");
+                radioBottomCenter!.Text = LanguageManager.GetString("BottomCenter");
+                radioBottomRight!.Text = LanguageManager.GetString("BottomRight");
 
-            alwaysOnTopLabel!.Text = LanguageManager.GetString("AlwaysOnTop");
+                groupBoxLanguage!.Text = LanguageManager.GetString("Language");
+                chineseRadioButton!.Text = LanguageManager.GetString("Chinese");
+                englishRadioButton!.Text = LanguageManager.GetString("English");
+
+                alwaysOnTopLabel!.Text = LanguageManager.GetString("AlwaysOnTop");
+            }
+            catch {
+                // 如果出错（比如资源找不到），保持 InitializeComponent 中的默认文本
+            }
         }
 
-
-        // --- 公开属性供父控件获取数据 ---
-
+        // ... 属性部分保持不变 ...
         public SettingsControl.WindowPosition SelectedPosition {
             get {
-                if (radioTopLeft.Checked) return SettingsControl.WindowPosition.TopLeft;
-                if (radioTopCenter.Checked) return SettingsControl.WindowPosition.TopCenter;
-                if (radioTopRight.Checked) return SettingsControl.WindowPosition.TopRight;
-                if (radioBottomLeft.Checked) return SettingsControl.WindowPosition.BottomLeft;
-                if (radioBottomCenter.Checked) return SettingsControl.WindowPosition.BottomCenter;
-                if (radioBottomRight.Checked) return SettingsControl.WindowPosition.BottomRight;
+                if (radioTopLeft?.Checked ?? false) return SettingsControl.WindowPosition.TopLeft;
+                if (radioTopCenter?.Checked ?? false) return SettingsControl.WindowPosition.TopCenter;
+                if (radioTopRight?.Checked ?? false) return SettingsControl.WindowPosition.TopRight;
+                if (radioBottomLeft?.Checked ?? false) return SettingsControl.WindowPosition.BottomLeft;
+                if (radioBottomCenter?.Checked ?? false) return SettingsControl.WindowPosition.BottomCenter;
+                if (radioBottomRight?.Checked ?? false) return SettingsControl.WindowPosition.BottomRight;
                 return SettingsControl.WindowPosition.TopLeft;
             }
         }
 
         public SettingsControl.LanguageOption SelectedLanguage {
             get {
-                return chineseRadioButton.Checked ? SettingsControl.LanguageOption.Chinese : SettingsControl.LanguageOption.English;
+                return (chineseRadioButton?.Checked ?? false) ? SettingsControl.LanguageOption.Chinese : SettingsControl.LanguageOption.English;
             }
         }
+
         public bool IsAlwaysOnTop => alwaysOnTopCheckBox?.Checked ?? false;
     }
 }

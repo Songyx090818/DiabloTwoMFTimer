@@ -49,11 +49,10 @@ namespace DTwoMFTimerHelper.Services {
         private const int HOTKEY_ID_PAUSE = 2;
         private const int HOTKEY_ID_DELETE_HISTORY = 3;
         private const int HOTKEY_ID_RECORD_LOOT = 4;
-
-        private Keys _currentStartStopHotkey = Keys.Q | Keys.Alt;
-        private Keys _currentPauseHotkey = Keys.Space | Keys.Control;
-        private Keys _currentDeleteHistoryHotkey = Keys.D | Keys.Control;
-        private Keys _currentRecordLootHotkey = Keys.A | Keys.Alt;
+        private Keys _currentStartOrNextRunHotkey;
+        private Keys _currentPauseHotkey;
+        private Keys _currentDeleteHistoryHotkey;
+        private Keys _currentRecordLootHotkey;
 
         [DllImport("user32.dll")]
         private static extern bool RegisterHotKey(IntPtr hWnd, int id, int fsModifiers, int vk);
@@ -94,6 +93,22 @@ namespace DTwoMFTimerHelper.Services {
         /// </summary>
         public void InitializeApplication() {
             LoadSettings();
+            // 1. 从配置中初始化当前热键变量
+            if (_appSettings != null) {
+                _currentStartOrNextRunHotkey = _appSettings.HotkeyStartOrNext;
+                _currentPauseHotkey = _appSettings.HotkeyPause;
+                _currentDeleteHistoryHotkey = _appSettings.HotkeyDeleteHistory;
+                _currentRecordLootHotkey = _appSettings.HotkeyRecordLoot;
+            }
+            else {
+                // 默认值兜底
+                _currentStartOrNextRunHotkey = Keys.Q | Keys.Alt;
+                _currentPauseHotkey = Keys.Space | Keys.Control;
+                _currentDeleteHistoryHotkey = Keys.D | Keys.Control;
+                _currentRecordLootHotkey = Keys.A | Keys.Alt;
+                // ... 其他默认值
+            }
+
             InitializeLanguageSupport();
             ApplyWindowSettings();
             RegisterHotkeys();
@@ -206,6 +221,8 @@ namespace DTwoMFTimerHelper.Services {
             _timerControl = new TimerControl(_profileService, _timerService, _timerHistoryService, _pomodoroTimerService);
             _pomodoroControl = new PomodoroControl(_pomodoroTimerService);
             _settingsControl = new SettingsControl();
+            _appSettings ??= SettingsManager.LoadSettings();
+            _settingsControl.InitializeData(_appSettings);
         }
 
         private void InitializeControls() {
@@ -233,14 +250,12 @@ namespace DTwoMFTimerHelper.Services {
             if (_timerControl != null) {
                 _timerControl.TimerStateChanged += OnTimerTimerStateChanged;
             }
-
             // 订阅设置事件
             if (_settingsControl != null) {
                 _settingsControl.WindowPositionChanged += OnWindowPositionChanged;
                 _settingsControl.LanguageChanged += OnLanguageChanged;
                 _settingsControl.AlwaysOnTopChanged += OnAlwaysOnTopChanged;
-                _settingsControl.StartStopHotkeyChanged += OnStartStopHotkeyChanged;
-                _settingsControl.PauseHotkeyChanged += OnPauseHotkeyChanged;
+                _settingsControl.HotkeysChanged += OnHotkeysChanged;
             }
         }
 
@@ -277,7 +292,7 @@ namespace DTwoMFTimerHelper.Services {
         private void RegisterHotkeys() {
             UnregisterHotKeys();
 
-            RegisterHotKey(_currentStartStopHotkey, HOTKEY_ID_STARTSTOP);
+            RegisterHotKey(_currentStartOrNextRunHotkey, HOTKEY_ID_STARTSTOP);
             RegisterHotKey(_currentPauseHotkey, HOTKEY_ID_PAUSE);
             RegisterHotKey(_currentDeleteHistoryHotkey, HOTKEY_ID_DELETE_HISTORY);
             RegisterHotKey(_currentRecordLootHotkey, HOTKEY_ID_RECORD_LOOT);
@@ -342,15 +357,29 @@ namespace DTwoMFTimerHelper.Services {
             }
         }
 
-        private void OnStartStopHotkeyChanged(object? sender, SettingsControl.HotkeyChangedEventArgs e) {
-            _currentStartStopHotkey = e.Hotkey;
+        private void OnHotkeysChanged(object? sender, SettingsControl.AllHotkeysChangedEventArgs e) {
+            // 更新内存变量
+            _currentStartOrNextRunHotkey = e.StartHotkey;
+            _currentPauseHotkey = e.PauseHotkey;
+            _currentDeleteHistoryHotkey = e.DeleteHotkey;
+            _currentRecordLootHotkey = e.RecordHotkey;
+
+            // 更新并保存到配置文件
+            if (_appSettings != null) {
+                _appSettings.HotkeyStartOrNext = e.StartHotkey;
+                _appSettings.HotkeyPause = e.PauseHotkey;
+                _appSettings.HotkeyDeleteHistory = e.DeleteHotkey;
+                _appSettings.HotkeyRecordLoot = e.RecordHotkey;
+                SettingsManager.SaveSettings(_appSettings);
+            }
+
+            // 重新注册热键使其生效
             RegisterHotkeys();
+
+            // 可选：提示用户保存成功
+            // MessageBox.Show("设置已保存", "提示");
         }
 
-        private void OnPauseHotkeyChanged(object? sender, SettingsControl.HotkeyChangedEventArgs e) {
-            _currentPauseHotkey = e.Hotkey;
-            RegisterHotkeys();
-        }
 
         private void OnWindowPositionChanged(object? sender, SettingsControl.WindowPositionChangedEventArgs e) {
             if (_mainForm != null) {
@@ -379,8 +408,7 @@ namespace DTwoMFTimerHelper.Services {
                 _settingsControl.WindowPositionChanged -= OnWindowPositionChanged;
                 _settingsControl.LanguageChanged -= OnLanguageChanged;
                 _settingsControl.AlwaysOnTopChanged -= OnAlwaysOnTopChanged;
-                _settingsControl.StartStopHotkeyChanged -= OnStartStopHotkeyChanged;
-                _settingsControl.PauseHotkeyChanged -= OnPauseHotkeyChanged;
+                _settingsControl.HotkeysChanged -= OnHotkeysChanged;
             }
 
             LanguageManager.OnLanguageChanged -= LanguageManager_OnLanguageChanged;

@@ -27,22 +27,22 @@ namespace DTwoMFTimerHelper.UI.Profiles {
         }
         // 控件字段 - 使用组件容器来支持设计器
         private IContainer? components = null;
-        private Button? btnCreateCharacter = null;
-        private Button? btnSwitchCharacter = null;
-        private Button? btnDeleteCharacter = null;
-        private Label? lblScene = null;
-        private ComboBox? cmbScene = null;
-        private Label? lblDifficulty = null;
-        private ComboBox? cmbDifficulty = null;
-        private Button? btnStartStop = null;
-        private Label? lblCurrentProfile = null;
-        private Label? lblTime = null;
-        private Label? lblStats = null;
+        private Button? btnCreateCharacter = null!;
+        private Button? btnSwitchCharacter = null!;
+        private Button? btnDeleteCharacter = null!;
+        private Label? lblScene = null!;
+        private ComboBox? cmbScene = null!;
+        private Label? lblDifficulty = null!;
+        private ComboBox? cmbDifficulty = null!;
+        private Button? btnStartStop = null!;
+        private Label? lblCurrentProfile = null!;
+        private Label? lblTime = null!;
+        private Label? lblStats = null!;
 
         // MF记录功能相关字段
         private Models.CharacterProfile? currentProfile = null;
         private Models.MFRecord? currentRecord = null;
-        private List<Models.FarmingScene> farmingScenes = new List<Models.FarmingScene>();
+        private List<Models.FarmingScene> farmingScenes = new();
         public Models.CharacterProfile? CurrentProfile => currentProfile;
         public Models.MFRecord? CurrentRecord => currentRecord;
 

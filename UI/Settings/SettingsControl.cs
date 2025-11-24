@@ -14,9 +14,9 @@ namespace DTwoMFTimerHelper.UI.Settings {
         public event EventHandler<WindowPositionChangedEventArgs>? WindowPositionChanged;
         public event EventHandler<LanguageChangedEventArgs>? LanguageChanged;
         public event EventHandler<AlwaysOnTopChangedEventArgs>? AlwaysOnTopChanged;
-        public event EventHandler<HotkeyChangedEventArgs>? StartStopHotkeyChanged;
-        public event EventHandler<HotkeyChangedEventArgs>? PauseHotkeyChanged;
 
+        // 建议合并为一个快捷键更新事件，或者分别定义
+        public event EventHandler<AllHotkeysChangedEventArgs>? HotkeysChanged;
         // 控件引用
         private TabControl tabControl = null!;
         private TabPage tabPageGeneral = null!;
@@ -83,7 +83,7 @@ namespace DTwoMFTimerHelper.UI.Settings {
             tabPageHotkeys.Location = new Point(4, 37);
             tabPageHotkeys.Name = "tabPageHotkeys";
             tabPageHotkeys.Padding = new Padding(3);
-            tabPageHotkeys.Size = new Size(332, 234);
+            tabPageHotkeys.Size = new Size(363, 350);
             tabPageHotkeys.TabIndex = 1;
             tabPageHotkeys.Text = "快捷键";
             // 
@@ -93,13 +93,13 @@ namespace DTwoMFTimerHelper.UI.Settings {
             hotkeySettings.Dock = DockStyle.Fill;
             hotkeySettings.Location = new Point(3, 3);
             hotkeySettings.Name = "hotkeySettings";
-            hotkeySettings.Size = new Size(326, 228);
+            hotkeySettings.Size = new Size(357, 344);
             hotkeySettings.TabIndex = 0;
             // 
             // btnConfirmSettings
             // 
             btnConfirmSettings.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnConfirmSettings.Location = new Point(321, 8);
+            btnConfirmSettings.Location = new Point(271, 6);
             btnConfirmSettings.Name = "btnConfirmSettings";
             btnConfirmSettings.Size = new Size(80, 30);
             btnConfirmSettings.TabIndex = 0;
@@ -141,15 +141,34 @@ namespace DTwoMFTimerHelper.UI.Settings {
             hotkeySettings.RefreshUI();
         }
 
+        public void InitializeData(Services.AppSettings settings) {
+            generalSettings.LoadSettings(settings);
+            hotkeySettings.LoadHotkeys(settings);
+        }
+
         private void BtnConfirmSettings_Click(object? sender, EventArgs e) {
-            // 1. 获取通用设置并触发事件
+            // 触发通用设置事件
             WindowPositionChanged?.Invoke(this, new WindowPositionChangedEventArgs(generalSettings.SelectedPosition));
             LanguageChanged?.Invoke(this, new LanguageChangedEventArgs(generalSettings.SelectedLanguage));
             AlwaysOnTopChanged?.Invoke(this, new AlwaysOnTopChangedEventArgs(generalSettings.IsAlwaysOnTop));
 
-            // 2. 获取快捷键设置并触发事件
-            StartStopHotkeyChanged?.Invoke(this, new HotkeyChangedEventArgs(hotkeySettings.StartStopHotkey));
-            PauseHotkeyChanged?.Invoke(this, new HotkeyChangedEventArgs(hotkeySettings.PauseHotkey));
+            // 触发快捷键更新事件 (一次性发送所有快捷键)
+            HotkeysChanged?.Invoke(this, new AllHotkeysChangedEventArgs(
+                hotkeySettings.StartOrNextRunHotkey,
+                hotkeySettings.PauseHotkey,
+                hotkeySettings.DeleteHistoryHotkey,
+                hotkeySettings.RecordLootHotkey
+            ));
+        }
+
+        // ... (其他代码不变) ...
+
+        // 新增：包含所有快捷键的事件参数类
+        public class AllHotkeysChangedEventArgs(Keys start, Keys pause, Keys delete, Keys record) : EventArgs {
+            public Keys StartHotkey { get; } = start;
+            public Keys PauseHotkey { get; } = pause;
+            public Keys DeleteHotkey { get; } = delete;
+            public Keys RecordHotkey { get; } = record;
         }
 
         public void ApplyWindowPosition(Form form) {
