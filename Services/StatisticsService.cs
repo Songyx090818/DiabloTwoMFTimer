@@ -131,7 +131,7 @@ namespace DTwoMFTimerHelper.Services {
                 sb.AppendLine($"【{LanguageManager.GetString("SceneData")}】");
                 foreach (var s in sceneStats) {
                     // 格式：崔凡客: 25次 | Avg: 45s | Best: 40s
-                    string localizedSceneName = SceneService.GetLocalizedShortSceneName(s.Name);
+                    string localizedSceneName = SceneHelper.GetLocalizedShortSceneName(s.Name);
                     sb.AppendLine($"{localizedSceneName}: {s.Count}{LanguageManager.GetString("Times")} | {LanguageManager.GetString("Avg")}: {s.Avg:F1}s | {LanguageManager.GetString("Fastest")}: {s.Fastest:F1}s");
                 }
             }
@@ -152,7 +152,7 @@ namespace DTwoMFTimerHelper.Services {
                 sb.AppendLine($"【{LanguageManager.GetString("LootItems")}】");
                 foreach (var l in loots) {
                     // 格式：崔凡客(25): 28号符文
-                    string localizedSceneName = SceneService.GetLocalizedShortSceneName(l.SceneName);
+                    string localizedSceneName = SceneHelper.GetLocalizedShortSceneName(l.SceneName);
                     sb.AppendLine($"{localizedSceneName} ({LanguageManager.GetString("Round")} {l.RunCount}): {l.Name}");
                 }
             }

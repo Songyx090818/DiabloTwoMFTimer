@@ -50,7 +50,7 @@ namespace DTwoMFTimerHelper.UI.Timer {
             }
 
             string sceneName = _profileService?.CurrentScene ?? "";
-            string englishSceneName = SceneService.GetEnglishSceneName(sceneName);
+            string englishSceneName = SceneHelper.GetEnglishSceneName(sceneName);
 
             var lootRecord = new LootRecord {
                 Name = txtLootName.Text.Trim(),
@@ -63,7 +63,7 @@ namespace DTwoMFTimerHelper.UI.Timer {
             var currentProfile = _profileService?.CurrentProfile;
             if (currentProfile != null) {
                 currentProfile.LootRecords.Add(lootRecord);
-                Services.DataService.SaveProfile(currentProfile); // 保存修改
+                Utils.DataHelper.SaveProfile(currentProfile); // 保存修改
             }
 
             // 显示保存成功的Toast通知

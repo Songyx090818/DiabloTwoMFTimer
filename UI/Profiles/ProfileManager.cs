@@ -228,7 +228,7 @@ namespace DTwoMFTimerHelper.UI.Profiles {
             if (cmbDifficulty != null) {
                 cmbDifficulty.Items.Clear();
                 foreach (Models.GameDifficulty difficulty in Enum.GetValues(typeof(Models.GameDifficulty)))
-                    cmbDifficulty.Items.Add(SceneService.GetLocalizedDifficultyName(difficulty));
+                    cmbDifficulty.Items.Add(SceneHelper.GetLocalizedDifficultyName(difficulty));
 
                 if (cmbDifficulty.Items.Count > 0)
                     cmbDifficulty.SelectedIndex = 2; // 默认地狱难度
@@ -239,7 +239,7 @@ namespace DTwoMFTimerHelper.UI.Profiles {
             // 先初始化难度下拉框
             InitializeDifficultyComboBox();
 
-            farmingScenes = SceneService.LoadFarmingSpots();
+            farmingScenes = SceneHelper.LoadFarmingSpots();
 
             cmbScene?.Items.Clear();
 
@@ -248,7 +248,7 @@ namespace DTwoMFTimerHelper.UI.Profiles {
             }
             else {
                 foreach (var scene in farmingScenes) {
-                    string displayName = SceneService.GetSceneDisplayName(scene);
+                    string displayName = SceneHelper.GetSceneDisplayName(scene);
                     cmbScene?.Items.Add(displayName);
                 }
 
@@ -303,7 +303,7 @@ namespace DTwoMFTimerHelper.UI.Profiles {
             var settings = Services.SettingsManager.LoadSettings();
             // 尝试加载上次使用的角色档案
             if (!string.IsNullOrEmpty(settings.LastUsedProfile)) {
-                var profile = Services.DataService.FindProfileByName(settings.LastUsedProfile);
+                var profile = Utils.DataHelper.FindProfileByName(settings.LastUsedProfile);
                 if (profile != null) {
                     currentProfile = profile;
                     if (btnDeleteCharacter != null)
@@ -320,7 +320,7 @@ namespace DTwoMFTimerHelper.UI.Profiles {
         // 其他方法保持不变...
         private Models.GameDifficulty GetSelectedDifficulty() {
             if (cmbDifficulty?.SelectedIndex >= 0) {
-                return SceneService.GetDifficultyByIndex(cmbDifficulty.SelectedIndex);
+                return SceneHelper.GetDifficultyByIndex(cmbDifficulty.SelectedIndex);
             }
             return Models.GameDifficulty.Hell;
         }
@@ -372,7 +372,7 @@ namespace DTwoMFTimerHelper.UI.Profiles {
                         WriteDebugLog($"选中难度: {difficulty}");
 
                         // 获取场景的纯英文名称（与记录存储格式一致）
-                        string sceneDisplayName = SceneService.GetSceneDisplayName(selectedScene);
+                        string sceneDisplayName = SceneHelper.GetSceneDisplayName(selectedScene);
                         WriteDebugLog($"场景显示名称: {sceneDisplayName}");
 
                         string pureSceneName = sceneDisplayName;
@@ -473,7 +473,7 @@ namespace DTwoMFTimerHelper.UI.Profiles {
                 Models.CharacterClass charClass = selectedClass.Value;
 
                 // 创建新角色档案
-                currentProfile = DataService.CreateNewProfile(characterName, charClass);
+                currentProfile = DataHelper.CreateNewProfile(characterName, charClass);
 
                 // 验证创建结果
                 if (currentProfile == null) {
@@ -519,7 +519,7 @@ namespace DTwoMFTimerHelper.UI.Profiles {
                     WriteDebugLog($"成功切换到角色: {currentProfile.Name}");
 
                     // 更新LastUsedProfile设置
-                    var settings = SettingsManager.LoadSettings();
+                    var settings = Services.SettingsManager.LoadSettings();
                     settings.LastUsedProfile = selectedProfile.Name;
                     SettingsManager.SaveSettings(settings);
                     WriteDebugLog($"更新LastUsedProfile为: {selectedProfile.Name}");
@@ -543,7 +543,7 @@ namespace DTwoMFTimerHelper.UI.Profiles {
             string confirmMsg = $"确定要删除角色: {currentProfile.Name}?";
             if (MessageBox.Show(confirmMsg, "删除角色", MessageBoxButtons.YesNo) == DialogResult.Yes) {
                 // 删除角色档案
-                DataService.DeleteProfile(currentProfile);
+                DataHelper.DeleteProfile(currentProfile);
                 currentProfile = null;
                 currentRecord = null;
                 UpdateUI();
@@ -587,7 +587,7 @@ namespace DTwoMFTimerHelper.UI.Profiles {
                 WriteDebugLog($"难度索引已变更为: {selectedIndex}，显示文本: {selectedDifficultyText}");
 
                 // 使用SceneService中的GetDifficultyByIndex方法获取对应的GameDifficulty枚举值
-                Models.GameDifficulty difficulty = Services.SceneService.GetDifficultyByIndex(selectedIndex);
+                Models.GameDifficulty difficulty = Utils.SceneHelper.GetDifficultyByIndex(selectedIndex);
 
                 _profileService.CurrentDifficulty = difficulty;
                 // 更新UI - TimerControl会通过事件监听自动更新
@@ -608,7 +608,7 @@ namespace DTwoMFTimerHelper.UI.Profiles {
                 WriteDebugLog($"尝试加载上次使用的角色档案: {lastUsedProfileName}");
 
                 // 直接加载单个角色配置文件，而不是加载所有文件
-                var profile = Services.DataService.LoadProfileByName(lastUsedProfileName);
+                var profile = Utils.DataHelper.LoadProfileByName(lastUsedProfileName);
                 if (profile != null) {
                     currentProfile = profile;
                     currentRecord = null;

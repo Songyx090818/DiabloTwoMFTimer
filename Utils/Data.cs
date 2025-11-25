@@ -6,11 +6,10 @@ using System.Text;
 using System.Windows.Forms;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
-using DTwoMFTimerHelper.Utils;
 using DTwoMFTimerHelper.Models;
 
-namespace DTwoMFTimerHelper.Services {
-    public static class DataService {
+namespace DTwoMFTimerHelper.Utils {
+    public static class DataHelper {
         // 动态获取当前用户的AppData\Roaming路径
         private static readonly string ProfilesDirectory = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
@@ -19,15 +18,19 @@ namespace DTwoMFTimerHelper.Services {
             "");
 
         // 静态构造函数，用于验证目录路径
-        static DataService() {
-            LogManager.WriteDebugLog("DataService", $"[目录验证] 角色档案目录路径: {ProfilesDirectory}");
-            LogManager.WriteDebugLog("DataService", $"[目录验证] 目录是否存在: {Directory.Exists(ProfilesDirectory)}");
-            if (Directory.Exists(ProfilesDirectory)) {
-                var files = Directory.GetFiles(ProfilesDirectory, "*.yaml");
-                LogManager.WriteDebugLog("DataService", $"[目录验证] 目录中找到 {files.Length} 个YAML文件");
-                foreach (var file in files) {
-                    LogManager.WriteDebugLog("DataService", $"[目录验证] - {Path.GetFileName(file)}");
-                }
+        static DataHelper() {
+            LogManager.WriteDebugLog("DataHelper", $"[目录验证] 角色档案目录路径: {ProfilesDirectory}");
+            LogManager.WriteDebugLog("DataHelper", $"[目录验证] 目录是否存在: {Directory.Exists(ProfilesDirectory)}");
+
+            if (!Directory.Exists(ProfilesDirectory)) {
+                Directory.CreateDirectory(ProfilesDirectory);
+            }
+
+            // 扫描目录中的YAML文件
+            string[] files = Directory.GetFiles(ProfilesDirectory, "*.yaml");
+            LogManager.WriteDebugLog("DataHelper", $"[目录验证] 目录中找到 {files.Length} 个YAML文件");
+            foreach (string file in files) {
+                LogManager.WriteDebugLog("DataHelper", $"[目录验证] - {Path.GetFileName(file)}");
             }
         }
 
@@ -102,7 +105,7 @@ namespace DTwoMFTimerHelper.Services {
                     }
                 }
                 catch (Exception dirEx) {
-                    LogManager.WriteErrorLog("DataService", $"创建目录失败: {dirEx.Message}", dirEx);
+                    LogManager.WriteErrorLog("DataHelper", $"创建目录失败: {dirEx.Message}", dirEx);
                     throw new IOException($"创建配置文件目录失败: {dirEx.Message}", dirEx);
                 }
 
@@ -183,16 +186,16 @@ namespace DTwoMFTimerHelper.Services {
                 // 使用统一的方法获取文件路径
                 var filePath = GetProfileFilePath(profile.Name);
                 if (File.Exists(filePath)) {
-                    LogManager.WriteDebugLog("DataService", $"删除角色档案: {filePath}");
+                    LogManager.WriteDebugLog("DataHelper", $"删除角色档案: {filePath}");
                     File.Delete(filePath);
-                    LogManager.WriteDebugLog("DataService", $"角色档案删除成功: {profile.Name}");
+                    LogManager.WriteDebugLog("DataHelper", $"角色档案删除成功: {profile.Name}");
                 }
                 else {
-                    LogManager.WriteDebugLog("DataService", $"文件不存在，无法删除: {filePath}");
+                    LogManager.WriteDebugLog("DataHelper", $"文件不存在，无法删除: {filePath}");
                 }
             }
             catch (Exception ex) {
-                LogManager.WriteErrorLog("DataService", $"删除角色档案失败", ex);
+                LogManager.WriteErrorLog("DataHelper", $"删除角色档案失败", ex);
 
                 // 在所有模式下都显示错误信息
                 string errorMsg = $"删除角色档案失败: {ex.Message}";
@@ -203,35 +206,35 @@ namespace DTwoMFTimerHelper.Services {
         // 移除了ToggleProfileVisibility方法，因为不再需要隐藏/显示角色档案功能
 
         /// <summary>
-        /// 加载场景数据
+        /// 加载所有场景数据
         /// </summary>
         public static List<FarmingScene> LoadFarmingSpots() {
-            // 调用SceneService加载场景数据
-            return SceneService.LoadFarmingSpots();
+            // 调用SceneHelper加载场景数据
+            return SceneHelper.LoadFarmingSpots();
         }
 
         /// <summary>
         /// 获取场景的中英文映射字典
         /// </summary>
         public static Dictionary<string, string> GetSceneMappings() {
-            // 调用SceneService获取场景映射
-            return SceneService.GetSceneMappings();
+            // 调用SceneHelper获取场景映射
+            return SceneHelper.GetSceneMappings();
         }
 
         /// <summary>
         /// 获取场景的ACT值映射字典
         /// </summary>
         public static Dictionary<string, int> GetSceneActMappings() {
-            // 调用SceneService获取场景ACT映射
-            return SceneService.GetSceneActMappings();
+            // 调用SceneHelper获取场景ACT映射
+            return SceneHelper.GetSceneActMappings();
         }
 
         /// <summary>
         /// 根据场景名称获取对应的英文名称
         /// </summary>
         public static string GetEnglishSceneName(string sceneName) {
-            // 调用SceneService获取英文场景名称
-            return SceneService.GetEnglishSceneName(sceneName);
+            // 调用SceneHelper获取英文场景名称
+            return SceneHelper.GetEnglishSceneName(sceneName);
         }
 
         // 根据名称查找角色档案
@@ -269,17 +272,17 @@ namespace DTwoMFTimerHelper.Services {
                     Records = []
                 };
 
-                LogManager.WriteDebugLog("DataService", $"角色对象创建成功，现在准备保存");
+                LogManager.WriteDebugLog("DataHelper", $"角色对象创建成功，现在准备保存");
                 // 保存配置文件
                 SaveProfile(profile);
-                LogManager.WriteDebugLog("DataService", $"成功创建并保存角色档案: {name}");
+                LogManager.WriteDebugLog("DataHelper", $"成功创建并保存角色档案: {name}");
 
                 // 直接返回创建的profile对象，避免因文件系统缓存导致的验证失败
                 // 后续操作会通过正常加载流程确保数据一致性
                 return profile;
             }
             catch (Exception ex) {
-                LogManager.WriteErrorLog("DataService", $"创建角色档案失败: {ex.Message}", ex);
+                LogManager.WriteErrorLog("DataHelper", $"创建角色档案失败: {ex.Message}", ex);
                 // 在所有模式下都显示详细错误信息，确保用户知道具体失败原因
                 string errorMsg = ex.InnerException != null
                     ? $"创建角色失败: {ex.Message}\n内部错误: {ex.InnerException.Message}"

@@ -81,7 +81,7 @@ namespace DTwoMFTimerHelper.Services {
             get => LanguageManager.GetString(_currentScene);
             set {
                 // 确保保存时使用英文场景名称
-                string englishSceneName = SceneService.GetEnglishSceneName(value);
+                string englishSceneName = SceneHelper.GetEnglishSceneName(value);
 
                 if (_currentScene != englishSceneName) {
                     _currentScene = englishSceneName;
@@ -120,7 +120,7 @@ namespace DTwoMFTimerHelper.Services {
         /// 加载所有耕作场景
         /// </summary>
         public void LoadFarmingScenes() {
-            FarmingScenes = SceneService.LoadFarmingSpots();
+            FarmingScenes = SceneHelper.LoadFarmingSpots();
             // 加载上次使用的场景
             LoadLastRunScene();
         }
@@ -131,7 +131,7 @@ namespace DTwoMFTimerHelper.Services {
         public CharacterProfile? CreateCharacter(string characterName, CharacterClass characterClass) {
             try {
                 LogManager.WriteDebugLog("ProfileService", $"开始创建新角色: {characterName}, 职业: {characterClass}");
-                var profile = DataService.CreateNewProfile(characterName, characterClass);
+                var profile = DataHelper.CreateNewProfile(characterName, characterClass);
                 if (profile == null) {
                     LogManager.WriteDebugLog("ProfileService", "创建角色失败，返回的配置文件为null");
                     return null;
@@ -172,7 +172,7 @@ namespace DTwoMFTimerHelper.Services {
         /// </summary>
         public bool DeleteCharacter(CharacterProfile profile) {
             LogManager.WriteDebugLog("ProfileService", $"开始删除角色: {profile.Name}");
-            DataService.DeleteProfile(profile);
+            DataHelper.DeleteProfile(profile);
             // 如果删除的是当前角色，清空当前角色
             if (CurrentProfile?.Name == profile.Name) {
                 CurrentProfile = null;
@@ -190,14 +190,14 @@ namespace DTwoMFTimerHelper.Services {
         /// 获取所有角色档案
         /// </summary>
         public List<CharacterProfile> GetAllProfiles() {
-            return DataService.LoadAllProfiles();
+            return DataHelper.LoadAllProfiles();
         }
 
         /// <summary>
         /// 根据名称查找角色档案
         /// </summary>
         public CharacterProfile? FindProfileByName(string name) {
-            return DataService.FindProfileByName(name);
+            return DataHelper.FindProfileByName(name);
         }
 
         /// <summary>
@@ -232,7 +232,7 @@ namespace DTwoMFTimerHelper.Services {
         /// 获取场景显示名称列表
         /// </summary>
         public List<string> GetSceneDisplayNames() {
-            return FarmingScenes.Select(scene => SceneService.GetSceneDisplayName(scene)).ToList();
+            return FarmingScenes.Select(scene => SceneHelper.GetSceneDisplayName(scene)).ToList();
         }
 
         /// <summary>
@@ -240,7 +240,7 @@ namespace DTwoMFTimerHelper.Services {
         /// </summary>
         public FarmingScene? GetSceneByDisplayName(string displayName) {
             return FarmingScenes.FirstOrDefault(scene =>
-                SceneService.GetSceneDisplayName(scene) == displayName);
+                SceneHelper.GetSceneDisplayName(scene) == displayName);
         }
 
         /// <summary>
@@ -249,7 +249,7 @@ namespace DTwoMFTimerHelper.Services {
         public List<string> GetLocalizedDifficultyNames() {
             return [.. Enum.GetValues(typeof(GameDifficulty))
                       .Cast<GameDifficulty>()
-                      .Select(d => SceneService.GetLocalizedDifficultyName(d))];
+                      .Select(d => SceneHelper.GetLocalizedDifficultyName(d))];
         }
 
         /// <summary>

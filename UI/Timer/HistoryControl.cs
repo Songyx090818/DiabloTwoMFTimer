@@ -124,7 +124,7 @@ namespace DTwoMFTimerHelper.UI.Timer {
                         actualIndex);
 
                     if (deleteSuccess) {
-                        Services.DataService.SaveProfile(_currentProfile);
+                        Utils.DataHelper.SaveProfile(_currentProfile);
                         _displayStartIndex = Math.Max(0, Math.Min(_displayStartIndex, _historyService.RunHistory.Count - 1));
                         _isLoading = false;
                         await UpdateUIAsync();

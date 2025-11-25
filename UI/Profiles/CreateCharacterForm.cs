@@ -130,7 +130,7 @@ namespace DTwoMFTimerHelper.UI.Profiles {
             }
 
             // 检查角色是否已存在
-            if (DTwoMFTimerHelper.Services.DataService.FindProfileByName(CharacterName) != null) {
+            if (DTwoMFTimerHelper.Utils.DataHelper.FindProfileByName(CharacterName) != null) {
                 // 显示错误提示
                 Utils.Toast.Warning(LanguageManager.GetString("CharacterExists") ?? "该角色名称已存在");
                 return;

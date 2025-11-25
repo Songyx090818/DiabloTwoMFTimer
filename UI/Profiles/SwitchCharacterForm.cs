@@ -68,8 +68,8 @@ namespace DTwoMFTimerHelper.UI.Profiles {
             try {
                 LogManager.WriteDebugLog("SwitchCharacterForm", "[详细调试] 开始加载角色档案名称...");
                 // 只获取文件名列表而不加载所有文件内容
-                var profileNames = DTwoMFTimerHelper.Services.DataService.GetProfileNames();
-                LogManager.WriteDebugLog("SwitchCharacterForm", "[详细调试] 从DataService获取到角色档案名称列表");
+                var profileNames = DTwoMFTimerHelper.Utils.DataHelper.GetProfileNames();
+                LogManager.WriteDebugLog("SwitchCharacterForm", "[详细调试] 从DataHelper获取到角色档案名称列表");
 
                 lstCharacters!.Items.Clear();
                 LogManager.WriteDebugLog("SwitchCharacterForm", "[详细调试] 已清空角色列表");
@@ -123,7 +123,7 @@ namespace DTwoMFTimerHelper.UI.Profiles {
         private void BtnSelect_Click(object? sender, EventArgs e) {
             if (lstCharacters!.SelectedItem is ProfileItem profileItem) {
                 // 选择后加载单个配置文件
-                var selectedProfile = DTwoMFTimerHelper.Services.DataService.LoadProfileByName(profileItem.ProfileName);
+                var selectedProfile = DTwoMFTimerHelper.Utils.DataHelper.LoadProfileByName(profileItem.ProfileName);
 
                 // 验证角色数据有效性
                 if (selectedProfile != null && !string.IsNullOrEmpty(selectedProfile.Name)) {

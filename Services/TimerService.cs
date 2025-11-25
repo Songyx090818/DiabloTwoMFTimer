@@ -337,7 +337,7 @@ namespace DTwoMFTimerHelper.Services {
             if (string.IsNullOrEmpty(currentCharacter) || string.IsNullOrEmpty(currentScene))
                 return;
 
-            int actValue = SceneService.GetSceneActValue(currentScene);
+            int actValue = SceneHelper.GetSceneActValue(currentScene);
             string pureEnglishSceneName = LanguageManager.GetPureEnglishSceneName(currentScene);
             var difficulty = _profileService.CurrentDifficulty;
 
@@ -359,7 +359,7 @@ namespace DTwoMFTimerHelper.Services {
             if (_profileService.CurrentProfile != null) {
                 _profileService.CurrentProfile.LastRunScene = pureEnglishSceneName;
                 _profileService.CurrentProfile.LastRunDifficulty = difficulty;
-                DataService.AddMFRecord(_profileService.CurrentProfile, newRecord);
+                DataHelper.AddMFRecord(_profileService.CurrentProfile, newRecord);
                 LogManager.WriteDebugLog("TimerService", $"已创建开始记录到角色档案: {currentCharacter} - {currentScene}, ACT: {actValue}, 开始时间: {_startTime}");
             }
             else {
@@ -377,7 +377,7 @@ namespace DTwoMFTimerHelper.Services {
             if (string.IsNullOrEmpty(currentCharacter) || string.IsNullOrEmpty(currentScene) || _profileService.CurrentProfile == null)
                 return;
 
-            int actValue = SceneService.GetSceneActValue(currentScene);
+            int actValue = SceneHelper.GetSceneActValue(currentScene);
             var difficulty = _profileService.CurrentDifficulty;
             double durationSeconds = GetElapsedTime().TotalSeconds;
 
@@ -406,11 +406,11 @@ namespace DTwoMFTimerHelper.Services {
                 existingRecord.LatestTime = DateTime.Now;
                 existingRecord.DurationSeconds = durationSeconds;
 
-                DataService.UpdateMFRecord(_profileService.CurrentProfile, existingRecord);
+                DataHelper.UpdateMFRecord(_profileService.CurrentProfile, existingRecord);
                 LogManager.WriteDebugLog("TimerService", $"[更新现有记录] {currentCharacter} - {currentScene}, ACT: {actValue}, 难度: {difficulty}, 开始时间: {existingRecord.StartTime}, 结束时间: {DateTime.Now}, DurationSeconds: {existingRecord.DurationSeconds}");
             }
             else {
-                DataService.AddMFRecord(_profileService.CurrentProfile, newRecord);
+                DataHelper.AddMFRecord(_profileService.CurrentProfile, newRecord);
                 LogManager.WriteDebugLog("TimerService", $"[添加新记录] {currentCharacter} - {currentScene}, ACT: {actValue}, 难度: {difficulty}, 开始时间: {_startTime}, 结束时间: {DateTime.Now}, DurationSeconds: {newRecord.DurationSeconds}");
             }
 
@@ -434,7 +434,7 @@ namespace DTwoMFTimerHelper.Services {
             record.LatestTime = now;
 
             if (_profileService.CurrentProfile != null) {
-                DataService.UpdateMFRecord(_profileService.CurrentProfile, record);
+                DataHelper.UpdateMFRecord(_profileService.CurrentProfile, record);
                 LogManager.WriteDebugLog("TimerService",
                     $"更新未完成记录: 场景={_profileService.CurrentScene}, " +
                     $"持续时间={record.DurationSeconds}秒, " +
@@ -529,7 +529,7 @@ namespace DTwoMFTimerHelper.Services {
                 }
 
                 // 使用场景shortName，传递角色名以确定使用中文还是英文短名称
-                string sceneShortName = SceneService.GetSceneShortName(sceneName, characterName);
+                string sceneShortName = SceneHelper.GetSceneShortName(sceneName, characterName);
                 if (string.IsNullOrEmpty(sceneShortName)) {
                     sceneShortName = "UnknownScene";
                 }

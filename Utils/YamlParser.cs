@@ -2,11 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using DTwoMFTimerHelper.Models;
-using DTwoMFTimerHelper.Utils;
 using YamlDotNet.RepresentationModel;
 using YamlDotNet.Serialization;
 
-namespace DTwoMFTimerHelper.Services {
+namespace DTwoMFTimerHelper.Utils {
     /// <summary>
     /// YAML解析器，使用YamlDotNet库解析角色档案的YAML内容
     /// </summary>
