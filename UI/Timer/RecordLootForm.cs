@@ -13,8 +13,8 @@ namespace DTwoMFTimerHelper.UI.Timer {
         private CheckBox chkPreviousRun = null!;
         private readonly IContainer components = null!;
 
-        private readonly IProfileService? _profileService;
-        private readonly ITimerHistoryService? _timerHistoryService;
+        private readonly IProfileService _profileService = null!;
+        private readonly ITimerHistoryService _timerHistoryService = null!;
 
         public event EventHandler? LootRecordSaved;
 
@@ -24,7 +24,7 @@ namespace DTwoMFTimerHelper.UI.Timer {
         }
 
         // 2. 依赖注入构造函数 (运行时专用)
-        public RecordLootForm(IProfileService? profileService, ITimerHistoryService? timerHistoryService) : this() {
+        public RecordLootForm(IProfileService profileService, ITimerHistoryService timerHistoryService) : this() {
             _profileService = profileService;
             _timerHistoryService = timerHistoryService;
         }
@@ -134,12 +134,7 @@ namespace DTwoMFTimerHelper.UI.Timer {
                 return;
             }
 
-            // 安全检查：如果服务为空（例如从设计器运行或未正确注入），则直接返回
-            if (_timerHistoryService == null || _profileService == null) {
-                return;
-            }
-
-            int runCount = _timerHistoryService.RunCount;
+            int runCount = _timerHistoryService.RunCount + 1;
             if (chkPreviousRun.Checked) {
                 runCount = Math.Max(0, runCount - 1);
             }

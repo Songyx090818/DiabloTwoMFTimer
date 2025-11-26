@@ -21,7 +21,6 @@ namespace DTwoMFTimerHelper.UI.Timer {
         private CharacterSceneControl? characterSceneControl;
         private LootRecordsControl? lootRecordsControl;
 
-        // private PomodoroDisplayControl pomodoroDisplayControl;
         private AntdUI.LabelTime labelTime1 = null!; // 如果这是第三方控件，请确保引用正确
 
         // 控件字段定义
@@ -109,11 +108,6 @@ namespace DTwoMFTimerHelper.UI.Timer {
 
         // 事件
         public event EventHandler? TimerStateChanged;
-
-        /// <summary>
-        /// 获取番茄时间显示控件实例
-        /// </summary>
-        // public PomodoroDisplayControl? PomodoroDisplay => pomodoroDisplayControl;
 
         public bool IsTimerRunning => _timerService?.IsRunning ?? false;
 
@@ -323,6 +317,10 @@ namespace DTwoMFTimerHelper.UI.Timer {
         private void UpdateStatistics() {
             if (statisticsControl != null && historyControl != null) {
                 int runCount = historyControl.RunCount;
+                // 如果计时器正在运行，说明已经添加了一条未完成的记录，所以显示次数+1
+                if (_timerService.IsRunning) {
+                    runCount++;
+                }
                 TimeSpan fastestTime = historyControl.FastestTime;
                 var runHistory = historyControl.RunHistory;
                 statisticsControl.UpdateStatistics(runCount, fastestTime, runHistory);

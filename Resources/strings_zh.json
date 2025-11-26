@@ -97,7 +97,7 @@
   "Warning": "警告",
   "NoCharactersAvailable": "没有可用的角色档案，请先创建角色。",
   "Information": "提示",
-  "RunCount": "刷图次数 {{0}}",
+  "RunCount": "总次数 {{0}}",
   "NoData": "暂无数据",
   "TotalRuns": "场次",
   "Average": "平均",
