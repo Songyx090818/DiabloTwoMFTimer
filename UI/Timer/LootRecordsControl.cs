@@ -12,7 +12,7 @@ namespace DTwoMFTimerHelper.UI.Timer {
         private System.ComponentModel.IContainer components = null!;
         private Panel lootPanel = null!;
         private ListView lootListView = null!;
-        private List<LootRecord> _lootRecords = new();
+        private List<LootRecord> _lootRecords = [];
         private string _currentScene = string.Empty;
 
         // Loot记录属性
@@ -92,11 +92,12 @@ namespace DTwoMFTimerHelper.UI.Timer {
         private void UpdateLootRecordsDisplay() {
             // 清空现有项
             lootListView.Items.Clear();
+            string pureEnglishCurrentScene = SceneHelper.GetEnglishSceneName(_currentScene);
 
             // 获取要显示的记录：如果指定了场景，则只显示该场景的记录，否则显示所有记录
             var recordsToDisplay = string.IsNullOrEmpty(_currentScene)
                 ? _lootRecords
-                : _lootRecords.Where(r => r.SceneName == _currentScene);
+                : _lootRecords.Where(r => r.SceneName == pureEnglishCurrentScene);
 
             // 添加数据项，按掉落时间降序排列
             foreach (var record in recordsToDisplay.OrderByDescending(r => r.DropTime)) {
