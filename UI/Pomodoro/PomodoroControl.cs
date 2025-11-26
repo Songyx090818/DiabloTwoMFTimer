@@ -7,10 +7,11 @@ namespace DTwoMFTimerHelper.UI.Pomodoro {
     public partial class PomodoroControl : UserControl {
         // 注意：这里我们声明为可空，因为无参构造函数中它尚未赋值
         // 但在运行时使用带参构造后，它将不为空
-        private readonly IPomodoroTimerService? _timerService;
-        private readonly IAppSettings? _appSettings;
+        private readonly IPomodoroTimerService _timerService = null!;
+        private readonly IAppSettings _appSettings = null!;
+        private readonly IProfileService _profileService = null!;
+
         private BreakForm? _breakForm;
-        private readonly IProfileService? _profileService;
 
         // 1. 无参构造函数 (用于 VS 设计器预览)
         public PomodoroControl() {
@@ -36,7 +37,6 @@ namespace DTwoMFTimerHelper.UI.Pomodoro {
         }
 
         private void SubscribeEvents() {
-            if (_timerService == null) return;
             _timerService.TimerStateChanged += TimerService_TimerStateChanged;
             _timerService.PomodoroCompleted += TimerService_PomodoroCompleted;
             _timerService.BreakStarted += TimerService_BreakStarted;
@@ -46,12 +46,10 @@ namespace DTwoMFTimerHelper.UI.Pomodoro {
 
         // 清理资源：重写 OnHandleDestroyed 或 Dispose 来取消订阅
         protected override void OnHandleDestroyed(EventArgs e) {
-            if (_timerService != null) {
-                _timerService.TimerStateChanged -= TimerService_TimerStateChanged;
-                _timerService.PomodoroCompleted -= TimerService_PomodoroCompleted;
-                _timerService.BreakStarted -= TimerService_BreakStarted;
-                _timerService.BreakSkipped -= TimerService_BreakSkipped;
-            }
+            _timerService.TimerStateChanged -= TimerService_TimerStateChanged;
+            _timerService.PomodoroCompleted -= TimerService_PomodoroCompleted;
+            _timerService.BreakStarted -= TimerService_BreakStarted;
+            _timerService.BreakSkipped -= TimerService_BreakSkipped;
             base.OnHandleDestroyed(e);
         }
 
@@ -87,8 +85,6 @@ namespace DTwoMFTimerHelper.UI.Pomodoro {
         #region UI 更新逻辑
 
         private void UpdateUI() {
-            if (_timerService == null) return;
-
             // 更新按钮文字
             btnStartPomodoro.Text = _timerService.IsRunning ?
                 (LanguageManager.GetString("PausePomodoro") ?? "暂停") :
@@ -102,8 +98,6 @@ namespace DTwoMFTimerHelper.UI.Pomodoro {
         }
 
         private void UpdateCountDisplay() {
-            if (_timerService == null) return;
-
             int completed = _timerService.CompletedPomodoros;
             int bigPomodoros = completed / 4;
             int smallPomodoros = completed % 4;
@@ -120,7 +114,6 @@ namespace DTwoMFTimerHelper.UI.Pomodoro {
         #region 按钮点击与交互
 
         private void BtnStartPomodoro_Click(object sender, EventArgs e) {
-            if (_timerService == null) return;
             if (_timerService.IsRunning) {
                 _timerService.Pause();
                 Toast.Success(LanguageManager.GetString("PomodoroPaused", "Pomodoro timer paused"));
@@ -137,8 +130,6 @@ namespace DTwoMFTimerHelper.UI.Pomodoro {
         }
 
         private void BtnPomodoroSettings_Click(object sender, EventArgs e) {
-            if (_timerService == null) return;
-
             using var settingsForm = new PomodoroSettingsForm(
                 _timerService.Settings.WorkTimeMinutes,
                 _timerService.Settings.WorkTimeSeconds,
@@ -163,8 +154,6 @@ namespace DTwoMFTimerHelper.UI.Pomodoro {
         }
 
         private void ShowBreakForm(BreakType breakType) {
-            if (_timerService == null) return;
-
             if (_breakForm != null && !_breakForm.IsDisposed) {
                 _breakForm.Close();
             }
@@ -177,7 +166,6 @@ namespace DTwoMFTimerHelper.UI.Pomodoro {
 
         #region 设置加载/保存
         private void LoadSettings() {
-            if (_timerService == null) return;
             var settings = SettingsManager.LoadSettings();
             if (settings != null) {
                 _timerService.Settings.WorkTimeMinutes = settings.WorkTimeMinutes;
@@ -191,7 +179,6 @@ namespace DTwoMFTimerHelper.UI.Pomodoro {
         }
 
         private void SaveSettings() {
-            if (_timerService == null) return;
             var settings = SettingsManager.LoadSettings() ?? new AppSettings(); // 假设有 AppSettings 类
             settings.WorkTimeMinutes = _timerService.Settings.WorkTimeMinutes;
             settings.WorkTimeSeconds = _timerService.Settings.WorkTimeSeconds;

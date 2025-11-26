@@ -31,7 +31,7 @@ namespace DTwoMFTimerHelper.UI.Settings {
         private TabPage tabPageTimer = null!;
 
         // IAppSettings 字段
-        private readonly IAppSettings _appSettings;
+        private readonly IAppSettings _appSettings = null!;
 
         public SettingsControl() {
             InitializeComponent();

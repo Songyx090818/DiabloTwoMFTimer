@@ -3,7 +3,6 @@ using System.Drawing;
 using System.Windows.Forms;
 using System.Threading.Tasks;
 using DTwoMFTimerHelper.Services;
-using DTwoMFTimerHelper.UI;
 using DTwoMFTimerHelper.UI.Settings;
 using DTwoMFTimerHelper.UI.Pomodoro;
 using DTwoMFTimerHelper.Utils;
@@ -11,10 +10,10 @@ using DTwoMFTimerHelper.Utils;
 namespace DTwoMFTimerHelper.UI.Timer {
     public partial class TimerControl : UserControl {
         // 服务层引用
-        private readonly ITimerService? _timerService;
-        private readonly IProfileService? _profileService;
-        private readonly ITimerHistoryService? _historyService;
-        private readonly IPomodoroTimerService? _pomodoroTimerService;
+        private readonly ITimerService _timerService = null!;
+        private readonly IProfileService _profileService = null!;
+        private readonly ITimerHistoryService _historyService = null!;
+        private readonly IPomodoroTimerService _pomodoroTimerService = null!;
 
         // 组件引用 (这里去掉初始化，统一在 InitializeComponent 中处理)
         private StatisticsControl? statisticsControl;
@@ -43,10 +42,21 @@ namespace DTwoMFTimerHelper.UI.Timer {
             }
         }
 
-        public TimerControl(IProfileService profileService, ITimerService timerService, ITimerHistoryService historyService) : this() {
+        /// <summary>
+        /// 重载构造函数，用于注入番茄计时器服务
+        /// </summary>
+        /// <param name="profileService"></param>
+        /// <param name="timerService"></param>
+        /// <param name="historyService"></param>
+        /// <param name="pomodoroTimerService"></param>
+        public TimerControl(IProfileService profileService,
+        ITimerService timerService,
+        ITimerHistoryService historyService,
+        IPomodoroTimerService pomodoroTimerService) : this() {
             _timerService = timerService;
             _profileService = profileService;
             _historyService = historyService;
+            _pomodoroTimerService = pomodoroTimerService;
 
             // 初始化子控件的服务引用
             characterSceneControl?.Initialize(_profileService);
@@ -59,21 +69,10 @@ namespace DTwoMFTimerHelper.UI.Timer {
             LanguageManager.OnLanguageChanged += LanguageManager_OnLanguageChanged;
         }
 
-        /// <summary>
-        /// 重载构造函数，用于注入番茄计时器服务
-        /// </summary>
-        /// <param name="profileService"></param>
-        /// <param name="timerService"></param>
-        /// <param name="historyService"></param>
-        /// <param name="pomodoroTimerService"></param>
-        public TimerControl(IProfileService profileService, ITimerService timerService, ITimerHistoryService historyService, IPomodoroTimerService pomodoroTimerService) : this(profileService, timerService, historyService) {
-            _pomodoroTimerService = pomodoroTimerService;
-        }
-
         protected override void OnLoad(EventArgs e) {
             base.OnLoad(e);
 
-            if (!DesignMode && _profileService != null) {
+            if (!DesignMode) {
                 LoadProfileHistoryData();
 
                 // 根据角色档案的ShowLoot设置初始化掉落记录控件的可见性
@@ -84,17 +83,13 @@ namespace DTwoMFTimerHelper.UI.Timer {
                 UpdateUI();
             }
 
-            if (_pomodoroTimerService != null && pomodoroTime != null) {
-                pomodoroTime.BindService(_pomodoroTimerService);
-            }
+            pomodoroTime.BindService(_pomodoroTimerService);
         }
 
         private void InitializePomodoroVisibility() {
-            if (pomodoroTime != null) {
-                // 根据应用设置的TimerShowPomodoro设置初始化番茄时间控件的可见性
-                var settings = Services.SettingsManager.LoadSettings();
-                pomodoroTime.Visible = settings.TimerShowPomodoro;
-            }
+            // 根据应用设置的TimerShowPomodoro设置初始化番茄时间控件的可见性
+            var settings = Services.SettingsManager.LoadSettings();
+            pomodoroTime.Visible = settings.TimerShowPomodoro;
         }
 
         private void InitializeLootRecordsVisibility() {

@@ -46,17 +46,17 @@ namespace DTwoMFTimerHelper.UI.Pomodoro {
         private Button btnClose = null!;
         private Button btnSkip = null!;       // 跳过 (查看模式隐藏)
 
-        private readonly List<string> _shortBreakMessages = new List<string>
-        {
+        private readonly List<string> _shortBreakMessages = new() {
             "站起来走两步，活动一下筋骨", "眺望远方，放松一下眼睛", "喝口水，补充水分", "深呼吸，放松肩膀"
         };
-        private readonly List<string> _longBreakMessages = new List<string>
-        {
+        private readonly List<string> _longBreakMessages = new() {
             "休息时间长一点，去吃点水果吧", "这一轮辛苦了，彻底放松一下", "即使是奈非天也需要休息"
         };
 
         // 构造函数
-        public BreakForm(IPomodoroTimerService timerService, IAppSettings appSettings, IProfileService? profileService, BreakFormMode mode, BreakType breakType = BreakType.ShortBreak) {
+        public BreakForm(IPomodoroTimerService timerService,
+        IAppSettings appSettings, IProfileService? profileService,
+         BreakFormMode mode, BreakType breakType = BreakType.ShortBreak) {
             _timerService = timerService;
             _appSettings = appSettings;
             _profileService = profileService;
