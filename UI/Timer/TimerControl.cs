@@ -323,7 +323,13 @@ namespace DTwoMFTimerHelper.UI.Timer
         {
             if (historyControl != null)
             {
-                return await historyControl.DeleteSelectedRecordAsync();
+                bool result = await historyControl.DeleteSelectedRecordAsync();
+                // 删除成功后更新统计信息
+                if (result)
+                {
+                    UpdateStatistics();
+                }
+                return result;
             }
             return false;
         }

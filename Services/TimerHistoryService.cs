@@ -131,13 +131,34 @@ namespace DTwoMFTimerHelper.Services
                 var timeSpan = TimeSpan.FromSeconds(recordToDelete.DurationSeconds);
                 bool removedFromRunHistory = RunHistory.Remove(timeSpan);
 
-                // 如果有一个删除成功，则触发历史数据变更事件
+                // 如果有一个删除成功，则更新统计信息并触发历史数据变更事件
                 if (removedFromProfile || removedFromRunHistory)
                 {
+                    // 更新统计信息
+                    RunCount = RunHistory.Count;
+                    
+                    // 重新计算最快时间
+                    FastestTime = RunHistory.Count > 0 ? RunHistory.Min() : TimeSpan.MaxValue;
+                    
+                    // 重新计算平均时间
+                    if (RunCount > 0)
+                    {
+                        double totalSeconds = RunHistory.Sum(t => t.TotalSeconds);
+                        AverageTime = TimeSpan.FromSeconds(totalSeconds / RunCount);
+                    }
+                    else
+                    {
+                        AverageTime = TimeSpan.Zero;
+                    }
+                    
                     OnHistoryDataChanged(HistoryChangeType.FullRefresh, null);
                     LogManager.WriteDebugLog(
                         "TimerHistoryService",
                         $"根据索引删除记录成功: 索引={index}, 场景 '{recordToDelete.SceneName}', 耗时 '{timeSpan}'"
+                    );
+                    LogManager.WriteDebugLog(
+                        "TimerHistoryService",
+                        $"删除后统计信息: 运行次数={RunCount}, 最快时间={FastestTime}, 平均时间={AverageTime}"
                     );
                 }
 
