@@ -197,7 +197,7 @@ namespace DTwoMFTimerHelper.Services
                         Toast.Info(
                             LanguageManager.GetString(
                                 "PomodoroWorkEndingLong",
-                                $"Work time ending in {warningLongTime} seconds"
+                                warningLongTime
                             )
                         );
                     }
@@ -212,7 +212,7 @@ namespace DTwoMFTimerHelper.Services
                         Toast.Info(
                             LanguageManager.GetString(
                                 "PomodoroWorkEndingShort",
-                                $"Work time ending in {warningShortTime} seconds"
+                                warningShortTime
                             )
                         );
                     }
