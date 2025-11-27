@@ -280,15 +280,15 @@ namespace DTwoMFTimerHelper.UI.Timer
         // 【修改 4】 核心逻辑：添加记录完成后，强制焦点回到历史列表
         private void OnRunCompleted(TimeSpan runTime)
         {
-            // 1. 添加记录 (内部会触发 Grid 刷新)
+            // 1. 数据层添加（这会触发 HistoryControl 的 Grid 刷新，但现在 Grid 刷新不会清除选中了）
             historyControl?.AddRunRecord(runTime);
             UpdateStatistics();
 
-            // 2. 编排焦点
-            // 使用 BeginInvoke 确保在当前所有 UI 事件（如 Grid 刷新）处理完毕后执行
+            // 2. 强制焦点控制
+            // 使用 Invoke 确保在 UI 刷新完成后执行
             if (this.InvokeRequired)
             {
-                this.BeginInvoke(new Action(SetFocusToNewHistoryRecord));
+                this.Invoke(new Action(SetFocusToNewHistoryRecord));
             }
             else
             {

@@ -43,13 +43,12 @@ namespace DTwoMFTimerHelper.UI.Timer
             this.gridLoot.MultiSelect = false;
             this.gridLoot.VirtualMode = true;
 
-            // 事件绑定
             this.gridLoot.CellValueNeeded += GridLoot_CellValueNeeded;
-            // 只有当点击或鼠标进入时才触发交互，避免程序自动聚焦时触发
+            // 交互事件
             this.gridLoot.Click += (s, e) => InteractionOccurred?.Invoke(this, EventArgs.Empty);
             this.gridLoot.Enter += (s, e) => InteractionOccurred?.Invoke(this, EventArgs.Empty);
 
-            // 【修改】去掉了 Scene 列
+            // 【优化】不需要场景列
             DataGridViewTextBoxColumn colIndex = new DataGridViewTextBoxColumn();
             colIndex.HeaderText = "#";
             colIndex.Width = 40;
@@ -97,8 +96,7 @@ namespace DTwoMFTimerHelper.UI.Timer
             if (_currentProfile == null)
             {
                 _displayRecords = [];
-                if (gridLoot.InvokeRequired) gridLoot.Invoke(new Action(() => gridLoot.RowCount = 0));
-                else gridLoot.RowCount = 0;
+                RefreshGrid();
                 return;
             }
 
@@ -122,10 +120,7 @@ namespace DTwoMFTimerHelper.UI.Timer
             }
             gridLoot.RowCount = _displayRecords.Count;
             gridLoot.Invalidate();
-
-            // 【关键修改】每次刷新数据后，强制清除默认选中
-            gridLoot.ClearSelection();
-            gridLoot.CurrentCell = null; // 确保没有任何单元格处于“激活”状态
+            // 【关键修改】这里不再强制清除选中，避免打断父控件的焦点控制逻辑
         }
 
         public async Task<bool> DeleteSelectedLootAsync()
@@ -141,17 +136,9 @@ namespace DTwoMFTimerHelper.UI.Timer
 
             if (removed)
             {
-                try
-                {
-                    DataHelper.SaveProfile(_currentProfile);
-                    UpdateLootRecords(_currentProfile, _currentScene);
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    LogManager.WriteErrorLog("LootRecordsControl", "删除掉落保存失败", ex);
-                    return false;
-                }
+                DataHelper.SaveProfile(_currentProfile);
+                UpdateLootRecords(_currentProfile, _currentScene);
+                return true;
             }
             return await Task.FromResult(false);
         }

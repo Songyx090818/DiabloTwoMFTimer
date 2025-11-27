@@ -121,21 +121,9 @@ namespace DTwoMFTimerHelper.UI.Timer
             }
             var count = _historyService?.RunHistory?.Count ?? 0;
             gridRunHistory.RowCount = count;
-
-            // 【关键修改】加载数据时不自动全选或滚动到底部，由外部控制
-            // 除非你想默认滚动到底部，但不选中：
-            if (count > 0)
-            {
-                gridRunHistory.FirstDisplayedScrollingRowIndex = count - 1;
-                // 默认不选中任何行，防止抢焦点
-                gridRunHistory.ClearSelection();
-                gridRunHistory.CurrentCell = null;
-            }
-
             gridRunHistory.Invalidate();
         }
 
-        // 【核心修改】SelectLastRow 实现逻辑
         public void SelectLastRow()
         {
             if (gridRunHistory.InvokeRequired)
@@ -144,7 +132,7 @@ namespace DTwoMFTimerHelper.UI.Timer
                 return;
             }
 
-            // 1. 确保行数与 Service 同步 (防止 Service 更新了但 UI 还没来得及刷新的极少数情况)
+            // 同步行数防止异步问题
             if (_historyService != null && gridRunHistory.RowCount != _historyService.RunHistory.Count)
             {
                 gridRunHistory.RowCount = _historyService.RunHistory.Count;
@@ -153,18 +141,12 @@ namespace DTwoMFTimerHelper.UI.Timer
             if (gridRunHistory.RowCount > 0)
             {
                 int lastIndex = gridRunHistory.RowCount - 1;
-
-                // 2. 强制控件获得焦点
+                // 1. 强制获得焦点 (这会触发 InteractionOccurred -> 清除 Loot 选中)
                 gridRunHistory.Focus();
-
-                // 3. 滚动到该行
+                // 2. 滚动
                 gridRunHistory.FirstDisplayedScrollingRowIndex = lastIndex;
-
-                // 4. 【关键】使用 CurrentCell 来选中，这是 DataGridView 最稳健的选中方式
-                // 选中最后一行的第一个单元格
+                // 3. 选中
                 gridRunHistory.CurrentCell = gridRunHistory.Rows[lastIndex].Cells[0];
-
-                // 5. 确保 Selected 属性为 true
                 gridRunHistory.Rows[lastIndex].Selected = true;
             }
         }
@@ -178,16 +160,6 @@ namespace DTwoMFTimerHelper.UI.Timer
             }
             gridRunHistory.ClearSelection();
             gridRunHistory.CurrentCell = null;
-        }
-
-        // 确保外部调用 Focus 时 Grid 获得焦点
-        public new bool Focus()
-        {
-            if (gridRunHistory != null && gridRunHistory.CanFocus)
-            {
-                return gridRunHistory.Focus();
-            }
-            return base.Focus();
         }
 
         // ... 其他辅助方法保持不变 ...
