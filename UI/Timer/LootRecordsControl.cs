@@ -2,42 +2,21 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using DTwoMFTimerHelper.Models;
-using DTwoMFTimerHelper.UI;
 using DTwoMFTimerHelper.Utils;
 
 namespace DTwoMFTimerHelper.UI.Timer
 {
     public partial class LootRecordsControl : UserControl
     {
-        private System.ComponentModel.IContainer components = null!;
-        private Panel lootPanel = null!;
-        private ListView lootListView = null!;
-        private List<LootRecord> _lootRecords = [];
+        private DataGridView gridLoot = null!;
+        private CharacterProfile? _currentProfile;
+        private List<LootRecord> _displayRecords = [];
         private string _currentScene = string.Empty;
 
-        // Loot记录属性
-        public List<LootRecord> LootRecords
-        {
-            get { return _lootRecords; }
-            set
-            {
-                _lootRecords = value;
-                UpdateLootRecordsDisplay();
-            }
-        }
-
-        // 当前场景属性，用于过滤掉落记录
-        public string CurrentScene
-        {
-            get { return _currentScene; }
-            set
-            {
-                _currentScene = value;
-                UpdateLootRecordsDisplay();
-            }
-        }
+        public event EventHandler? InteractionOccurred;
 
         public LootRecordsControl()
         {
@@ -46,86 +25,148 @@ namespace DTwoMFTimerHelper.UI.Timer
 
         private void InitializeComponent()
         {
-            var height = UISizeConstants.LootRecordsControlHeight;
-            components = new System.ComponentModel.Container();
-            lootPanel = new Panel();
-            lootListView = new ListView();
-            lootPanel.SuspendLayout();
-            SuspendLayout();
-            //
-            // lootPanel
-            //
-            lootPanel.Controls.Add(lootListView);
-            lootPanel.Dock = DockStyle.Fill;
-            lootPanel.Location = new Point(0, 0);
-            lootPanel.Name = "lootPanel";
-            lootPanel.Size = new Size(605, height);
-            lootPanel.TabIndex = 0;
-            //
-            // lootListView
-            //
-            lootListView.Dock = DockStyle.Fill;
-            lootListView.View = View.List;
-            lootListView.LabelWrap = false;
-            lootListView.Location = new Point(0, 0);
-            lootListView.Name = "lootListView";
-            lootListView.Size = new Size(605, height);
-            lootListView.TabIndex = 0;
-            lootListView.UseCompatibleStateImageBehavior = false;
-            //
-            // LootRecordsControl
-            //
-            AutoScaleDimensions = new SizeF(13F, 28F);
-            AutoScaleMode = AutoScaleMode.Font;
-            Controls.Add(lootPanel);
-            Margin = new Padding(4);
-            Name = "LootRecordsControl";
-            Size = new Size(605, height);
-            lootPanel.ResumeLayout(false);
-            ResumeLayout(false);
+            this.gridLoot = new DataGridView();
+            ((System.ComponentModel.ISupportInitialize)(this.gridLoot)).BeginInit();
+            this.SuspendLayout();
+
+            this.gridLoot.Dock = DockStyle.Fill;
+            this.gridLoot.BackgroundColor = SystemColors.Window;
+            this.gridLoot.BorderStyle = BorderStyle.None;
+            this.gridLoot.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
+            this.gridLoot.ColumnHeadersVisible = true;
+            this.gridLoot.RowHeadersVisible = false;
+            this.gridLoot.AllowUserToAddRows = false;
+            this.gridLoot.AllowUserToDeleteRows = false;
+            this.gridLoot.AllowUserToResizeRows = false;
+            this.gridLoot.ReadOnly = true;
+            this.gridLoot.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            this.gridLoot.MultiSelect = false;
+            this.gridLoot.VirtualMode = true;
+
+            // 事件绑定
+            this.gridLoot.CellValueNeeded += GridLoot_CellValueNeeded;
+            // 只有当点击或鼠标进入时才触发交互，避免程序自动聚焦时触发
+            this.gridLoot.Click += (s, e) => InteractionOccurred?.Invoke(this, EventArgs.Empty);
+            this.gridLoot.Enter += (s, e) => InteractionOccurred?.Invoke(this, EventArgs.Empty);
+
+            // 【修改】去掉了 Scene 列
+            DataGridViewTextBoxColumn colIndex = new DataGridViewTextBoxColumn();
+            colIndex.HeaderText = "#";
+            colIndex.Width = 40;
+            colIndex.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+
+            DataGridViewTextBoxColumn colName = new DataGridViewTextBoxColumn();
+            colName.HeaderText = "Item";
+            colName.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+
+            DataGridViewTextBoxColumn colTime = new DataGridViewTextBoxColumn();
+            colTime.HeaderText = "Time";
+            colTime.Width = 120;
+            colTime.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+
+            this.gridLoot.Columns.AddRange(new DataGridViewColumn[] { colIndex, colName, colTime });
+
+            this.AutoScaleDimensions = new SizeF(9F, 20F);
+            this.AutoScaleMode = AutoScaleMode.Font;
+            this.Controls.Add(this.gridLoot);
+            this.Name = "LootRecordsControl";
+            this.Size = new Size(605, 150);
+
+            ((System.ComponentModel.ISupportInitialize)(this.gridLoot)).EndInit();
+            this.ResumeLayout(false);
         }
 
-        public void UpdateLootRecords(List<LootRecord> lootRecords)
+        private void GridLoot_CellValueNeeded(object? sender, DataGridViewCellValueEventArgs e)
         {
-            this._lootRecords = lootRecords;
-            UpdateLootRecordsDisplay();
+            if (_displayRecords == null || e.RowIndex >= _displayRecords.Count) return;
+
+            var record = _displayRecords[e.RowIndex];
+            switch (e.ColumnIndex)
+            {
+                case 0: e.Value = record.RunCount.ToString(); break;
+                case 1: e.Value = record.Name; break;
+                case 2: e.Value = record.DropTime.ToString("MM-dd HH:mm"); break;
+            }
         }
 
-        // 更新掉落记录并设置当前场景
-        public void UpdateLootRecords(List<LootRecord> lootRecords, string currentScene)
+        public void UpdateLootRecords(CharacterProfile? profile, string currentScene)
         {
-            this._lootRecords = lootRecords;
-            this._currentScene = currentScene;
-            UpdateLootRecordsDisplay();
-        }
+            _currentProfile = profile;
+            _currentScene = currentScene;
 
-        private void UpdateLootRecordsDisplay()
-        {
-            // 清空现有项
-            lootListView.Items.Clear();
+            if (_currentProfile == null)
+            {
+                _displayRecords = [];
+                if (gridLoot.InvokeRequired) gridLoot.Invoke(new Action(() => gridLoot.RowCount = 0));
+                else gridLoot.RowCount = 0;
+                return;
+            }
+
             string pureEnglishCurrentScene = SceneHelper.GetEnglishSceneName(_currentScene);
 
-            // 获取要显示的记录：如果指定了场景，则只显示该场景的记录，否则显示所有记录
-            var recordsToDisplay = string.IsNullOrEmpty(_currentScene)
-                ? _lootRecords
-                : _lootRecords.Where(r => r.SceneName == pureEnglishCurrentScene);
+            var query = string.IsNullOrEmpty(_currentScene)
+                ? _currentProfile.LootRecords
+                : _currentProfile.LootRecords.Where(r => r.SceneName == pureEnglishCurrentScene);
 
-            // 添加数据项，按掉落时间降序排列
-            foreach (var record in recordsToDisplay.OrderByDescending(r => r.DropTime))
-            {
-                // 使用国际化格式字符串显示掉落记录，直接使用GetString的格式化功能
-                string lootText = LanguageManager.GetString("RunNumber", record.RunCount, record.Name);
-                lootListView.Items.Add(lootText);
-            }
+            _displayRecords = query.OrderByDescending(r => r.DropTime).ToList();
+
+            RefreshGrid();
         }
 
-        protected override void Dispose(bool disposing)
+        private void RefreshGrid()
         {
-            if (disposing && (components != null))
+            if (gridLoot.InvokeRequired)
             {
-                components.Dispose();
+                gridLoot.Invoke(new Action(RefreshGrid));
+                return;
             }
-            base.Dispose(disposing);
+            gridLoot.RowCount = _displayRecords.Count;
+            gridLoot.Invalidate();
+
+            // 【关键修改】每次刷新数据后，强制清除默认选中
+            gridLoot.ClearSelection();
+            gridLoot.CurrentCell = null; // 确保没有任何单元格处于“激活”状态
         }
+
+        public async Task<bool> DeleteSelectedLootAsync()
+        {
+            if (_currentProfile == null || gridLoot.SelectedRows.Count == 0)
+                return false;
+
+            int visualIndex = gridLoot.SelectedRows[0].Index;
+            if (visualIndex < 0 || visualIndex >= _displayRecords.Count) return false;
+
+            var recordToDelete = _displayRecords[visualIndex];
+            bool removed = _currentProfile.LootRecords.Remove(recordToDelete);
+
+            if (removed)
+            {
+                try
+                {
+                    DataHelper.SaveProfile(_currentProfile);
+                    UpdateLootRecords(_currentProfile, _currentScene);
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    LogManager.WriteErrorLog("LootRecordsControl", "删除掉落保存失败", ex);
+                    return false;
+                }
+            }
+            return await Task.FromResult(false);
+        }
+
+        public void ClearSelection()
+        {
+            if (gridLoot.InvokeRequired)
+            {
+                gridLoot.Invoke(new Action(ClearSelection));
+                return;
+            }
+            gridLoot.ClearSelection();
+            gridLoot.CurrentCell = null;
+        }
+
+        public bool HasFocus => gridLoot.ContainsFocus;
     }
 }

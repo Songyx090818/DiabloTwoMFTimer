@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using DTwoMFTimerHelper.Models;
@@ -12,21 +11,18 @@ namespace DTwoMFTimerHelper.UI.Timer
 {
     public partial class HistoryControl : UserControl
     {
-        private System.Windows.Forms.ListBox lstRunHistory = null!;
-        private System.Windows.Forms.Label _loadingIndicator = null!;
-
+        private DataGridView gridRunHistory = null!;
         private ITimerHistoryService? _historyService;
         private bool _isInitialized = false;
-
-        private const int PageSize = 20;
-        private int _displayStartIndex = 0;
-        private bool _isLoading = false;
-        private bool _isProcessingHistoryChange = false;
 
         private CharacterProfile? _currentProfile = null;
         private string? _currentScene = null;
         private GameDifficulty _currentDifficulty = GameDifficulty.Hell;
 
+        // 【新功能】暴露交互事件
+        public event EventHandler? InteractionOccurred;
+
+        // 属性保持不变...
         public int RunCount => _historyService?.RunCount ?? 0;
         public TimeSpan FastestTime => _historyService?.FastestTime ?? TimeSpan.Zero;
         public TimeSpan AverageTime => _historyService?.AverageTime ?? TimeSpan.Zero;
@@ -35,551 +31,207 @@ namespace DTwoMFTimerHelper.UI.Timer
         public HistoryControl()
         {
             InitializeComponent();
-            // 【新增】确保控件已创建
-            if (!this.DesignMode)
-            {
-                this.Load += HistoryControl_Load;
-            }
-        }
-
-        // 【新增】控件加载完成事件
-        private void HistoryControl_Load(object? sender, EventArgs e)
-        {
-            // 确保控件句柄已创建
-            if (lstRunHistory != null && lstRunHistory.IsHandleCreated)
-            {
-                // 可以在这里执行一些初始化后的操作
-            }
-        }
-
-        public void Initialize(ITimerHistoryService historyService)
-        {
-            if (_isInitialized || historyService == null)
-                return;
-
-            _historyService = historyService;
-            _isInitialized = true;
-
-            LanguageManager.OnLanguageChanged += LanguageManager_OnLanguageChanged;
-            _historyService.HistoryDataChanged += OnHistoryDataChanged;
         }
 
         private void InitializeComponent()
         {
-            this.lstRunHistory = new System.Windows.Forms.ListBox();
-            this._loadingIndicator = new System.Windows.Forms.Label();
+            this.gridRunHistory = new DataGridView();
+            ((System.ComponentModel.ISupportInitialize)(this.gridRunHistory)).BeginInit();
             this.SuspendLayout();
 
-            // lstRunHistory
-            this.lstRunHistory.FormattingEnabled = true;
-            this.lstRunHistory.HorizontalScrollbar = true;
-            this.lstRunHistory.ItemHeight = 20;
-            this.lstRunHistory.Location = new System.Drawing.Point(0, 0);
-            this.lstRunHistory.Name = "lstRunHistory";
-            this.lstRunHistory.Size = new System.Drawing.Size(290, 90);
-            this.lstRunHistory.TabIndex = 0;
-            this.lstRunHistory.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.LstRunHistory_MouseWheel);
+            // Grid 配置 (保持之前的配置)
+            this.gridRunHistory.Dock = DockStyle.Fill;
+            this.gridRunHistory.BackgroundColor = SystemColors.Window;
+            this.gridRunHistory.BorderStyle = BorderStyle.None;
+            this.gridRunHistory.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
+            this.gridRunHistory.ColumnHeadersVisible = true;
+            this.gridRunHistory.RowHeadersVisible = false;
+            this.gridRunHistory.AllowUserToAddRows = false;
+            this.gridRunHistory.AllowUserToDeleteRows = false;
+            this.gridRunHistory.AllowUserToResizeRows = false;
+            this.gridRunHistory.ReadOnly = true;
+            this.gridRunHistory.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            this.gridRunHistory.MultiSelect = false;
+            this.gridRunHistory.VirtualMode = true;
 
-            // _loadingIndicator
-            this._loadingIndicator.AutoSize = true;
-            this._loadingIndicator.BackColor = System.Drawing.Color.Transparent;
-            this._loadingIndicator.Dock = System.Windows.Forms.DockStyle.Top;
-            this._loadingIndicator.Font = new System.Drawing.Font(
-                "Microsoft YaHei UI",
-                9F,
-                System.Drawing.FontStyle.Bold,
-                System.Drawing.GraphicsUnit.Point,
-                ((byte)(134))
-            );
-            this._loadingIndicator.Location = new System.Drawing.Point(0, 0);
-            this._loadingIndicator.Name = "_loadingIndicator";
-            this._loadingIndicator.Padding = new System.Windows.Forms.Padding(0, 5, 0, 0);
-            this._loadingIndicator.Size = new System.Drawing.Size(66, 24);
-            this._loadingIndicator.TabIndex = 1;
-            this._loadingIndicator.Text = "加载中...";
-            this._loadingIndicator.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this._loadingIndicator.Visible = false;
+            // 【关键】当网格被点击或获得焦点时，触发交互事件
+            this.gridRunHistory.Enter += (s, e) => InteractionOccurred?.Invoke(this, EventArgs.Empty);
+            this.gridRunHistory.Click += (s, e) => InteractionOccurred?.Invoke(this, EventArgs.Empty);
 
-            // HistoryControl
-            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this._loadingIndicator);
-            this.Controls.Add(this.lstRunHistory);
+            this.gridRunHistory.CellValueNeeded += GridRunHistory_CellValueNeeded;
+
+            // ... 列配置保持不变 ...
+            DataGridViewTextBoxColumn colIndex = new DataGridViewTextBoxColumn();
+            colIndex.HeaderText = "#";
+            colIndex.Width = 50;
+            colIndex.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            DataGridViewTextBoxColumn colTime = new DataGridViewTextBoxColumn();
+            colTime.HeaderText = "Time";
+            colTime.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            this.gridRunHistory.Columns.AddRange(new DataGridViewColumn[] { colIndex, colTime });
+
+            this.AutoScaleDimensions = new SizeF(9F, 20F);
+            this.AutoScaleMode = AutoScaleMode.Font;
+            this.Controls.Add(this.gridRunHistory);
             this.Name = "HistoryControl";
-            this.Size = new System.Drawing.Size(290, 90);
+            this.Size = new Size(290, 90);
+
+            ((System.ComponentModel.ISupportInitialize)(this.gridRunHistory)).EndInit();
             this.ResumeLayout(false);
-            this.PerformLayout();
         }
 
-        public void AddRunRecord(TimeSpan runTime)
+        // Initialize, GridRunHistory_CellValueNeeded 等方法保持不变 ...
+        public void Initialize(ITimerHistoryService historyService)
         {
-            if (_historyService == null)
-                return;
-            _historyService.AddRunRecord(runTime);
+            if (_isInitialized || historyService == null) return;
+            _historyService = historyService;
+            _isInitialized = true;
+            LanguageManager.OnLanguageChanged += LanguageManager_OnLanguageChanged;
+            _historyService.HistoryDataChanged += OnHistoryDataChanged;
+            UpdateColumnHeaderLanguage();
         }
 
-        public void UpdateHistory(List<TimeSpan> runHistory)
+        private void GridRunHistory_CellValueNeeded(object? sender, DataGridViewCellValueEventArgs e)
         {
-            if (_historyService == null)
-                return;
-            _historyService.UpdateHistory(runHistory);
+            if (_historyService == null || _historyService.RunHistory == null) return;
+            if (e.RowIndex >= 0 && e.RowIndex < _historyService.RunHistory.Count)
+            {
+                if (e.ColumnIndex == 0) e.Value = (e.RowIndex + 1).ToString();
+                else if (e.ColumnIndex == 1) e.Value = FormatTime(_historyService.RunHistory[e.RowIndex]);
+            }
         }
+
+        // ... LoadProfileHistoryData, RefreshGridRowCount, DeleteSelectedRecordAsync 保持不变 ...
+        public bool LoadProfileHistoryData(CharacterProfile? profile, string scene, string characterName, GameDifficulty difficulty)
+        {
+            if (_historyService == null) return false;
+            _currentProfile = profile;
+            _currentScene = scene;
+            _currentDifficulty = difficulty;
+            bool result = _historyService.LoadProfileHistoryData(profile, scene, characterName, difficulty);
+            if (result) RefreshGridRowCount();
+            return result;
+        }
+        private void RefreshGridRowCount()
+        {
+            if (gridRunHistory.InvokeRequired)
+            {
+                gridRunHistory.Invoke(new Action(RefreshGridRowCount));
+                return;
+            }
+            var count = _historyService?.RunHistory?.Count ?? 0;
+            gridRunHistory.RowCount = count;
+
+            // 【关键修改】加载数据时不自动全选或滚动到底部，由外部控制
+            // 除非你想默认滚动到底部，但不选中：
+            if (count > 0)
+            {
+                gridRunHistory.FirstDisplayedScrollingRowIndex = count - 1;
+                // 默认不选中任何行，防止抢焦点
+                gridRunHistory.ClearSelection();
+                gridRunHistory.CurrentCell = null;
+            }
+
+            gridRunHistory.Invalidate();
+        }
+
+        // 【核心修改】SelectLastRow 实现逻辑
+        public void SelectLastRow()
+        {
+            if (gridRunHistory.InvokeRequired)
+            {
+                gridRunHistory.Invoke(new Action(SelectLastRow));
+                return;
+            }
+
+            // 1. 确保行数与 Service 同步 (防止 Service 更新了但 UI 还没来得及刷新的极少数情况)
+            if (_historyService != null && gridRunHistory.RowCount != _historyService.RunHistory.Count)
+            {
+                gridRunHistory.RowCount = _historyService.RunHistory.Count;
+            }
+
+            if (gridRunHistory.RowCount > 0)
+            {
+                int lastIndex = gridRunHistory.RowCount - 1;
+
+                // 2. 强制控件获得焦点
+                gridRunHistory.Focus();
+
+                // 3. 滚动到该行
+                gridRunHistory.FirstDisplayedScrollingRowIndex = lastIndex;
+
+                // 4. 【关键】使用 CurrentCell 来选中，这是 DataGridView 最稳健的选中方式
+                // 选中最后一行的第一个单元格
+                gridRunHistory.CurrentCell = gridRunHistory.Rows[lastIndex].Cells[0];
+
+                // 5. 确保 Selected 属性为 true
+                gridRunHistory.Rows[lastIndex].Selected = true;
+            }
+        }
+
+        public void ClearSelection()
+        {
+            if (gridRunHistory.InvokeRequired)
+            {
+                gridRunHistory.Invoke(new Action(ClearSelection));
+                return;
+            }
+            gridRunHistory.ClearSelection();
+            gridRunHistory.CurrentCell = null;
+        }
+
+        // 确保外部调用 Focus 时 Grid 获得焦点
+        public new bool Focus()
+        {
+            if (gridRunHistory != null && gridRunHistory.CanFocus)
+            {
+                return gridRunHistory.Focus();
+            }
+            return base.Focus();
+        }
+
+        // ... 其他辅助方法保持不变 ...
 
         public async Task<bool> DeleteSelectedRecordAsync()
         {
-            if (_historyService == null)
+            if (_historyService == null || gridRunHistory.SelectedRows.Count == 0 || _currentProfile == null)
                 return false;
-
-            if (lstRunHistory == null || lstRunHistory.SelectedIndex == -1 || _currentProfile == null)
-                return false;
-
-            try
+            int index = gridRunHistory.SelectedRows[0].Index;
+            bool success = _historyService.DeleteHistoryRecordByIndex(_currentProfile, _currentScene!, _currentDifficulty, index);
+            if (success)
             {
-                _isLoading = true;
-                int actualIndex = _displayStartIndex + lstRunHistory.SelectedIndex;
-
-                if (actualIndex >= 0 && actualIndex < _historyService.RunHistory.Count && _currentScene != null)
-                {
-                    bool deleteSuccess = _historyService.DeleteHistoryRecordByIndex(
-                        _currentProfile,
-                        _currentScene,
-                        _currentDifficulty,
-                        actualIndex
-                    );
-
-                    if (deleteSuccess)
-                    {
-                        Utils.DataHelper.SaveProfile(_currentProfile);
-                        _displayStartIndex = Math.Max(
-                            0,
-                            Math.Min(_displayStartIndex, _historyService.RunHistory.Count - 1)
-                        );
-                        _isLoading = false;
-                        await UpdateUIAsync();
-                        return true;
-                    }
-                }
-                return false;
+                Utils.DataHelper.SaveProfile(_currentProfile);
+                RefreshGridRowCount();
             }
-            finally
-            {
-                _isLoading = false;
-            }
+            return await Task.FromResult(success);
         }
 
-        public async Task<bool> LoadProfileHistoryDataAsync(
-            CharacterProfile? profile,
-            string scene,
-            string characterName,
-            GameDifficulty difficulty
-        )
-        {
-            if (_historyService == null)
-                return false;
-
-            // 【修改】防止重复加载
-            if (_isLoading)
-                return false;
-
-            _isLoading = true;
-            ShowLoadingIndicator(true);
-
-            try
-            {
-                _currentProfile = profile;
-                _currentScene = scene;
-                _currentDifficulty = difficulty;
-
-                bool result = _historyService.LoadProfileHistoryData(profile, scene, characterName, difficulty);
-                if (result)
-                {
-                    // 【修改】重置显示起始位置，确保显示最新数据
-                    int totalCount = _historyService.RunHistory.Count;
-                    _displayStartIndex = Math.Max(0, totalCount - PageSize);
-
-                    // 【新增】强制刷新UI
-                    await ForceRefreshUIAsync();
-                }
-                return result;
-            }
-            finally
-            {
-                _isLoading = false;
-                ShowLoadingIndicator(false);
-                // 初始化完成
-            }
-        }
-
-        // 【新增】强制刷新UI方法
-        private async Task ForceRefreshUIAsync()
-        {
-            if (_historyService == null || lstRunHistory == null)
-                return;
-
-            await SafeInvokeAsync(() =>
-            {
-                lstRunHistory.Items.Clear();
-
-                var currentHistory = _historyService.RunHistory;
-                if (currentHistory == null || currentHistory.Count == 0)
-                    return;
-
-                _displayStartIndex = Math.Max(0, currentHistory.Count - PageSize);
-                int displayCount = Math.Min(currentHistory.Count - _displayStartIndex, PageSize);
-
-                for (int i = _displayStartIndex; i < _displayStartIndex + displayCount; i++)
-                {
-                    if (i >= 0 && i < currentHistory.Count)
-                    {
-                        var time = currentHistory[i];
-                        string timeFormatted = FormatTime(time);
-                        string runText = GetRunText(i + 1, timeFormatted);
-                        lstRunHistory.Items.Add(runText);
-                    }
-                }
-
-                // 【修改】确保滚动到底部
-                if (lstRunHistory.Items.Count > 0)
-                {
-                    lstRunHistory.SelectedIndex = lstRunHistory.Items.Count - 1;
-                    lstRunHistory.TopIndex = Math.Max(
-                        0,
-                        lstRunHistory.Items.Count - (lstRunHistory.Height / lstRunHistory.ItemHeight)
-                    );
-                }
-            });
-        }
-
-        // 【新增】安全的UI调用方法
-        private async Task SafeInvokeAsync(Action action)
-        {
-            if (lstRunHistory == null)
-                return;
-
-            try
-            {
-                if (lstRunHistory.InvokeRequired)
-                {
-                    await Task.Run(() => lstRunHistory.Invoke(action));
-                }
-                else
-                {
-                    action();
-                }
-            }
-            catch (Exception ex)
-            {
-                // 【新增】记录异常以便调试
-                System.Diagnostics.Debug.WriteLine($"[HistoryControl] UI更新异常: {ex.Message}");
-            }
-        }
-
-        // 【新增】显示/隐藏加载指示器
-        private void ShowLoadingIndicator(bool show)
-        {
-            if (_loadingIndicator == null)
-                return;
-
-            if (_loadingIndicator.InvokeRequired)
-            {
-                _loadingIndicator.Invoke(new Action<bool>(ShowLoadingIndicator), show);
-            }
-            else
-            {
-                _loadingIndicator.Visible = show;
-                _loadingIndicator.BringToFront();
-            }
-        }
-
-        public bool LoadProfileHistoryData(
-            CharacterProfile? profile,
-            string scene,
-            string characterName,
-            GameDifficulty difficulty
-        )
-        {
-            // 【修改】同步方法也使用异步方式
-            return LoadProfileHistoryDataAsync(profile, scene, characterName, difficulty)
-                .ConfigureAwait(false)
-                .GetAwaiter()
-                .GetResult();
-        }
-
-        private async Task UpdateUIAsync()
-        {
-            if (_historyService == null || lstRunHistory == null)
-                return;
-            if (_isLoading)
-                return;
-
-            _isLoading = true;
-
-            try
-            {
-                await SafeInvokeAsync(() =>
-                {
-                    lstRunHistory.Items.Clear();
-
-                    var currentHistory = _historyService.RunHistory;
-                    if (currentHistory == null)
-                        return;
-
-                    _displayStartIndex = Math.Max(0, Math.Min(_displayStartIndex, currentHistory.Count - 1));
-                    int displayCount = Math.Min(currentHistory.Count - _displayStartIndex, PageSize);
-
-                    for (int i = _displayStartIndex; i < _displayStartIndex + displayCount; i++)
-                    {
-                        if (i >= 0 && i < currentHistory.Count)
-                        {
-                            var time = currentHistory[i];
-                            string timeFormatted = FormatTime(time);
-                            string runText = GetRunText(i + 1, timeFormatted);
-                            lstRunHistory.Items.Add(runText);
-                        }
-                    }
-
-                    if (lstRunHistory.Items.Count > 0)
-                    {
-                        lstRunHistory.SelectedIndex = lstRunHistory.Items.Count - 1;
-                        lstRunHistory.TopIndex = Math.Max(0, lstRunHistory.Items.Count - 1);
-                    }
-                });
-            }
-            finally
-            {
-                _isLoading = false;
-            }
-        }
-
-        private void ScrollToBottom()
-        {
-            if (lstRunHistory != null && lstRunHistory.Items.Count > 0 && lstRunHistory.IsHandleCreated)
-            {
-                lstRunHistory.SelectedIndex = lstRunHistory.Items.Count - 1;
-                lstRunHistory.TopIndex = Math.Max(0, lstRunHistory.Items.Count - 1);
-            }
-        }
-
-        public async Task RefreshUIAsync()
-        {
-            if (_historyService == null || lstRunHistory == null)
-                return;
-            await ForceRefreshUIAsync();
-        }
-
-        private void UpdateListItems(List<TimeSpan> currentHistory)
-        {
-            if (_historyService == null || lstRunHistory == null)
-                return;
-            for (int i = 0; i < lstRunHistory.Items.Count; i++)
-            {
-                int actualIndex = _displayStartIndex + i;
-                if (actualIndex < currentHistory.Count)
-                {
-                    var time = currentHistory[actualIndex];
-                    string timeFormatted = FormatTime(time);
-                    string runText = GetRunText(actualIndex + 1, timeFormatted);
-                    lstRunHistory.Items[i] = runText;
-                }
-            }
-        }
-
-        public void RefreshUI() => _ = RefreshUIAsync();
-
-        private void AddSingleRunRecord(TimeSpan runTime)
-        {
-            if (_historyService == null || lstRunHistory == null)
-                return;
-            var currentHistory = _historyService.RunHistory;
-            if (currentHistory == null)
-                return;
-
-            int newIndex = currentHistory.Count - 1;
-            _displayStartIndex = Math.Max(0, newIndex - PageSize + 1);
-
-            string timeFormatted = FormatTime(runTime);
-            string runText = GetRunText(newIndex + 1, timeFormatted);
-
-            SafeInvokeAsync(() =>
-                {
-                    if (lstRunHistory.Items.Count >= PageSize)
-                        lstRunHistory.Items.RemoveAt(0);
-
-                    lstRunHistory.Items.Add(runText);
-                    lstRunHistory.SelectedIndex = lstRunHistory.Items.Count - 1;
-                    lstRunHistory.TopIndex = Math.Max(0, lstRunHistory.Items.Count - 1);
-                })
-                .ConfigureAwait(false);
-        }
-
-        private async void LstRunHistory_MouseWheel(object? sender, MouseEventArgs e)
-        {
-            if (_historyService == null || lstRunHistory == null)
-                return;
-            if (e != null && e.Delta > 0 && _displayStartIndex > 0 && !_isLoading && lstRunHistory.TopIndex < 5)
-            {
-                await LoadMoreHistoryAsync();
-            }
-        }
-
-        private async Task LoadMoreHistoryAsync()
-        {
-            if (
-                _historyService == null
-                || lstRunHistory == null
-                || _loadingIndicator == null
-                || _displayStartIndex <= 0
-                || _isLoading
-            )
-                return;
-
-            _isLoading = true;
-            ShowLoadingIndicator(true);
-
-            try
-            {
-                int newStartIndex = Math.Max(0, _displayStartIndex - PageSize);
-                int addedCount = _displayStartIndex - newStartIndex;
-                var currentHistory = _historyService.RunHistory;
-                if (currentHistory == null || currentHistory.Count == 0)
-                    return;
-
-                await SafeInvokeAsync(() =>
-                {
-                    var newItems = new List<string>(addedCount);
-                    for (int i = newStartIndex; i < _displayStartIndex; i++)
-                    {
-                        if (i >= 0 && i < currentHistory.Count)
-                        {
-                            var time = currentHistory[i];
-                            string timeFormatted = FormatTime(time);
-                            string runText = GetRunText(i + 1, timeFormatted);
-                            newItems.Add(runText);
-                        }
-                    }
-
-                    if (newItems.Count == 0)
-                        return;
-                    _displayStartIndex = newStartIndex;
-
-                    var currentDisplayItems = new List<string>();
-                    foreach (var item in lstRunHistory.Items)
-                        currentDisplayItems.Add(item?.ToString() ?? string.Empty);
-
-                    lstRunHistory.Items.Clear();
-                    foreach (var item in newItems)
-                        lstRunHistory.Items.Add(item);
-                    foreach (var item in currentDisplayItems)
-                        lstRunHistory.Items.Add(item);
-
-                    if (newItems.Count > 0)
-                    {
-                        lstRunHistory.TopIndex = 0;
-                        lstRunHistory.SelectedIndex = -1;
-                    }
-                });
-            }
-            finally
-            {
-                _isLoading = false;
-                ShowLoadingIndicator(false);
-            }
-        }
-
-        private string FormatTime(TimeSpan time)
-        {
-            return string.Format(
-                "{0:00}:{1:00}:{2:00}.{3}",
-                time.Hours,
-                time.Minutes,
-                time.Seconds,
-                (int)(time.Milliseconds / 100)
-            );
-        }
-
-        private string GetRunText(int runNumber, string timeFormatted)
-        {
-            string runText = Utils.LanguageManager.GetString("RunNumber", runNumber, timeFormatted);
-            if (string.IsNullOrEmpty(runText) || runText == "RunNumber")
-            {
-                runText = $"Run {runNumber}: {timeFormatted}";
-            }
-            return runText;
-        }
-
+        // 响应 Service 数据变更
         private void OnHistoryDataChanged(object? sender, HistoryChangedEventArgs e)
         {
-            if (e == null)
-                return;
-
-            // 【修改】增加调试日志
-            System.Diagnostics.Debug.WriteLine($"[HistoryControl] 收到历史数据变更事件: {e.ChangeType}");
-
-            if (InvokeRequired)
+            if (e == null) return;
+            switch (e.ChangeType)
             {
-                BeginInvoke(new Action<HistoryChangedEventArgs>(ProcessHistoryChange), e);
-            }
-            else
-            {
-                ProcessHistoryChange(e);
+                // 注意：这里我们不再在 Add 事件里处理 SelectLastRow，
+                // 因为我们希望由 TimerControl 统一调度（添加后，清除Loot选中，再选中History），
+                // 避免事件冲突。所以这里只负责更新行数。
+                case HistoryChangeType.Add:
+                case HistoryChangeType.FullRefresh:
+                default:
+                    RefreshGridRowCount();
+                    break;
             }
         }
 
-        private async void ProcessHistoryChange(HistoryChangedEventArgs e)
-        {
-            if (e == null)
-                return;
-            if (_isProcessingHistoryChange)
-                return;
-
-            _isProcessingHistoryChange = true;
-            try
-            {
-                System.Diagnostics.Debug.WriteLine($"[HistoryControl] 处理历史数据变更: {e.ChangeType}");
-
-                switch (e.ChangeType)
-                {
-                    case HistoryChangeType.Add:
-                        if (e.AddedRecord.HasValue)
-                        {
-                            AddSingleRunRecord(e.AddedRecord.Value);
-                        }
-                        break;
-                    case HistoryChangeType.FullRefresh:
-                    default:
-                        _isLoading = false;
-                        if (_historyService != null && _historyService.RunHistory != null)
-                        {
-                            _displayStartIndex = Math.Max(0, _historyService.RunHistory.Count - PageSize);
-                            await ForceRefreshUIAsync();
-                        }
-                        break;
-                }
-            }
-            finally
-            {
-                _isProcessingHistoryChange = false;
-            }
-        }
-
-        private async void LanguageManager_OnLanguageChanged(object? sender, EventArgs e)
-        {
-            if (e == null)
-                return;
-            await RefreshUIAsync();
-        }
-
+        private string FormatTime(TimeSpan time) => string.Format("{0:00}:{1:00}:{2:00}.{3}", time.Hours, time.Minutes, time.Seconds, (int)(time.Milliseconds / 100));
+        private void UpdateColumnHeaderLanguage() { if (gridRunHistory.Columns.Count > 1) gridRunHistory.Columns[1].HeaderText = Utils.LanguageManager.GetString("Time", "Time"); }
+        private void LanguageManager_OnLanguageChanged(object? sender, EventArgs e) { UpdateColumnHeaderLanguage(); gridRunHistory.Invalidate(); }
+        public void AddRunRecord(TimeSpan runTime) => _historyService?.AddRunRecord(runTime);
+        public void UpdateHistory(List<TimeSpan> runHistory) => _historyService?.UpdateHistory(runHistory);
+        public void RefreshUI() => RefreshGridRowCount();
         protected override void Dispose(bool disposing)
         {
-            if (disposing)
-            {
-                LanguageManager.OnLanguageChanged -= LanguageManager_OnLanguageChanged;
-                if (_historyService != null)
-                    _historyService.HistoryDataChanged -= OnHistoryDataChanged;
-                if (lstRunHistory != null)
-                    lstRunHistory.MouseWheel -= LstRunHistory_MouseWheel;
-                this.Load -= HistoryControl_Load;
-            }
+            if (disposing) { LanguageManager.OnLanguageChanged -= LanguageManager_OnLanguageChanged; if (_historyService != null) _historyService.HistoryDataChanged -= OnHistoryDataChanged; }
             base.Dispose(disposing);
         }
     }

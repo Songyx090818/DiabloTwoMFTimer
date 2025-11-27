@@ -34,6 +34,7 @@ namespace DTwoMFTimerHelper.UI.Timer
         public TimerControl()
         {
             InitializeComponent();
+            InitializeInteractionLogic(); // 【新增】初始化交互逻辑
 
             // 设置圆形指示器
             // 建议放在构造函数末尾，确保控件尺寸已初始化
@@ -88,11 +89,22 @@ namespace DTwoMFTimerHelper.UI.Timer
                 InitializeLootRecordsVisibility();
                 // 根据设置初始化番茄时间显示
                 InitializePomodoroVisibility();
+                // 【关键】首次加载时，清除所有选中状态，防止默认选中第一行掉落
+                ClearAllSelections();
                 // 更新界面状态
                 UpdateUI();
             }
 
             pomodoroTime.BindService(_pomodoroTimerService);
+        }
+
+        private void ClearAllSelections()
+        {
+            lootRecordsControl?.ClearSelection();
+            historyControl?.ClearSelection();
+            // 让焦点落在一个“无害”的控件上，比如时间显示Label（虽然Label不能获得焦点）
+            // 或者直接设 ActiveControl = null
+            this.ActiveControl = null;
         }
 
         private void InitializePomodoroVisibility()
@@ -123,6 +135,16 @@ namespace DTwoMFTimerHelper.UI.Timer
                         ? UISizeConstants.TimerControlHeightWithLoot
                         : UISizeConstants.TimerControlHeightWithoutLoot
                 );
+            }
+        }
+
+        // 互斥逻辑：一个动，另一个清
+        private void InitializeInteractionLogic()
+        {
+            if (historyControl != null && lootRecordsControl != null)
+            {
+                historyControl.InteractionOccurred += (s, e) => lootRecordsControl.ClearSelection();
+                lootRecordsControl.InteractionOccurred += (s, e) => historyControl.ClearSelection();
             }
         }
 
@@ -204,18 +226,15 @@ namespace DTwoMFTimerHelper.UI.Timer
 
         private void OnProfileChanged(Models.CharacterProfile? profile)
         {
-            // 在切换到新角色前，先保存当前角色的ShowLoot设置
             SaveShowLootSetting();
-
             LoadProfileHistoryData();
             UpdateCharacterSceneInfo();
 
-            // 更新掉落记录
             if (lootRecordsControl != null && profile != null && _profileService != null)
             {
                 string currentScene = _profileService.CurrentScene ?? string.Empty;
-                lootRecordsControl.UpdateLootRecords(profile.LootRecords, currentScene);
-                // 重新初始化控件可见性（现在基于应用设置而非角色档案）
+                // 传递 profile 对象
+                lootRecordsControl.UpdateLootRecords(profile, currentScene);
                 InitializeLootRecordsVisibility();
             }
         }
@@ -224,18 +243,15 @@ namespace DTwoMFTimerHelper.UI.Timer
         {
             LoadProfileHistoryData();
             UpdateCharacterSceneInfo();
+            // 场景切换也需要刷新 Loot 显示过滤
+            if (lootRecordsControl != null && _profileService?.CurrentProfile != null)
+            {
+                lootRecordsControl.UpdateLootRecords(_profileService.CurrentProfile, scene);
+            }
         }
-
-        private void OnDifficultyChanged(Models.GameDifficulty difficulty)
-        {
-            LoadProfileHistoryData();
-            UpdateCharacterSceneInfo();
-        }
-
-        // 【关键修复】确保加载后刷新列表
         private void LoadProfileHistoryData()
         {
-            LogManager.WriteDebugLog("TimerControl", "LoadProfileHistoryData");
+            // ... 原有日志代码 ...
             if (historyControl != null && _profileService != null)
             {
                 var profile = _profileService.CurrentProfile;
@@ -246,17 +262,88 @@ namespace DTwoMFTimerHelper.UI.Timer
                     "TimerControl",
                     $"LoadProfileHistoryData: profile={profile?.Name}, scene={scene}, characterName={characterName}, difficulty={difficulty}"
                 );
-
-                // 1. 尝试加载数据
+                // ... 原有加载历史逻辑 ...
                 historyControl.LoadProfileHistoryData(profile, scene, characterName, difficulty);
 
-                // 2. 更新掉落记录
+                // 更新 Loot
                 if (lootRecordsControl != null && profile != null)
                 {
                     string currentScene = _profileService.CurrentScene ?? string.Empty;
-                    lootRecordsControl.UpdateLootRecords(profile.LootRecords, currentScene);
+                    lootRecordsControl.UpdateLootRecords(profile, currentScene);
                 }
+                ClearAllSelections();
             }
+        }
+
+        // ... OnTimerRunningStateChanged 等方法保持不变 ...
+
+        // 【修改 4】 核心逻辑：添加记录完成后，强制焦点回到历史列表
+        private void OnRunCompleted(TimeSpan runTime)
+        {
+            // 1. 添加记录 (内部会触发 Grid 刷新)
+            historyControl?.AddRunRecord(runTime);
+            UpdateStatistics();
+
+            // 2. 编排焦点
+            // 使用 BeginInvoke 确保在当前所有 UI 事件（如 Grid 刷新）处理完毕后执行
+            if (this.InvokeRequired)
+            {
+                this.BeginInvoke(new Action(SetFocusToNewHistoryRecord));
+            }
+            else
+            {
+                SetFocusToNewHistoryRecord();
+            }
+        }
+
+        private void SetFocusToNewHistoryRecord()
+        {
+            // 确保掉落列表不被选中
+            lootRecordsControl?.ClearSelection();
+
+            // 强制选中历史列表最后一行
+            historyControl?.SelectLastRow();
+        }
+
+        // 【修改 5】 路由删除逻辑
+        public async Task<bool> DeleteSelectedRecordAsync()
+        {
+            // 逻辑：如果 Loot 控件拥有焦点，则删除 Loot；否则默认删除 History
+
+            if (lootRecordsControl != null && lootRecordsControl.HasFocus)
+            {
+                return await lootRecordsControl.DeleteSelectedLootAsync();
+            }
+
+            if (historyControl != null)
+            {
+                bool result = await historyControl.DeleteSelectedRecordAsync();
+                if (result)
+                {
+                    UpdateStatistics();
+                }
+                return result;
+            }
+            return false;
+        }
+
+        // ... UpdateUI, UpdateStatistics 保持不变 ...
+
+        // 【修改 6】 UpdateLootRecords 辅助方法更新
+        private void UpdateLootRecords()
+        {
+            if (lootRecordsControl != null && _profileService != null && _profileService.CurrentProfile != null)
+            {
+                string currentScene = _profileService.CurrentScene ?? string.Empty;
+                // 传递 Profile
+                lootRecordsControl.UpdateLootRecords(_profileService.CurrentProfile, currentScene);
+            }
+        }
+
+        private void OnDifficultyChanged(Models.GameDifficulty difficulty)
+        {
+            LoadProfileHistoryData();
+            UpdateCharacterSceneInfo();
         }
 
         private void OnTimerReset()
@@ -269,12 +356,6 @@ namespace DTwoMFTimerHelper.UI.Timer
             {
                 lblTimeDisplay.Text = "00:00:00.0";
             }
-            UpdateStatistics();
-        }
-
-        private void OnRunCompleted(TimeSpan runTime)
-        {
-            historyControl?.AddRunRecord(runTime);
             UpdateStatistics();
         }
         #endregion
@@ -317,21 +398,6 @@ namespace DTwoMFTimerHelper.UI.Timer
                 settings.TimerShowLootDrops = lootRecordsControl.Visible;
                 Services.SettingsManager.SaveSettings(settings);
             }
-        }
-
-        public async Task<bool> DeleteSelectedRecordAsync()
-        {
-            if (historyControl != null)
-            {
-                bool result = await historyControl.DeleteSelectedRecordAsync();
-                // 删除成功后更新统计信息
-                if (result)
-                {
-                    UpdateStatistics();
-                }
-                return result;
-            }
-            return false;
         }
         #endregion
 
@@ -400,15 +466,6 @@ namespace DTwoMFTimerHelper.UI.Timer
         private void UpdateCharacterSceneInfo()
         {
             characterSceneControl?.UpdateCharacterSceneInfo();
-        }
-
-        private void UpdateLootRecords()
-        {
-            if (lootRecordsControl != null && _profileService != null && _profileService.CurrentProfile != null)
-            {
-                string currentScene = _profileService.CurrentScene ?? string.Empty;
-                lootRecordsControl.UpdateLootRecords(_profileService.CurrentProfile.LootRecords, currentScene);
-            }
         }
         #endregion
 
