@@ -300,21 +300,3 @@ public class PomodoroTimerService : IPomodoroTimerService
     public PomodoroTimerState CurrentState => _currentState;
     public PomodoroTimerState PreviousState => _previousState;
 }
-
-public class PomodoroTimerStateChangedEventArgs(PomodoroTimerState state, PomodoroTimerState previousState, bool isRunning, TimeSpan timeLeft) : EventArgs
-{
-    public PomodoroTimerState State { get; } = state;
-    public PomodoroTimerState PreviousState { get; } = previousState;
-    public bool IsRunning { get; } = isRunning;
-    public TimeSpan TimeLeft { get; } = timeLeft;
-}
-
-public class PomodoroCompletedEventArgs(int completedPomodoros) : EventArgs
-{
-    public int CompletedPomodoros { get; } = completedPomodoros;
-}
-
-public class PomodoroBreakStartedEventArgs(PomodoroBreakType breakType) : EventArgs
-{
-    public PomodoroBreakType BreakType { get; } = breakType;
-}

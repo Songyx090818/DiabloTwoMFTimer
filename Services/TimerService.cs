@@ -58,6 +58,12 @@ public class TimerService : ITimerService
     /// </summary>
     public void Start()
     {
+        if (_profileService.CurrentProfile == null)
+        {
+            Toast.Warning("当前未选择角色，无法开始计时");
+            return;
+        }
+
         if (_status == TimerStatus.Running)
             return;
 
@@ -335,12 +341,23 @@ public class TimerService : ITimerService
             LatestTime = _startTime, // 每次启动时，更新latestTime为当前时间
             DurationSeconds = 0.0,
         };
+        var existingRecord = FindIncompleteRecordForCurrentScene();
 
         if (_profileService.CurrentProfile != null)
         {
+            if (existingRecord != null)
+            {
+                existingRecord.StartTime = _startTime;
+                existingRecord.LatestTime = _startTime; // 每次启动时，更新latestTime为当前时间
+                existingRecord.DurationSeconds = 0.0;
+                DataHelper.UpdateMFRecord(_profileService.CurrentProfile, existingRecord);
+            }
+            else
+            {
+                DataHelper.AddMFRecord(_profileService.CurrentProfile, newRecord);
+            }
             _profileService.CurrentProfile.LastRunScene = pureEnglishSceneName;
             _profileService.CurrentProfile.LastRunDifficulty = difficulty;
-            DataHelper.AddMFRecord(_profileService.CurrentProfile, newRecord);
             LogManager.WriteDebugLog(
                 "TimerService",
                 $"已创建开始记录到角色档案: {currentCharacter} - {currentScene}, ACT: {actValue}, 开始时间: {_startTime}"
@@ -348,6 +365,7 @@ public class TimerService : ITimerService
         }
         else
         {
+            Toast.Warning("当前未选择角色，无法创建记录");
             LogManager.WriteDebugLog(
                 "TimerService",
                 $"已创建临时记录但未保存到档案: {currentCharacter} - {currentScene}, ACT: {actValue}, 开始时间: {_startTime}"

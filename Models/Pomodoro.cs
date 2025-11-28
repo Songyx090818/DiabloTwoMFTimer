@@ -1,3 +1,5 @@
+using System;
+
 namespace DiabloTwoMFTimer.Models;
 
 // 枚举和事件参数类
@@ -22,4 +24,23 @@ public class PomodoroTimeSettings
     public int ShortBreakSeconds { get; set; } = 0;
     public int LongBreakMinutes { get; set; } = 15;
     public int LongBreakSeconds { get; set; } = 0;
+}
+
+// 番茄钟事件参数类
+public class PomodoroTimerStateChangedEventArgs(PomodoroTimerState state, PomodoroTimerState previousState, bool isRunning, TimeSpan timeLeft) : EventArgs
+{
+    public PomodoroTimerState State { get; } = state;
+    public PomodoroTimerState PreviousState { get; } = previousState;
+    public bool IsRunning { get; } = isRunning;
+    public TimeSpan TimeLeft { get; } = timeLeft;
+}
+
+public class PomodoroCompletedEventArgs(int completedPomodoros) : EventArgs
+{
+    public int CompletedPomodoros { get; } = completedPomodoros;
+}
+
+public class PomodoroBreakStartedEventArgs(PomodoroBreakType breakType) : EventArgs
+{
+    public PomodoroBreakType BreakType { get; } = breakType;
 }

@@ -1,49 +1,59 @@
 using System;
 using System.Runtime.InteropServices;
-using System.Windows.Forms;
-using DiabloTwoMFTimer.UI;
-using DiabloTwoMFTimer.UI.Pomodoro;
-using DiabloTwoMFTimer.UI.Profiles;
-using DiabloTwoMFTimer.UI.Settings;
-using DiabloTwoMFTimer.UI.Timer;
+using System.Windows.Forms; // 仅保留用于 Keys, Message, Form (作为参数)
 using DiabloTwoMFTimer.Utils;
 
 namespace DiabloTwoMFTimer.Services;
 
 public interface IMainServices
 {
-    void InitializeMainForm(MainForm mainForm);
-    void HandleTabChanged();
-    void RefreshUI();
-    void InitializeApplication();
-    void ApplyWindowSettings();
-    void ProcessHotKeyMessage(Message msg);
+    // 初始化应用逻辑，传入窗口句柄用于注册热键
+    void InitializeApplication(IntPtr windowHandle);
+
+    // 处理关闭逻辑
     void HandleApplicationClosing();
+
+    // 处理 Windows 消息（热键）
+    void ProcessHotKeyMessage(Message msg);
+
+    // 应用窗口设置（变为无状态的辅助方法，或者通过事件通知）
+    void ApplyWindowSettings(Form form);
+
+    // 触发 UI 刷新的请求
+    void RequestRefresh();
+
+    // --- 事件定义：用于通知 UI 层执行操作 ---
+
     void SetActiveTabPage(Models.TabPage tabPage);
+
+    // 请求切换 Tab
+    event Action<Models.TabPage>? OnRequestTabChange;
+
+    // 请求 UI 刷新
+    event Action? OnRequestRefreshUI;
+
+    // 请求删除历史记录 (对应原来的 DeleteSelectedRecordAsync)
+    event Action? OnRequestDeleteHistory;
+
+    // 请求显示战利品记录窗口 (对应原来的 RecordLootForm)
+    event Action? OnRequestRecordLoot;
+
+    void ReloadHotkeys();
 }
 
-public class MainServices(
-    IProfileService profileService,
-    ITimerService timerService,
-    ITimerHistoryService timerHistoryService,
-    IPomodoroTimerService pomodoroTimerService,
-    IAppSettings appSettings
-) : IMainServices, IDisposable
+public class MainServices : IMainServices, IDisposable
 {
-    #region Fields and Properties
-    private readonly IProfileService _profileService = profileService;
-    private readonly ITimerService _timerService = timerService;
-    private readonly ITimerHistoryService _timerHistoryService = timerHistoryService;
-    private readonly IPomodoroTimerService _pomodoroTimerService = pomodoroTimerService;
-    private readonly IAppSettings _appSettings = appSettings;
+    #region Services & Fields
+    private readonly IProfileService _profileService;
+    private readonly ITimerService _timerService;
+    private readonly ITimerHistoryService _timerHistoryService;
+    private readonly IPomodoroTimerService _pomodoroTimerService;
+    private readonly IAppSettings _appSettings;
 
-    private MainForm? _mainForm;
-    private ProfileManager? _profileManager;
-    private PomodoroControl? _pomodoroControl;
-    private TimerControl? _timerControl;
-    private SettingsControl? _settingsControl;
+    // 仅持有句柄用于注册热键，不持有 Form 对象
+    private IntPtr _windowHandle;
 
-    // 热键相关
+    // 热键常量
     private const int WM_HOTKEY = 0x0312;
     private const int MOD_ALT = 0x0001;
     private const int MOD_CONTROL = 0x0002;
@@ -53,6 +63,7 @@ public class MainServices(
     private const int HOTKEY_ID_PAUSE = 2;
     private const int HOTKEY_ID_DELETE_HISTORY = 3;
     private const int HOTKEY_ID_RECORD_LOOT = 4;
+
     private Keys _currentStartOrNextRunHotkey;
     private Keys _currentPauseHotkey;
     private Keys _currentDeleteHistoryHotkey;
@@ -63,44 +74,40 @@ public class MainServices(
 
     [DllImport("user32.dll")]
     private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
-
-    public ProfileManager? ProfileManager => _profileManager;
-    public TimerControl? TimerControl => _timerControl;
-    public TabControl? TabControl => _mainForm?.TabControl;
     #endregion
 
+    #region Events
+    public event Action<Models.TabPage>? OnRequestTabChange;
+    public event Action? OnRequestRefreshUI;
+    public event Action? OnRequestDeleteHistory;
+    public event Action? OnRequestRecordLoot;
+    #endregion
+
+    public MainServices(
+        IProfileService profileService,
+        ITimerService timerService,
+        ITimerHistoryService timerHistoryService,
+        IPomodoroTimerService pomodoroTimerService,
+        IAppSettings appSettings
+    )
+    {
+        _profileService = profileService;
+        _timerService = timerService;
+        _timerHistoryService = timerHistoryService;
+        _pomodoroTimerService = pomodoroTimerService;
+        _appSettings = appSettings;
+    }
+
     #region Public Methods
-    /// <summary>
-    /// 初始化主窗体引用和相关组件
-    /// 程序第一层加载时调用
-    /// </summary>
-    public void InitializeMainForm(MainForm mainForm)
-    {
-        _mainForm = mainForm;
-        InitializeControlInstances(); // 在这里初始化控件实例
-        InitializeControls();
-    }
 
     /// <summary>
-    /// 切换到指定的Tab页
+    /// 初始化应用程序逻辑
     /// </summary>
-    public void SetActiveTabPage(Models.TabPage tabPage)
+    /// <param name="windowHandle">主窗口句柄，用于注册热键</param>
+    public void InitializeApplication(IntPtr windowHandle)
     {
-        if (_mainForm?.TabControl != null)
-        {
-            int tabIndex = (int)tabPage;
-            if (tabIndex >= 0 && tabIndex < _mainForm.TabControl.TabCount)
-            {
-                _mainForm.TabControl.SelectedIndex = tabIndex;
-            }
-        }
-    }
+        _windowHandle = windowHandle;
 
-    /// <summary>
-    /// 初始化应用程序
-    /// </summary>
-    public void InitializeApplication()
-    {
         // 1. 从配置中初始化当前热键变量
         _currentStartOrNextRunHotkey = _appSettings.HotkeyStartOrNext;
         _currentPauseHotkey = _appSettings.HotkeyPause;
@@ -108,15 +115,28 @@ public class MainServices(
         _currentRecordLootHotkey = _appSettings.HotkeyRecordLoot;
 
         InitializeLanguageSupport();
-        ApplyWindowSettings();
         RegisterHotkeys();
 
-        // 加载上次使用的角色档案
-        _profileManager?.LoadLastUsedProfile();
+        // 加载上次使用的角色档案 (不再直接操作 ProfileManager，而是依赖 ProfileService)
+        // 注意：UI 层的 ProfileManager 需要自己监听 ProfileService 的变化或者在初始化时读取
+        LoadLastUsedProfile();
 
-        // 在所有初始化完成后，触发恢复未完成记录的请求
+        // 恢复未完成记录
         _timerService.RestoreIncompleteRecord();
-        UpdateUI();
+
+        // 通知 UI 刷新
+        RequestRefresh();
+    }
+
+    public void RequestRefresh()
+    {
+        OnRequestRefreshUI?.Invoke();
+    }
+
+    public void HandleApplicationClosing()
+    {
+        _timerService.HandleApplicationClosing();
+        UnregisterHotKeys();
     }
 
     /// <summary>
@@ -124,401 +144,146 @@ public class MainServices(
     /// </summary>
     public void ProcessHotKeyMessage(Message m)
     {
-        if (m.Msg == WM_HOTKEY)
+        if (m.Msg != WM_HOTKEY) return;
+
+        int id = m.WParam.ToInt32();
+
+        switch (id)
         {
-            int id = m.WParam.ToInt32();
+            case HOTKEY_ID_STARTSTOP:
+                // 逻辑：如果热键触发，强制切到 Timer 页面，并执行开始/停止
+                OnRequestTabChange?.Invoke(Models.TabPage.Timer);
+                _timerService.StartOrNextRun();
+                break;
 
-            switch (id)
+            case HOTKEY_ID_PAUSE:
+                OnRequestTabChange?.Invoke(Models.TabPage.Timer);
+                _timerService.TogglePause();
+                break;
+
+            case HOTKEY_ID_DELETE_HISTORY:
+                // 逻辑：只有在 Timer 页面才能删除 (判断逻辑也可以移给 UI 层，或者在这里判断)
+                // 这里我们选择触发事件，让 UI 层决定是否响应以及如何响应
+                OnRequestDeleteHistory?.Invoke();
+                break;
+
+            case HOTKEY_ID_RECORD_LOOT:
+                OnRequestTabChange?.Invoke(Models.TabPage.Timer);
+                // 触发事件，让 UI 层弹出 Loot 窗口
+                OnRequestRecordLoot?.Invoke();
+                break;
+        }
+    }
+
+    /// <summary>
+    /// 应用窗口设置 (无状态辅助方法)
+    /// </summary>
+    public void ApplyWindowSettings(Form form)
+    {
+        if (form != null && _appSettings != null)
+        {
+            form.TopMost = _appSettings.AlwaysOnTop;
+
+            if (Screen.PrimaryScreen != null)
             {
-                case HOTKEY_ID_STARTSTOP:
-                    if (
-                        _mainForm?.TabControl != null
-                        && _mainForm.TabControl.SelectedIndex != (int)Models.TabPage.Timer
-                    )
-                    {
-                        SetActiveTabPage(Models.TabPage.Timer);
-                        bool hasIncompleteRecord = _profileService?.HasIncompleteRecord() ?? false;
-                        if (hasIncompleteRecord)
-                        {
-                            _timerControl?.TogglePause();
-                        }
-                        else
-                        {
-                            _timerControl?.ToggleTimer();
-                        }
-                    }
-                    else
-                    {
-                        _timerControl?.ToggleTimer();
-                    }
-
-                    break;
-                case HOTKEY_ID_PAUSE:
-                    SetActiveTabPage(Models.TabPage.Timer);
-                    _timerControl?.TogglePause();
-                    break;
-                case HOTKEY_ID_DELETE_HISTORY:
-                    if (
-                        _timerControl != null
-                        && _mainForm != null
-                        && _mainForm.TabControl != null
-                        && _mainForm.TabControl.SelectedIndex == (int)Models.TabPage.Timer
-                    )
-                    {
-                        // 异步调用删除选中记录的方法
-                        _ = _timerControl.DeleteSelectedRecordAsync();
-                    }
-                    break;
-                case HOTKEY_ID_RECORD_LOOT:
-                    // 切换到计时界面
-                    SetActiveTabPage(Models.TabPage.Timer);
-                    // 显示掉落记录弹窗
-                    if (_mainForm != null)
-                    {
-                        using var lootForm = new UI.Timer.RecordLootForm(_profileService, _timerHistoryService);
-                        // 订阅掉落记录保存成功事件
-                        lootForm.LootRecordSaved += OnLootRecordSaved;
-                        lootForm.ShowDialog(_mainForm);
-                    }
-                    break;
+                var position = SettingsManager.StringToWindowPosition(_appSettings.WindowPosition);
+                UI.Settings.SettingsControl.MoveWindowToPosition(form, position);
             }
         }
     }
 
-    /// <summary>
-    /// 处理标签页切换
-    /// </summary>
-    public void HandleTabChanged()
+    public void SetActiveTabPage(Models.TabPage tabPage)
     {
-        UpdateUI();
-
-        // 当切换到计时器标签页时，调用OnTabSelected方法以加载角色档案数据
-        if (TabControl != null && _timerControl != null && TabControl.SelectedIndex == (int)Models.TabPage.Timer)
-        {
-            _timerControl.HandleTabSelected();
-        }
-        // 当切换到档案标签页时，重新刷新ProfileManager的UI，确保按钮文本根据最新的计时器状态正确显示
-        else if (
-            TabControl != null
-            && _profileManager != null
-            && TabControl.SelectedIndex == (int)Models.TabPage.Profile
-        )
-        {
-            _profileManager.RefreshUI();
-        }
+        // 这里的 OnRequestTabChange 会被 MainForm 监听到，
+        // 然后由 MainForm 去真正执行 tabControl.SelectedIndex = ...
+        OnRequestTabChange?.Invoke(tabPage);
     }
 
-    /// <summary>
-    /// 刷新UI
-    /// </summary>
-    public void RefreshUI()
+    public void ReloadHotkeys()
     {
-        UpdateUI();
+        // 1. 重新从配置读取热键到内存变量
+        _currentStartOrNextRunHotkey = _appSettings.HotkeyStartOrNext;
+        _currentPauseHotkey = _appSettings.HotkeyPause;
+        _currentDeleteHistoryHotkey = _appSettings.HotkeyDeleteHistory;
+        _currentRecordLootHotkey = _appSettings.HotkeyRecordLoot;
+
+        // 2. 重新注册
+        RegisterHotkeys();
+
+        // 记录日志方便调试
+        Utils.LogManager.WriteDebugLog("MainServices", "热键已重新注册");
     }
 
-    /// <summary>
-    /// 当掉落记录保存成功时触发的事件处理程序
-    /// </summary>
-    private void OnLootRecordSaved(object? sender, EventArgs e)
-    {
-        // 刷新UI以显示新添加的掉落记录
-        UpdateUI();
-    }
-
-    /// <summary>
-    /// 处理应用程序关闭
-    /// </summary>
-    public void HandleApplicationClosing()
-    {
-        _timerControl?.HandleApplicationClosing();
-        UnregisterHotKeys();
-    }
-
-    /// <summary>
-    /// 应用窗口设置
-    /// </summary>
-    public void ApplyWindowSettings()
-    {
-        if (_mainForm != null && _appSettings != null && Screen.PrimaryScreen != null)
-        {
-            _mainForm.TopMost = _appSettings.AlwaysOnTop;
-
-            var position = SettingsManager.StringToWindowPosition(_appSettings.WindowPosition);
-            SettingsControl.MoveWindowToPosition(_mainForm, position);
-        }
-    }
     #endregion
 
     #region Private Methods
-    private void InitializeControlInstances()
+
+    private void LoadLastUsedProfile()
     {
-        // 修复：传递 this 作为 IMainServices 参数
-        _profileManager = new ProfileManager(
-            _profileService,
-            _appSettings,
-            _timerService,
-            _pomodoroTimerService,
-            this
-        );
-        _timerControl = new TimerControl(
-            _profileService,
-            _timerService,
-            _timerHistoryService,
-            _pomodoroTimerService,
-            _appSettings
-        );
-        _pomodoroControl = new PomodoroControl(_pomodoroTimerService, _appSettings, _profileService);
-        _settingsControl = new SettingsControl(_appSettings);
-        _settingsControl.InitializeData(_appSettings);
-    }
-
-    private void InitializeControls()
-    {
-        if (
-            _mainForm == null
-            || _profileManager == null
-            || _timerControl == null
-            || _pomodoroControl == null
-            || _settingsControl == null
-        )
-            return;
-
-        // 设置控件的Dock属性
-        _profileManager.Dock = DockStyle.Fill;
-        _timerControl.Dock = DockStyle.Fill;
-        _pomodoroControl.Dock = DockStyle.Fill;
-        _settingsControl.Dock = DockStyle.Fill;
-
-        // 添加到对应的TabPage
-        _mainForm.TabProfilePage?.Controls.Add(_profileManager);
-        _mainForm.TabTimerPage?.Controls.Add(_timerControl);
-        _mainForm.TabPomodoroPage?.Controls.Add(_pomodoroControl);
-        _mainForm.TabSettingsPage?.Controls.Add(_settingsControl);
-
-        // 订阅事件
-        SubscribeToEvents();
-    }
-
-    private void SubscribeToEvents()
-    {
-        // 订阅计时器事件
-        if (_timerControl != null)
+        // 这一步是纯数据逻辑，没问题
+        if (!string.IsNullOrEmpty(_appSettings.LastUsedProfile))
         {
-            _timerControl.TimerStateChanged += OnTimerTimerStateChanged;
+            var profile = Utils.DataHelper.LoadProfileByName(_appSettings.LastUsedProfile);
+            if (profile != null)
+            {
+                // 设置当前 Profile，这将触发 ProfileService 的事件，
+                // UI 层的 ProfileManager 和 TimerControl 会监听到这个变化并自动更新
+                _profileService.SwitchCharacter(profile);
+            }
         }
-        // 订阅设置事件
-        if (_settingsControl != null)
-        {
-            _settingsControl.WindowPositionChanged += OnWindowPositionChanged;
-            _settingsControl.LanguageChanged += OnLanguageChanged;
-            _settingsControl.AlwaysOnTopChanged += OnAlwaysOnTopChanged;
-            _settingsControl.HotkeysChanged += OnHotkeysChanged;
-            _settingsControl.TimerSettingsChanged += OnTimerSettingsChanged;
-        }
-    }
-
-    /// <summary>
-    /// 加载设置到番茄钟服务
-    /// </summary>
-    private void LoadSettings()
-    {
-        _pomodoroTimerService.LoadSettings(_appSettings);
     }
 
     private void InitializeLanguageSupport()
     {
-        // 在应用启动时，根据IAppSettings中的Language设置来切换语言
         LanguageManager.SwitchLanguage(
             _appSettings.Language == "Chinese" ? LanguageManager.Chinese : LanguageManager.English
         );
-        LanguageManager.OnLanguageChanged += LanguageManager_OnLanguageChanged;
-    }
-
-    private void UpdateUI()
-    {
-        if (_mainForm == null)
-            return;
-
-        _mainForm.UpdateFormTitle(LanguageManager.GetString("FormTitle"));
-
-        // 更新选项卡标题
-        if (_mainForm.TabControl != null && _mainForm.TabControl.TabPages.Count >= 4)
-        {
-            _mainForm.TabControl.TabPages[(int)Models.TabPage.Profile].Text = LanguageManager.GetString(
-                "TabProfile"
-            );
-            _mainForm.TabControl.TabPages[(int)Models.TabPage.Timer].Text = LanguageManager.GetString("TabTimer");
-            _mainForm.TabControl.TabPages[(int)Models.TabPage.Pomodoro].Text = LanguageManager.GetString(
-                "TabPomodoro"
-            );
-            _mainForm.TabControl.TabPages[(int)Models.TabPage.Settings].Text = LanguageManager.GetString(
-                "TabSettings"
-            );
-        }
-
-        // 更新各功能控件的UI
-        _profileManager?.RefreshUI();
-        _timerControl?.RefreshUI();
-        _pomodoroControl?.RefreshUI();
-        _settingsControl?.RefreshUI();
+        // MainService 本身不需要监听语言变化来更新 UI，因为它不再持有 UI 控件
+        // 只需要确保设置了正确的语言即可
     }
 
     private void RegisterHotkeys()
     {
         UnregisterHotKeys();
 
-        RegisterHotKey(_currentStartOrNextRunHotkey, HOTKEY_ID_STARTSTOP);
-        RegisterHotKey(_currentPauseHotkey, HOTKEY_ID_PAUSE);
-        RegisterHotKey(_currentDeleteHistoryHotkey, HOTKEY_ID_DELETE_HISTORY);
-        RegisterHotKey(_currentRecordLootHotkey, HOTKEY_ID_RECORD_LOOT);
-        // 不再注册删除历史和记录战利品的热键，因为它们未被使用
+        if (_windowHandle != IntPtr.Zero)
+        {
+            RegisterHotKey(_currentStartOrNextRunHotkey, HOTKEY_ID_STARTSTOP);
+            RegisterHotKey(_currentPauseHotkey, HOTKEY_ID_PAUSE);
+            RegisterHotKey(_currentDeleteHistoryHotkey, HOTKEY_ID_DELETE_HISTORY);
+            RegisterHotKey(_currentRecordLootHotkey, HOTKEY_ID_RECORD_LOOT);
+        }
     }
 
     private void UnregisterHotKeys()
     {
-        if (_mainForm != null && !_mainForm.IsDisposed && _mainForm.IsHandleCreated)
+        if (_windowHandle != IntPtr.Zero)
         {
-            UnregisterHotKey(_mainForm.Handle, HOTKEY_ID_STARTSTOP);
-            UnregisterHotKey(_mainForm.Handle, HOTKEY_ID_PAUSE);
-            UnregisterHotKey(_mainForm.Handle, HOTKEY_ID_DELETE_HISTORY);
-            UnregisterHotKey(_mainForm.Handle, HOTKEY_ID_RECORD_LOOT);
+            UnregisterHotKey(_windowHandle, HOTKEY_ID_STARTSTOP);
+            UnregisterHotKey(_windowHandle, HOTKEY_ID_PAUSE);
+            UnregisterHotKey(_windowHandle, HOTKEY_ID_DELETE_HISTORY);
+            UnregisterHotKey(_windowHandle, HOTKEY_ID_RECORD_LOOT);
         }
     }
 
     private void RegisterHotKey(Keys keys, int id)
     {
-        if (_mainForm == null || _mainForm.IsDisposed || !_mainForm.IsHandleCreated)
-            return;
+        if (_windowHandle == IntPtr.Zero) return;
 
         int modifiers = 0;
-
-        if ((keys & Keys.Alt) == Keys.Alt)
-            modifiers |= MOD_ALT;
-        if ((keys & Keys.Control) == Keys.Control)
-            modifiers |= MOD_CONTROL;
-        if ((keys & Keys.Shift) == Keys.Shift)
-            modifiers |= MOD_SHIFT;
+        if ((keys & Keys.Alt) == Keys.Alt) modifiers |= MOD_ALT;
+        if ((keys & Keys.Control) == Keys.Control) modifiers |= MOD_CONTROL;
+        if ((keys & Keys.Shift) == Keys.Shift) modifiers |= MOD_SHIFT;
 
         int keyCode = (int)(keys & Keys.KeyCode);
-
-        RegisterHotKey(_mainForm.Handle, id, modifiers, keyCode);
+        RegisterHotKey(_windowHandle, id, modifiers, keyCode);
     }
+
     #endregion
 
-    #region Event Handlers
-    private void OnTimerTimerStateChanged(object? sender, EventArgs e)
-    {
-        UpdateUI();
-    }
-
-    private void OnLanguageChanged(object? sender, SettingsControl.LanguageChangedEventArgs e)
-    {
-        // 先更新IAppSettings中的Language属性
-        if (_appSettings != null)
-        {
-            _appSettings.Language = SettingsManager.LanguageToString(e.Language);
-        }
-
-        // 再调用LanguageManager.SwitchLanguage触发语言变更事件
-        if (e.Language == SettingsControl.LanguageOption.Chinese)
-        {
-            LanguageManager.SwitchLanguage(LanguageManager.Chinese);
-        }
-        else
-        {
-            LanguageManager.SwitchLanguage(LanguageManager.English);
-        }
-    }
-
-    private void OnAlwaysOnTopChanged(object? sender, SettingsControl.AlwaysOnTopChangedEventArgs e)
-    {
-        if (_mainForm != null)
-        {
-            _mainForm.TopMost = e.IsAlwaysOnTop;
-        }
-
-        if (_appSettings != null)
-        {
-            _appSettings.AlwaysOnTop = e.IsAlwaysOnTop;
-        }
-    }
-
-    private void OnHotkeysChanged(object? sender, SettingsControl.AllHotkeysChangedEventArgs e)
-    {
-        // 更新内存变量
-        _currentStartOrNextRunHotkey = e.StartHotkey;
-        _currentPauseHotkey = e.PauseHotkey;
-        _currentDeleteHistoryHotkey = e.DeleteHotkey;
-        _currentRecordLootHotkey = e.RecordHotkey;
-
-        // 重新注册热键使其生效
-        RegisterHotkeys();
-    }
-
-    private void OnTimerSettingsChanged(object? sender, SettingsControl.TimerSettingsChangedEventArgs e)
-    {
-        // 更新配置文件中的计时器设置
-        if (_appSettings != null)
-        {
-            _appSettings.TimerShowPomodoro = e.ShowPomodoro;
-            _appSettings.TimerShowLootDrops = e.ShowLootDrops;
-            _appSettings.TimerSyncStartPomodoro = e.SyncStartPomodoro;
-            _appSettings.TimerSyncPausePomodoro = e.SyncPausePomodoro;
-            _appSettings.GenerateRoomName = e.GenerateRoomName;
-        }
-
-        // 应用掉落记录显示设置到UI
-        if (_timerControl != null)
-        {
-            _timerControl.SetLootRecordsVisible(e.ShowLootDrops);
-        }
-
-        // 更新UI
-        UpdateUI();
-
-        // 跳转到计时界面
-        SetActiveTabPage(Models.TabPage.Timer);
-    }
-
-    private void OnWindowPositionChanged(object? sender, SettingsControl.WindowPositionChangedEventArgs e)
-    {
-        if (_mainForm != null)
-        {
-            SettingsControl.MoveWindowToPosition(_mainForm, e.Position);
-        }
-
-        if (_appSettings != null)
-        {
-            _appSettings.WindowPosition = SettingsManager.WindowPositionToString(e.Position);
-            SettingsManager.SaveSettings(_appSettings);
-        }
-    }
-
-    private void LanguageManager_OnLanguageChanged(object? sender, EventArgs e)
-    {
-        UpdateUI();
-    }
-    #endregion
-
-    #region IDisposable Implementation
     public void Dispose()
     {
         UnregisterHotKeys();
-
-        if (_timerControl != null)
-        {
-            _timerControl.TimerStateChanged -= OnTimerTimerStateChanged;
-        }
-        if (_settingsControl != null)
-        {
-            _settingsControl.WindowPositionChanged -= OnWindowPositionChanged;
-            _settingsControl.LanguageChanged -= OnLanguageChanged;
-            _settingsControl.AlwaysOnTopChanged -= OnAlwaysOnTopChanged;
-            _settingsControl.HotkeysChanged -= OnHotkeysChanged;
-            _settingsControl.TimerSettingsChanged -= OnTimerSettingsChanged;
-        }
-
-        LanguageManager.OnLanguageChanged -= LanguageManager_OnLanguageChanged;
+        // 取消订阅其他可能的事件
     }
-    #endregion
 }
