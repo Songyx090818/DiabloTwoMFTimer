@@ -1,10 +1,9 @@
-namespace DiabloTwoMFTimer.Models
+namespace DiabloTwoMFTimer.Models;
+
+public enum TabPage
 {
-    public enum TabPage
-    {
-        Profile = 0,
-        Timer = 1,
-        Pomodoro = 2,
-        Settings = 3,
-    }
+    Profile = 0,
+    Timer = 1,
+    Pomodoro = 2,
+    Settings = 3,
 }

@@ -157,7 +157,6 @@ namespace DiabloTwoMFTimer.UI.Timer
             if (disposing)
             {
                 UnsubscribeFromServiceEvents();
-                LanguageManager.OnLanguageChanged -= LanguageManager_OnLanguageChanged;
             }
             base.Dispose(disposing);
         }

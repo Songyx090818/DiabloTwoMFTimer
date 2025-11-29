@@ -2,6 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Windows.Forms; // 仅保留用于 Keys, Message, Form (作为参数)
 using DiabloTwoMFTimer.Interfaces;
+using DiabloTwoMFTimer.Models;
 using DiabloTwoMFTimer.Utils;
 
 namespace DiabloTwoMFTimer.Services;
@@ -12,7 +13,8 @@ public class MainServices(
     ITimerHistoryService timerHistoryService,
     IPomodoroTimerService pomodoroTimerService,
     IProfileRepository profileRepository,
-    IAppSettings appSettings
+    IAppSettings appSettings,
+    IMessenger messenger
     ) : IMainService, IDisposable
 {
     #region Services & Fields
@@ -22,6 +24,7 @@ public class MainServices(
     private readonly ITimerHistoryService _timerHistoryService = timerHistoryService;
     private readonly IPomodoroTimerService _pomodoroTimerService = pomodoroTimerService;
     private readonly IAppSettings _appSettings = appSettings;
+    private readonly IMessenger _messenger = messenger;
 
     // 仅持有句柄用于注册热键，不持有 Form 对象
     private IntPtr _windowHandle;
@@ -75,6 +78,9 @@ public class MainServices(
 
         InitializeLanguageSupport();
         RegisterHotkeys();
+        _messenger.Subscribe<LanguageChangedMessage>(OnLanguageChanged);
+        _messenger.Subscribe<TimerSettingsChangedMessage>(OnTimerSettingsChanged);
+        _messenger.Subscribe<HotkeysChangedMessage>(_ => ReloadHotkeys());
 
         // 加载上次使用的角色档案 (不再直接操作 ProfileManager，而是依赖 ProfileService)
         // 注意：UI 层的 ProfileManager 需要自己监听 ProfileService 的变化或者在初始化时读取
@@ -200,6 +206,21 @@ public class MainServices(
         // MainService 本身不需要监听语言变化来更新 UI，因为它不再持有 UI 控件
         // 只需要确保设置了正确的语言即可
     }
+    private void OnTimerSettingsChanged(TimerSettingsChangedMessage _)
+    {
+        // 收到设置变更，自动切回计时器页面 (保持原有用户体验)
+        OnRequestTabChange?.Invoke(Models.TabPage.Timer);
+
+        // 也可以在这里触发 RequestRefresh 来刷新整个 UI 的标题等
+        RequestRefresh();
+    }
+
+    private void OnLanguageChanged(LanguageChangedMessage message)
+    {
+        // 收到语言变更消息，切换语言
+        LanguageManager.SwitchLanguage(message.LanguageCode);
+        RequestRefresh();
+    }
 
     private void RegisterHotkeys()
     {
@@ -243,6 +264,7 @@ public class MainServices(
     public void Dispose()
     {
         UnregisterHotKeys();
+        _messenger.Unsubscribe<TimerSettingsChangedMessage>(OnTimerSettingsChanged);
         // 取消订阅其他可能的事件
     }
 }

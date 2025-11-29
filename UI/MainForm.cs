@@ -2,6 +2,7 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 using DiabloTwoMFTimer.Interfaces;
+using DiabloTwoMFTimer.Models;
 using DiabloTwoMFTimer.Services;
 using DiabloTwoMFTimer.UI.Pomodoro;
 using DiabloTwoMFTimer.UI.Profiles;
@@ -20,6 +21,7 @@ public partial class MainForm : Form
     // 为了创建 RecordLootForm，我们需要这两个服务 (或者你可以选择把弹窗逻辑封装进 TimerControl)
     private readonly IProfileService _profileService;
     private readonly ITimerHistoryService _timerHistoryService;
+    private readonly IMessenger _messenger;
 
     // 子控件引用 (用于后续的方法调用)
     private readonly ProfileManager _profileManager;
@@ -33,6 +35,7 @@ public partial class MainForm : Form
         IAppSettings settings,
         IProfileService profileService,
         ITimerHistoryService timerHistoryService,
+        IMessenger messenger,
         ProfileManager profileManager,
         TimerControl timerControl,
         PomodoroControl pomodoroControl,
@@ -48,6 +51,7 @@ public partial class MainForm : Form
         _timerControl = timerControl;
         _pomodoroControl = pomodoroControl;
         _settingsControl = settingsControl;
+        _messenger = messenger;
 
         InitializeComponent(); // 初始化设计器生成的控件 (TabControl 等)
 
@@ -59,8 +63,7 @@ public partial class MainForm : Form
 
         // 订阅 MainService 的事件
         SubscribeToEvents();
-
-        SubscribeToChildControlEvents();
+        SubscribeToMessages();
 
         // 注册窗体显示事件
         this.Shown += OnMainForm_Shown;
@@ -81,7 +84,7 @@ public partial class MainForm : Form
     private void InitializeChildControls()
     {
         // 辅助方法：设置 Dock 并添加到 TabPage
-        void AddControlToTab(TabPage page, Control control)
+        void AddControlToTab(System.Windows.Forms.TabPage page, Control control)
         {
             control.Dock = DockStyle.Fill;
             page.Controls.Add(control);
@@ -143,62 +146,47 @@ public partial class MainForm : Form
         };
     }
 
-    private void SubscribeToChildControlEvents()
+    private void SubscribeToMessages()
     {
-        // -----------------------------------------------------------
-        // 修复问题 1 & 2：监听设置界面的事件并作出响应
-        // -----------------------------------------------------------
-
-        // 1. 监听快捷键变更事件
-        _settingsControl.HotkeysChanged += (s, e) =>
+        _messenger.Subscribe<WindowPositionChangedMessage>(_ =>
         {
-            // 通知 MainService 重新注册热键
-            _mainService.ReloadHotkeys();
-        };
-
-        // 2. 监听计时器设置变更 (显示/隐藏番茄钟或掉落列表)
-        _settingsControl.TimerSettingsChanged += (s, e) =>
-        {
-            // 2.1 更新 TimerControl 的 UI (比如显示/隐藏 Loot 面板)
-            // 注意：e.ShowLootDrops 包含了最新的设置
-            _timerControl.SetLootRecordsVisible(e.ShowLootDrops);
-
-            // 2.2 更新 UI 刷新
-            UpdateFormTitleAndTabs();
-
-            // 2.3 【关键】修复“原来逻辑是切换到 Tag 页面”
-            // 调用 Service 请求切换 Tab，Service 会触发事件，MainForm 再响应切换
-            _mainService.SetActiveTabPage(Models.TabPage.Timer);
-        };
-
-        // 3. 监听窗口位置变更
-        _settingsControl.WindowPositionChanged += (s, e) =>
-        {
-            // 立即应用新位置
-            _mainService.ApplyWindowSettings(this);
-        };
-
-        // 4. 监听语言变更
-        _settingsControl.LanguageChanged += (s, e) =>
-        {
-            // 刷新整个 UI
-            UpdateFormTitleAndTabs();
-            // 再调用LanguageManager.SwitchLanguage触发语言变更事件
-            if (e.Language == SettingsControl.LanguageOption.Chinese)
+            this.SafeInvoke(() =>
             {
-                LanguageManager.SwitchLanguage(LanguageManager.Chinese);
-            }
-            else
-            {
-                LanguageManager.SwitchLanguage(LanguageManager.English);
-            }
-        };
+                // 直接调用 MainService 的辅助方法应用位置
+                _mainService.ApplyWindowSettings(this);
+            });
+        });
 
-        // 5. 监听始终置顶变更
-        _settingsControl.AlwaysOnTopChanged += (s, e) =>
+        // [新增] 监听始终置顶变更
+        _messenger.Subscribe<AlwaysOnTopChangedMessage>(_ =>
         {
-            this.TopMost = e.IsAlwaysOnTop;
-        };
+            this.SafeInvoke(() =>
+            {
+                // 从配置中读取最新值
+                this.TopMost = _appSettings.AlwaysOnTop;
+            });
+        });
+        // 监听设置变更 -> 调整窗口大小
+        // 窗口大小属于 MainForm 的职责，不应该由 TimerControl 来改 ParentForm
+        _messenger.Subscribe<TimerSettingsChangedMessage>(msg =>
+        {
+            this.SafeInvoke(() =>
+            {
+                // 根据是否显示掉落，调整窗口高度
+                int targetHeight = msg.ShowLootDrops
+                    ? UISizeConstants.ClientHeightWithLoot
+                    : UISizeConstants.ClientHeightWithoutLoot;
+
+                // 只有高度不一致时才调整，避免闪烁
+                if (this.ClientSize.Height != targetHeight)
+                {
+                    this.ClientSize = new Size(UISizeConstants.ClientWidth, targetHeight);
+
+                    // 如果设置了靠底对齐，可能需要重新调整位置(可选)
+                    _mainService.ApplyWindowSettings(this);
+                }
+            });
+        });
     }
 
     /// <summary>

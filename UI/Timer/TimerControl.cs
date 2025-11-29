@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using DiabloTwoMFTimer.Interfaces;
+using DiabloTwoMFTimer.Models;
 using DiabloTwoMFTimer.Services;
 using DiabloTwoMFTimer.UI.Pomodoro;
 using DiabloTwoMFTimer.UI.Settings;
@@ -17,6 +18,7 @@ public partial class TimerControl : UserControl
     private readonly IProfileService _profileService = null!;
     private readonly ITimerHistoryService _historyService = null!;
     private readonly IPomodoroTimerService _pomodoroTimerService = null!;
+    private readonly IMessenger _messenger = null!; // 新增字段
 
     private readonly IAppSettings _appSettings = null!;
 
@@ -47,7 +49,8 @@ public partial class TimerControl : UserControl
         ITimerService timerService,
         ITimerHistoryService historyService,
         IPomodoroTimerService pomodoroTimerService,
-        IAppSettings appSettings
+        IAppSettings appSettings,
+        IMessenger messenger // 新增参数
     )
         : this()
     {
@@ -56,6 +59,7 @@ public partial class TimerControl : UserControl
         _historyService = historyService;
         _pomodoroTimerService = pomodoroTimerService;
         _appSettings = appSettings;
+        _messenger = messenger; // 赋值新增字段
 
         // 初始化子控件的服务引用
         characterSceneControl?.Initialize(_profileService, _appSettings);
@@ -65,8 +69,6 @@ public partial class TimerControl : UserControl
         // 订阅服务事件
         SubscribeToServiceEvents();
 
-        // 注册语言变更事件
-        LanguageManager.OnLanguageChanged += LanguageManager_OnLanguageChanged;
     }
 
     protected override void OnLoad(EventArgs e)
@@ -138,6 +140,25 @@ public partial class TimerControl : UserControl
         }
     }
 
+    // [重构] 消息处理方法
+    private void OnTimerSettingsChanged(TimerSettingsChangedMessage message)
+    {
+        // Messenger 可能在任意线程回调，必须使用 SafeInvoke
+        this.SafeInvoke(() =>
+        {
+            // 响应 ShowLootDrops 变化
+            SetLootRecordsVisible(message.ShowLootDrops);
+
+            // 响应 ShowPomodoro 变化
+            if (pomodoroTime != null)
+            {
+                pomodoroTime.Visible = message.ShowPomodoro;
+            }
+
+            // 其他设置如果需要立即响应 UI 变化也可以在这里处理
+        });
+    }
+
     // 事件
     public event EventHandler? TimerStateChanged;
 
@@ -159,6 +180,11 @@ public partial class TimerControl : UserControl
         _profileService.CurrentProfileChangedEvent += OnProfileChanged;
         _profileService.CurrentSceneChangedEvent += OnSceneChanged;
         _profileService.CurrentDifficultyChangedEvent += OnDifficultyChanged;
+
+        _messenger.Subscribe<TimerSettingsChangedMessage>(OnTimerSettingsChanged);
+
+        // 注册语言变更事件
+        LanguageManager.OnLanguageChanged += LanguageManager_OnLanguageChanged;
     }
 
     private void UnsubscribeFromServiceEvents()
@@ -175,6 +201,9 @@ public partial class TimerControl : UserControl
         _profileService.CurrentProfileChangedEvent -= OnProfileChanged;
         _profileService.CurrentSceneChangedEvent -= OnSceneChanged;
         _profileService.CurrentDifficultyChangedEvent -= OnDifficultyChanged;
+
+        _messenger.Unsubscribe<TimerSettingsChangedMessage>(OnTimerSettingsChanged);
+        LanguageManager.OnLanguageChanged -= LanguageManager_OnLanguageChanged;
     }
 
 

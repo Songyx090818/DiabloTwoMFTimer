@@ -2,6 +2,7 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 using DiabloTwoMFTimer.Interfaces;
+using DiabloTwoMFTimer.Models;
 using DiabloTwoMFTimer.Services; // 假设存在
 using DiabloTwoMFTimer.Utils; // 假设存在
 
@@ -26,15 +27,9 @@ public partial class SettingsControl : UserControl
         English,
     }
 
-    // 事件定义
-    public event EventHandler<WindowPositionChangedEventArgs>? WindowPositionChanged;
-    public event EventHandler<LanguageChangedEventArgs>? LanguageChanged;
-    public event EventHandler<AlwaysOnTopChangedEventArgs>? AlwaysOnTopChanged;
-    public event EventHandler<AllHotkeysChangedEventArgs>? HotkeysChanged;
-    public event EventHandler<TimerSettingsChangedEventArgs>? TimerSettingsChanged;
-
-    // IAppSettings 字段
     private readonly IAppSettings _appSettings = null!;
+
+    private readonly IMessenger _messenger = null!;
 
     public SettingsControl()
     {
@@ -42,10 +37,11 @@ public partial class SettingsControl : UserControl
         RefreshUI();
     }
 
-    public SettingsControl(IAppSettings appSettings)
+    public SettingsControl(IAppSettings appSettings, IMessenger messenger)
         : this()
     {
         _appSettings = appSettings;
+        _messenger = messenger;
         InitializeData(_appSettings);
     }
 
@@ -103,32 +99,21 @@ public partial class SettingsControl : UserControl
         // 显示成功提示
         Utils.Toast.Success(Utils.LanguageManager.GetString("SuccessSettingsChanged", "设置修改成功"));
 
-        // 触发所有设置事件，用于其他UI更新
-        WindowPositionChanged?.Invoke(this, new WindowPositionChangedEventArgs(generalSettings.SelectedPosition));
-        LanguageChanged?.Invoke(this, new LanguageChangedEventArgs(generalSettings.SelectedLanguage));
-        AlwaysOnTopChanged?.Invoke(this, new AlwaysOnTopChangedEventArgs(generalSettings.IsAlwaysOnTop));
-        HotkeysChanged?.Invoke(
-            this,
-            new AllHotkeysChangedEventArgs(
-                hotkeySettings.StartOrNextRunHotkey,
-                hotkeySettings.PauseHotkey,
-                hotkeySettings.DeleteHistoryHotkey,
-                hotkeySettings.RecordLootHotkey
-            )
-        );
-        TimerSettingsChanged?.Invoke(
-            this,
-            new TimerSettingsChangedEventArgs(
-                timerSettings.TimerShowPomodoro,
-                timerSettings.TimerShowLootDrops,
-                timerSettings.TimerSyncStartPomodoro,
-                timerSettings.TimerSyncPausePomodoro,
-                timerSettings.GenerateRoomName
-            )
-        );
+        // LanguageChanged?.Invoke(this, new LanguageChangedEventArgs(generalSettings.SelectedLanguage));
+        string langCode = (generalSettings.SelectedLanguage == LanguageOption.Chinese)
+        ? "zh-CN" : "en-US";
+        _messenger.Publish(new LanguageChangedMessage(langCode));
+        _messenger.Publish(new TimerSettingsChangedMessage(
+            timerSettings.TimerShowPomodoro,
+            timerSettings.TimerShowLootDrops,
+            timerSettings.TimerSyncStartPomodoro,
+            timerSettings.TimerSyncPausePomodoro,
+            timerSettings.GenerateRoomName
+        ));
+        _messenger.Publish(new WindowPositionChangedMessage());
+        _messenger.Publish(new AlwaysOnTopChangedMessage());
+        _messenger.Publish(new HotkeysChangedMessage());
     }
-
-    // ... (其他代码不变) ...
 
     // 新增：包含所有快捷键的事件参数类
     public class AllHotkeysChangedEventArgs(Keys start, Keys pause, Keys delete, Keys record) : EventArgs
