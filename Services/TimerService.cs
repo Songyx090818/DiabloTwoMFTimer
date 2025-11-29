@@ -285,7 +285,6 @@ public class TimerService : ITimerService
             var newRecord = new MFRecord
             {
                 SceneName = pureEnglishSceneName,
-                ACT = actValue,
                 Difficulty = difficulty,
                 StartTime = _startTime,
                 EndTime = null,
@@ -336,7 +335,6 @@ public class TimerService : ITimerService
             var newRecord = new MFRecord
             {
                 SceneName = pureEnglishSceneName,
-                ACT = actValue,
                 Difficulty = difficulty,
                 StartTime = _startTime,
                 EndTime = DateTime.Now,

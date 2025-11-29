@@ -184,29 +184,31 @@ public class YamlProfileRepository : IProfileRepository
     {
         try
         {
-            // 1. 查缓存
             if (_profileCache.TryGetValue(filePath, out var cachedProfile))
-            {
                 return cachedProfile;
-            }
 
             if (!File.Exists(filePath)) return null;
 
-            // 2. 读取文件
-            string yamlContent;
-            using (var reader = new StreamReader(filePath, Encoding.UTF8))
-            {
-                yamlContent = reader.ReadToEnd();
-            }
+            using var reader = new StreamReader(filePath, Encoding.UTF8);
 
-            if (string.IsNullOrWhiteSpace(yamlContent)) return null;
+            // [修改] 直接使用 _serializer 对应的 _deserializer
+            // 你可能需要在构造函数里初始化一个 _deserializer
+            var deserializer = new DeserializerBuilder()
+                .IgnoreUnmatchedProperties() // 允许 YAML 有多余字段
+                .Build();
 
-            // 3. 解析 (复用现有的 YamlParser 工具类逻辑)
-            var profile = YamlParser.ParseYamlManually(yamlContent, filePath);
+            var profile = deserializer.Deserialize<CharacterProfile>(reader);
 
-            // 4. 存入缓存
+            // 防御性初始化
             if (profile != null)
             {
+                profile.Records ??= [];
+                LogManager.WriteDebugLog("YamlProfileRepository", $"加载成功, {profile.Name} 有 {profile.Records.Count} 条记录");
+                profile.LootRecords ??= [];
+                // 如果 Name 为空，尝试用文件名
+                if (string.IsNullOrEmpty(profile.Name))
+                    profile.Name = Path.GetFileNameWithoutExtension(filePath);
+
                 _profileCache[filePath] = profile;
             }
 

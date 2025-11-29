@@ -117,6 +117,7 @@ public partial class ProfileManager : UserControl
             for (int i = 0; i < farmingScenes.Count; i++)
             {
                 var scene = farmingScenes[i];
+                LogManager.WriteDebugLog($"添加场景到下拉框: {scene}");
                 string displayName = _sceneService.GetSceneDisplayName(scene);
                 cmbScene?.Items.Add(displayName);
 

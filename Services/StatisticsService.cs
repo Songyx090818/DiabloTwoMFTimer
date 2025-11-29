@@ -100,7 +100,7 @@ public class StatisticsService(IProfileService profileService, IAppSettings appS
         var records = profile
             .Records.Where(r => r.IsCompleted && r.StartTime >= start && r.StartTime <= end)
             .ToList();
-        if (!records.Any())
+        if (records.Count == 0)
             return LanguageManager.GetString("NoData");
 
         int totalRuns = records.Count;
@@ -127,7 +127,7 @@ public class StatisticsService(IProfileService profileService, IAppSettings appS
             .CurrentProfile.Records.Where(r => r.IsCompleted && r.StartTime >= start && r.StartTime <= end)
             .ToList();
 
-        if (validRecords.Any())
+        if (validRecords.Count > 0)
         {
             var sceneStats = validRecords
                 .GroupBy(r => r.SceneName)
@@ -165,7 +165,7 @@ public class StatisticsService(IProfileService profileService, IAppSettings appS
             .OrderByDescending(l => l.DropTime) // 最近的在上面
             .ToList();
 
-        if (loots.Any())
+        if (loots.Count > 0)
         {
             sb.AppendLine($"【{LanguageManager.GetString("LootItems")}】");
             foreach (var l in loots)
@@ -178,7 +178,7 @@ public class StatisticsService(IProfileService profileService, IAppSettings appS
             }
         }
         // 如果没有掉落，就不显示掉落栏位，或者显示"无"
-        else if (validRecords.Any())
+        else if (validRecords.Count > 0)
         {
             sb.AppendLine($"【{LanguageManager.GetString("LootItems")}】");
             sb.AppendLine(LanguageManager.GetString("NoHighValueLoots"));

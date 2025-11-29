@@ -34,7 +34,6 @@ public class SceneService : ISceneService
             {
                 var yaml = File.ReadAllText(path);
                 var deserializer = new DeserializerBuilder()
-                    .WithNamingConvention(CamelCaseNamingConvention.Instance)
                     .IgnoreUnmatchedProperties()
                     .Build();
                 var data = deserializer.Deserialize<FarmingSpotsData>(yaml);
@@ -109,17 +108,19 @@ public class SceneService : ISceneService
             return sceneName;
 
         string cleanSceneName = GetPureSceneName(sceneName);
-        var scene = FarmingScenes.FirstOrDefault(s => s.EnUS == cleanSceneName);
-        string result = "";
+        var scene = FarmingScenes.FirstOrDefault(s => s.EnUS == cleanSceneName || s.ZhCN == cleanSceneName);
+        string result = cleanSceneName;
 
         switch (_appSettings.Language)
         {
             case "English":
-                result = scene?.ShortEnName ?? cleanSceneName;
+                if (scene != null && !string.IsNullOrEmpty(scene.ShortEnName))
+                    result = scene.ShortEnName;
                 break;
             case "Chinese":
             default:
-                result = scene?.ShortZhCN ?? cleanSceneName;
+                if (scene != null && !string.IsNullOrEmpty(scene.ShortZhCN))
+                    result = scene.ShortZhCN;
                 break;
         }
         return result;
@@ -174,7 +175,7 @@ public class SceneService : ISceneService
         // 移除ACT前缀（如果有），提取纯场景名称
         string pureSceneName = sceneName;
         pureSceneName = pureSceneName.Trim('"', '\'');
-        if (sceneName.StartsWith("ACT ") || sceneName.StartsWith("Act ") || sceneName.StartsWith("act "))
+        if (sceneName.StartsWith("ACT ") || sceneName.StartsWith("ACT ") || sceneName.StartsWith("ACT "))
         {
             int colonIndex = sceneName.IndexOf(':');
             if (colonIndex > 0)
@@ -248,7 +249,7 @@ public class SceneService : ISceneService
                 : (
                     !string.IsNullOrEmpty(scene.ShortEnName)
                         ? scene.ShortEnName
-                        : (!string.IsNullOrEmpty(scene.ShortName) ? scene.ShortName : pureSceneName)
+                        : (!string.IsNullOrEmpty(scene.ShortZhCN) ? scene.ShortZhCN : pureSceneName)
                 );
         }
         else
@@ -256,9 +257,9 @@ public class SceneService : ISceneService
             return !string.IsNullOrEmpty(scene.ShortEnName)
                 ? scene.ShortEnName
                 : (
-                    !string.IsNullOrEmpty(scene.ShortName)
-                        ? scene.ShortName
-                        : (!string.IsNullOrEmpty(scene.ShortZhCN) ? scene.ShortZhCN : pureSceneName)
+                    !string.IsNullOrEmpty(scene.ShortZhCN)
+                        ? scene.ShortZhCN
+                        : pureSceneName
                 );
         }
     }

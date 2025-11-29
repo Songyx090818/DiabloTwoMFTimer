@@ -1,25 +1,27 @@
 using System;
+using YamlDotNet.Serialization;
 
 namespace DiabloTwoMFTimer.Models;
 
 // MF记录类
 public class MFRecord
 {
+    [YamlMember(Alias = "sceneName")]
     public string SceneName { get; set; } = string.Empty;
-    public int ACT { get; set; } = 0;
+    [YamlMember(Alias = "difficulty")]
     public GameDifficulty Difficulty { get; set; } = GameDifficulty.Normal;
 
-    [YamlDotNet.Serialization.YamlMember(Alias = "startTime")]
+    [YamlMember(Alias = "startTime")]
     public DateTime StartTime { get; set; }
 
-    [YamlDotNet.Serialization.YamlMember(Alias = "endTime")]
+    [YamlMember(Alias = "endTime")]
     public DateTime? EndTime { get; set; }
 
-    [YamlDotNet.Serialization.YamlMember(Alias = "latestTime")]
+    [YamlMember(Alias = "latestTime")]
     public DateTime? LatestTime { get; set; }
 
-    [YamlDotNet.Serialization.YamlMember(Alias = "durationSeconds")]
+    [YamlMember(Alias = "durationSeconds")]
     public double DurationSeconds { get; set; } = 0;
-
+    [YamlIgnore]
     public bool IsCompleted => EndTime.HasValue;
 }
