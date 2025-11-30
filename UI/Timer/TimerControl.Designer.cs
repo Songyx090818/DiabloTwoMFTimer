@@ -4,6 +4,7 @@ using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
+using DiabloTwoMFTimer.UI.Components;
 using DiabloTwoMFTimer.UI.Pomodoro;
 using DiabloTwoMFTimer.Utils;
 
@@ -19,20 +20,15 @@ namespace DiabloTwoMFTimer.UI.Timer
         private CharacterSceneControl characterSceneControl;
         private LootRecordsControl lootRecordsControl;
         private AntdUI.LabelTime labelTime1;
-
-        // 控件字段定义
-        private Label btnStatusIndicator;
         private Button toggleLootButton;
         private PomodoroTimeDisplayLabel pomodoroTime;
         private Label lblTimeDisplay;
 
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources =
-                new System.ComponentModel.ComponentResourceManager(typeof(TimerControl));
             mainLayout = new TableLayoutPanel();
             topPanel = new FlowLayoutPanel();
-            btnStatusIndicator = new Label();
+            btnStatusIndicator = new ThemedLabel();
             lblTimeDisplay = new Label();
             statisticsControl = new StatisticsControl();
             historyControl = new HistoryControl();
@@ -42,17 +38,36 @@ namespace DiabloTwoMFTimer.UI.Timer
             toggleLootButton = new Button();
             pomodoroTime = new PomodoroTimeDisplayLabel();
             SuspendLayout();
-            //
+            // 
+            // mainLayout
+            // 
+            mainLayout.Location = new Point(0, 0);
+            mainLayout.Name = "mainLayout";
+            mainLayout.Size = new Size(200, 100);
+            mainLayout.TabIndex = 0;
+            // 
+            // topPanel
+            // 
+            topPanel.Location = new Point(0, 0);
+            topPanel.Name = "topPanel";
+            topPanel.Size = new Size(200, 100);
+            topPanel.TabIndex = 0;
+            // 
             // btnStatusIndicator
-            //
+            // 
+            btnStatusIndicator.AutoSize = true;
+            btnStatusIndicator.BackColor = Color.Transparent;
+            btnStatusIndicator.Font = new Font("微软雅黑", 10F);
+            btnStatusIndicator.ForeColor = Color.FromArgb(240, 240, 240);
+            btnStatusIndicator.IsTitle = false;
             btnStatusIndicator.Location = new Point(15, 19);
             btnStatusIndicator.Margin = new Padding(6);
             btnStatusIndicator.Name = "btnStatusIndicator";
-            btnStatusIndicator.Size = new Size(24, 24);
+            btnStatusIndicator.Size = new Size(0, 31);
             btnStatusIndicator.TabIndex = 0;
-            //
+            // 
             // lblTimeDisplay
-            //
+            // 
             lblTimeDisplay.AutoSize = true;
             lblTimeDisplay.Font = new Font("Microsoft YaHei UI", 28F, FontStyle.Regular, GraphicsUnit.Point, 134);
             lblTimeDisplay.Location = new Point(20, 61);
@@ -62,9 +77,9 @@ namespace DiabloTwoMFTimer.UI.Timer
             lblTimeDisplay.TabIndex = 1;
             lblTimeDisplay.Text = "00:00:00";
             lblTimeDisplay.TextAlign = ContentAlignment.MiddleLeft;
-            //
+            // 
             // statisticsControl
-            //
+            // 
             statisticsControl.AverageTime = TimeSpan.Parse("00:00:00");
             statisticsControl.FastestTime = TimeSpan.Parse("00:00:00");
             statisticsControl.Location = new Point(9, 157);
@@ -73,52 +88,52 @@ namespace DiabloTwoMFTimer.UI.Timer
             statisticsControl.RunCount = 0;
             statisticsControl.Size = new Size(421, 116);
             statisticsControl.TabIndex = 2;
-            //
+            // 
             // historyControl
-            //
+            // 
             historyControl.Location = new Point(9, 289);
             historyControl.Margin = new Padding(9, 8, 9, 8);
             historyControl.Name = "historyControl";
             historyControl.Size = new Size(421, 117);
             historyControl.TabIndex = 3;
-            //
+            // 
             // characterSceneControl
-            //
+            // 
             characterSceneControl.Location = new Point(9, 409);
             characterSceneControl.Margin = new Padding(6);
             characterSceneControl.Name = "characterSceneControl";
             characterSceneControl.Size = new Size(421, 80);
             characterSceneControl.TabIndex = 4;
-            //
+            // 
             // lootRecordsControl
-            //
+            // 
             lootRecordsControl.Location = new Point(9, 495);
             lootRecordsControl.Margin = new Padding(9, 8, 9, 8);
             lootRecordsControl.Name = "lootRecordsControl";
             lootRecordsControl.Size = new Size(421, 100);
             lootRecordsControl.TabIndex = 6;
-            //
+            // 
             // labelTime1
-            //
+            // 
             labelTime1.Location = new Point(60, 9);
             labelTime1.Name = "labelTime1";
             labelTime1.ShowTime = false;
             labelTime1.Size = new Size(135, 40);
             labelTime1.TabIndex = 5;
             labelTime1.Text = "labelTime1";
-            //
+            // 
             // toggleLootButton
-            //
-            toggleLootButton.Location = new Point(299, 414);
+            // 
+            toggleLootButton.Location = new Point(299, 438);
             toggleLootButton.Name = "toggleLootButton";
             toggleLootButton.Size = new Size(131, 40);
             toggleLootButton.TabIndex = 7;
             toggleLootButton.Text = "ShowLoot";
             toggleLootButton.UseVisualStyleBackColor = true;
             toggleLootButton.Click += ToggleLootButton_Click;
-            //
+            // 
             // pomodoroTime
-            //
+            // 
             pomodoroTime.AutoSize = true;
             pomodoroTime.Font = new Font("微软雅黑", 16F, FontStyle.Bold);
             pomodoroTime.Location = new Point(299, 9);
@@ -127,9 +142,9 @@ namespace DiabloTwoMFTimer.UI.Timer
             pomodoroTime.Size = new Size(125, 50);
             pomodoroTime.TabIndex = 8;
             pomodoroTime.Text = "00:00";
-            //
+            // 
             // TimerControl
-            //
+            // 
             AutoScaleDimensions = new SizeF(13F, 28F);
             AutoScaleMode = AutoScaleMode.Font;
             Controls.Add(pomodoroTime);
@@ -160,5 +175,6 @@ namespace DiabloTwoMFTimer.UI.Timer
             }
             base.Dispose(disposing);
         }
+        private ThemedLabel btnStatusIndicator;
     }
 }

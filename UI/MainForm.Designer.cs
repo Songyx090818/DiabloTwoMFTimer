@@ -2,6 +2,7 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
+using DiabloTwoMFTimer.UI.Theme;
 
 namespace DiabloTwoMFTimer.UI;
 
@@ -33,7 +34,7 @@ partial class MainForm
     /// </summary>
     private void InitializeComponent()
     {
-        tabControl = new System.Windows.Forms.TabControl();
+        tabControl = new DiabloTwoMFTimer.UI.Components.ThemedTabControl();
         tabProfilePage = new System.Windows.Forms.TabPage();
         tabTimerPage = new System.Windows.Forms.TabPage();
         tabPomodoroPage = new System.Windows.Forms.TabPage();
@@ -48,6 +49,7 @@ partial class MainForm
         tabControl.Controls.Add(tabSettingsPage);
         tabControl.Dock = DockStyle.Fill;
         tabControl.Margin = new Padding(6);
+        tabControl.BackColor = AppTheme.BackColor;
         tabControl.Name = "tabControl";
         tabControl.SelectedIndex = 0;
         tabControl.TabIndex = 1;
@@ -96,7 +98,7 @@ partial class MainForm
 
     #endregion
 
-    private System.Windows.Forms.TabControl tabControl;
+    private DiabloTwoMFTimer.UI.Components.ThemedTabControl tabControl;
     private System.Windows.Forms.TabPage tabProfilePage;
     private System.Windows.Forms.TabPage tabTimerPage;
     private System.Windows.Forms.TabPage tabPomodoroPage;

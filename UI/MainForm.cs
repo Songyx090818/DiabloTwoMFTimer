@@ -15,20 +15,31 @@ namespace DiabloTwoMFTimer.UI;
 public partial class MainForm : Form
 {
     // 服务引用
-    private readonly IMainService _mainService;
-    private readonly IAppSettings _appSettings;
+    private readonly IMainService _mainService = null!;
+    private readonly IAppSettings _appSettings = null!;
 
     // 为了创建 RecordLootForm，我们需要这两个服务 (或者你可以选择把弹窗逻辑封装进 TimerControl)
-    private readonly IProfileService _profileService;
-    private readonly ITimerHistoryService _timerHistoryService;
-    private readonly IMessenger _messenger;
-    private readonly ISceneService _sceneService;
+    private readonly IProfileService _profileService = null!;
+    private readonly ITimerHistoryService _timerHistoryService = null!;
+    private readonly IMessenger _messenger = null!;
+    private readonly ISceneService _sceneService = null!;
 
     // 子控件引用 (用于后续的方法调用)
-    private readonly ProfileManager _profileManager;
-    private readonly TimerControl _timerControl;
-    private readonly PomodoroControl _pomodoroControl;
-    private readonly SettingsControl _settingsControl;
+    private readonly ProfileManager _profileManager = null!;
+    private readonly TimerControl _timerControl = null!;
+    private readonly PomodoroControl _pomodoroControl = null!;
+    private readonly SettingsControl _settingsControl = null!;
+
+    public MainForm()
+    {
+        InitializeComponent();
+
+        // 可选：为了防止设计器里看着太空，可以放一些假数据或空对象，避免空引用报错
+        if (DesignMode)
+        {
+            // 仅在设计模式下不做任何事，或者给字段赋 null
+        }
+    }
 
     // 构造函数：通过依赖注入获取所有需要的组件
     public MainForm(
@@ -42,7 +53,7 @@ public partial class MainForm : Form
         TimerControl timerControl,
         PomodoroControl pomodoroControl,
         SettingsControl settingsControl
-    )
+    ) : this()
     {
         _mainService = mainService;
         _appSettings = settings;
@@ -55,8 +66,6 @@ public partial class MainForm : Form
         _pomodoroControl = pomodoroControl;
         _settingsControl = settingsControl;
         _messenger = messenger;
-
-        InitializeComponent(); // 初始化设计器生成的控件 (TabControl 等)
 
         // 组装 UI：将注入的控件添加到 TabPage 中
         InitializeChildControls();
@@ -87,7 +96,7 @@ public partial class MainForm : Form
     private void InitializeChildControls()
     {
         // 辅助方法：设置 Dock 并添加到 TabPage
-        void AddControlToTab(System.Windows.Forms.TabPage page, Control control)
+        static void AddControlToTab(System.Windows.Forms.TabPage page, Control control)
         {
             control.Dock = DockStyle.Fill;
             page.Controls.Add(control);

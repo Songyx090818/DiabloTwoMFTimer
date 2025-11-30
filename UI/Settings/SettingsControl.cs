@@ -43,6 +43,7 @@ public partial class SettingsControl : UserControl
         _appSettings = appSettings;
         _messenger = messenger;
         InitializeData(_appSettings);
+        this.BackColor = DiabloTwoMFTimer.UI.Theme.AppTheme.BackColor;
     }
 
     public void RefreshUI()

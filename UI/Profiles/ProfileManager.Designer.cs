@@ -10,7 +10,6 @@ namespace DiabloTwoMFTimer.UI.Profiles
 {
     partial class ProfileManager
     {
-
         private Button btnCreateCharacter;
         private Button btnSwitchCharacter;
         private Button btnDeleteCharacter;
@@ -29,10 +28,10 @@ namespace DiabloTwoMFTimer.UI.Profiles
             btnCreateCharacter = new ThemedButton();
             btnSwitchCharacter = new ThemedButton();
             btnDeleteCharacter = new ThemedButton();
-            lblScene = new Label();
-            cmbScene = new ComboBox();
-            lblDifficulty = new Label();
-            cmbDifficulty = new ComboBox();
+            lblScene = new ThemedLabel();
+            cmbScene = new ThemedComboBox();
+            lblDifficulty = new ThemedLabel();
+            cmbDifficulty = new ThemedComboBox();
             btnStartFarm = new ThemedButton();
             btnShowStats = new ThemedButton();
             lblCurrentProfile = new ThemedLabel();
