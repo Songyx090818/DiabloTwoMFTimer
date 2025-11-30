@@ -509,13 +509,6 @@ public partial class TimerControl : UserControl
             // 隐藏掉落时：历史占满剩余空间 (100%)，掉落高度强行设为 0
             mainLayout.RowStyles[5] = new RowStyle(SizeType.Absolute, 0F);
         }
-        if (isVisible != _appSettings.TimerShowLootDrops)
-        {
-            _appSettings.TimerShowLootDrops = isVisible;
-            _appSettings.Save();
-            // 发送消息通知其他组件更新
-            _messenger.Publish(new TimerShowLootDropsChangedMessage());
-        }
     }
 
     private void ToggleLootButton_Click(object? sender, EventArgs e)
@@ -532,6 +525,7 @@ public partial class TimerControl : UserControl
 
             _appSettings.TimerShowLootDrops = isVisible;
             _appSettings.Save();
+            _messenger.Publish(new TimerShowLootDropsChangedMessage());
         }
     }
 }
