@@ -9,15 +9,25 @@ public class ThemedGroupBox : GroupBox
     public ThemedGroupBox()
     {
         this.DoubleBuffered = true;
-        this.BackColor = Color.Transparent; // 透明背景以显示父容器颜色
+        // 关键修复：不要用 Transparent，改用实色
+        this.BackColor = AppTheme.BackColor;
         this.ForeColor = AppTheme.TextColor;
         this.Font = AppTheme.MainFont;
+
+        // 启用重绘样式
+        this.SetStyle(ControlStyles.UserPaint |
+                      ControlStyles.AllPaintingInWmPaint |
+                      ControlStyles.OptimizedDoubleBuffer |
+                      ControlStyles.ResizeRedraw, true);
     }
 
     protected override void OnPaint(PaintEventArgs e)
     {
         var g = e.Graphics;
-        g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+        // 关键修复：清空画布
+        g.Clear(this.BackColor);
+
+        g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
 
         // 1. 测量文字大小
         var textSize = g.MeasureString(this.Text, this.Font);
@@ -43,7 +53,7 @@ public class ThemedGroupBox : GroupBox
         }
 
         // 4. 绘制文字
-        using (var brush = new SolidBrush(AppTheme.AccentColor)) // 用金色标题
+        using (var brush = new SolidBrush(AppTheme.AccentColor))
         {
             g.DrawString(this.Text, this.Font, brush, textRect.X, 0);
         }

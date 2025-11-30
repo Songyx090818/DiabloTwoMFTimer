@@ -10,17 +10,23 @@ public class ThemedCheckBox : CheckBox
 {
     public ThemedCheckBox()
     {
-        this.SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
+        this.SetStyle(ControlStyles.UserPaint |
+                      ControlStyles.AllPaintingInWmPaint |
+                      ControlStyles.OptimizedDoubleBuffer |
+                      ControlStyles.ResizeRedraw, true);
+
         this.Cursor = Cursors.Hand;
         this.Font = AppTheme.MainFont;
+        this.BackColor = AppTheme.BackColor;
         this.ForeColor = AppTheme.TextColor;
     }
 
     protected override void OnPaint(PaintEventArgs e)
     {
         var g = e.Graphics;
+        g.Clear(this.BackColor);
         g.SmoothingMode = SmoothingMode.AntiAlias;
-        g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+        g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
 
         // 1. 绘制方框
         int boxSize = 16;
@@ -39,16 +45,17 @@ public class ThemedCheckBox : CheckBox
         {
             using (var pen = new Pen(AppTheme.AccentColor, 2))
             {
-                // 画个对勾
                 g.DrawLine(pen, boxRect.Left + 3, boxRect.Top + 8, boxRect.Left + 6, boxRect.Bottom - 4);
                 g.DrawLine(pen, boxRect.Left + 6, boxRect.Bottom - 4, boxRect.Right - 3, boxRect.Top + 4);
             }
         }
 
-        // 3. 绘制文字
+        // 3. 绘制文字 (精准垂直居中)
         using (var brush = new SolidBrush(this.ForeColor))
         {
-            g.DrawString(this.Text, this.Font, brush, boxSize + 6, yOffset); // 稍微垂直居中
+            var textSize = g.MeasureString(this.Text, this.Font);
+            float textY = (this.Height - textSize.Height) / 2;
+            g.DrawString(this.Text, this.Font, brush, boxSize + 8, textY + 1);
         }
     }
 }

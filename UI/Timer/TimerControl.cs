@@ -62,7 +62,6 @@ public partial class TimerControl : UserControl
         _messenger = messenger; // 赋值新增字段
         _sceneService = sceneService;
 
-        this.BackColor = DiabloTwoMFTimer.UI.Theme.AppTheme.BackColor;
         // 初始化子控件的服务引用
         characterSceneControl?.Initialize(_profileService, _appSettings, _sceneService);
         historyControl?.Initialize(_historyService, _profileService);

@@ -3,16 +3,17 @@ using System.Drawing;
 using System.Windows.Forms;
 using DiabloTwoMFTimer.Interfaces;
 using DiabloTwoMFTimer.Utils;
+using DiabloTwoMFTimer.UI.Theme; // 引用主题
 
 namespace DiabloTwoMFTimer.UI.Settings;
 
 public partial class HotkeySettingsControl : UserControl
 {
-    // 样式定义
-    private readonly Color ColorNormal = Color.White;
-    private readonly Color ColorEditing = Color.AliceBlue;
+    // 修改为使用主题颜色
+    private readonly Color ColorNormal = AppTheme.SurfaceColor;
+    // 编辑状态用稍亮一点的颜色，或者带点颜色的背景
+    private readonly Color ColorEditing = Color.FromArgb(60, 60, 70);
 
-    //防止焦点回弹的标志位
     private bool _isUpdating = false;
 
     public Keys StartOrNextRunHotkey { get; private set; }
@@ -23,16 +24,30 @@ public partial class HotkeySettingsControl : UserControl
     public HotkeySettingsControl()
     {
         InitializeComponent();
+        InitializeTextBoxStyles(); // 初始化样式
     }
 
-    // --- 核心修复逻辑 ---
+    private void InitializeTextBoxStyles()
+    {
+        // 确保初始加载时颜色正确
+        ApplyStyle(txtStartNext);
+        ApplyStyle(txtPause);
+        ApplyStyle(txtDeleteHistory);
+        ApplyStyle(txtRecordLoot);
+    }
+
+    private void ApplyStyle(TextBox tb)
+    {
+        tb.BackColor = ColorNormal;
+        tb.ForeColor = AppTheme.TextColor;
+        tb.BorderStyle = BorderStyle.FixedSingle;
+    }
 
     private void OnTextBoxEnter(object? sender, EventArgs e)
     {
         if (sender is not TextBox textBox)
             return;
 
-        // 修复关键：如果是刚刚修改完触发的焦点回弹，不要显示提示语，直接返回
         if (_isUpdating)
         {
             _isUpdating = false;
@@ -40,7 +55,8 @@ public partial class HotkeySettingsControl : UserControl
         }
 
         textBox.BackColor = ColorEditing;
-        textBox.Text = "请按快捷键 (Esc取消)";
+        textBox.ForeColor = AppTheme.AccentColor; // 编辑时高亮文字
+        textBox.Text = LanguageManager.GetString("HotkeyPressToSet") ?? "请按快捷键 (Esc取消)";
     }
 
     private void OnTextBoxLeave(object? sender, EventArgs e)
@@ -49,8 +65,8 @@ public partial class HotkeySettingsControl : UserControl
             return;
 
         textBox.BackColor = ColorNormal;
+        textBox.ForeColor = AppTheme.TextColor; // 恢复文字颜色
 
-        // 还原/更新文本
         string tag = textBox.Tag?.ToString() ?? "";
         Keys currentKey = Keys.None;
         switch (tag)
@@ -69,8 +85,6 @@ public partial class HotkeySettingsControl : UserControl
                 break;
         }
         textBox.Text = FormatKeyString(currentKey);
-
-        // 确保标志位复位（防呆）
         _isUpdating = false;
     }
 
@@ -81,45 +95,32 @@ public partial class HotkeySettingsControl : UserControl
 
         e.SuppressKeyPress = true;
 
-        // Esc: 取消
         if (e.KeyCode == Keys.Escape)
         {
-            // 主动转移焦点到父控件，比 ActiveControl=null 更稳健
             this.Focus();
             return;
         }
 
-        // Delete/Back: 清除
         if (e.KeyCode == Keys.Back || e.KeyCode == Keys.Delete)
         {
-            // 标记正在更新，防止Enter事件覆盖文本
             _isUpdating = true;
             UpdateHotkey(textBox, Keys.None);
             this.Focus();
             return;
         }
 
-        // 忽略单一控制键
         if (e.KeyCode == Keys.ControlKey || e.KeyCode == Keys.ShiftKey || e.KeyCode == Keys.Menu)
         {
             return;
         }
 
         Keys keyData = e.KeyCode;
-        if (e.Control)
-            keyData |= Keys.Control;
-        if (e.Shift)
-            keyData |= Keys.Shift;
-        if (e.Alt)
-            keyData |= Keys.Alt;
+        if (e.Control) keyData |= Keys.Control;
+        if (e.Shift) keyData |= Keys.Shift;
+        if (e.Alt) keyData |= Keys.Alt;
 
-        // 标记正在更新，防止Enter事件覆盖文本
         _isUpdating = true;
-
         UpdateHotkey(textBox, keyData);
-
-        // 尝试转移焦点，这会触发 Leave -> Enter(回弹)
-        // 但因为我们设置了 _isUpdating = true，回弹的 Enter 会被忽略
         this.Focus();
     }
 
@@ -141,11 +142,12 @@ public partial class HotkeySettingsControl : UserControl
                 RecordLootHotkey = newKey;
                 break;
         }
-        // 立即更新文本，让用户立刻看到结果
         textBox.Text = FormatKeyString(newKey);
-        // 立即恢复颜色
         textBox.BackColor = ColorNormal;
+        textBox.ForeColor = AppTheme.TextColor;
     }
+
+    // ... 其余 LoadHotkeys, RefreshUI, FormatKeyString 方法保持不变 ...
 
     private string FormatKeyString(Keys key)
     {

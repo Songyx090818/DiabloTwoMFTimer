@@ -111,16 +111,17 @@ namespace DiabloTwoMFTimer.UI.Timer
             // 控件：日期
             // labelTime1 (时间)
             this.labelTime1.AutoSize = true;
-            this.labelTime1.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular);
+            this.labelTime1.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Bold);
             this.labelTime1.ForeColor = System.Drawing.Color.LightGray;
             this.labelTime1.Text = "12:00";
             // 文字通常自带一些上边距，Margin Top 给小一点
-            this.labelTime1.Margin = new System.Windows.Forms.Padding(8, 12, 0, 0);
+            this.labelTime1.Margin = new System.Windows.Forms.Padding(8, 6, 0, 0);
 
             // 控件：番茄钟
             this.pomodoroTime.AutoSize = true;
             this.pomodoroTime.Dock = System.Windows.Forms.DockStyle.Right;
             this.pomodoroTime.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.pomodoroTime.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Bold);
             this.pomodoroTime.ForeColor = System.Drawing.Color.White;
             this.pomodoroTime.ShowMilliseconds = false;
 
