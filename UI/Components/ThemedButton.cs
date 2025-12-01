@@ -157,7 +157,8 @@ public class ThemedButton : Button
             d = rect.Height;
 
         // 如果 d 计算出来仍然 <= 0 (理论上前面 rect 检查已过滤，双重保险)，设为 1
-        if (d <= 0) d = 1;
+        if (d <= 0)
+            d = 1;
 
         // 顺时针添加四段圆弧
         path.AddArc(rect.X, rect.Y, d, d, 180, 90); // 左上

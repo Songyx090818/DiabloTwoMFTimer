@@ -2,9 +2,9 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 using DiabloTwoMFTimer.Interfaces;
-using DiabloTwoMFTimer.Utils;
 using DiabloTwoMFTimer.Models; // 引用消息命名空间
 using DiabloTwoMFTimer.UI.Theme;
+using DiabloTwoMFTimer.Utils;
 
 namespace DiabloTwoMFTimer.UI.Settings;
 
@@ -131,9 +131,12 @@ public partial class HotkeySettingsControl : UserControl
         }
 
         Keys keyData = e.KeyCode;
-        if (e.Control) keyData |= Keys.Control;
-        if (e.Shift) keyData |= Keys.Shift;
-        if (e.Alt) keyData |= Keys.Alt;
+        if (e.Control)
+            keyData |= Keys.Control;
+        if (e.Shift)
+            keyData |= Keys.Shift;
+        if (e.Alt)
+            keyData |= Keys.Alt;
 
         _isUpdating = true;
         UpdateHotkey(textBox, keyData);

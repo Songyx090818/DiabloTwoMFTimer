@@ -17,4 +17,5 @@ public class LanguageChangedMessage(string code)
 public class TimerShowLootDropsChangedMessage { }
 
 public class SuspendHotkeysMessage { }
+
 public class ResumeHotkeysMessage { }

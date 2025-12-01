@@ -9,10 +9,13 @@ public class ThemedRadioButton : RadioButton
 {
     public ThemedRadioButton()
     {
-        this.SetStyle(ControlStyles.UserPaint |
-                      ControlStyles.AllPaintingInWmPaint |
-                      ControlStyles.OptimizedDoubleBuffer |
-                      ControlStyles.ResizeRedraw, true);
+        this.SetStyle(
+            ControlStyles.UserPaint
+                | ControlStyles.AllPaintingInWmPaint
+                | ControlStyles.OptimizedDoubleBuffer
+                | ControlStyles.ResizeRedraw,
+            true
+        );
 
         this.Cursor = Cursors.Hand;
         this.Font = AppTheme.MainFont;

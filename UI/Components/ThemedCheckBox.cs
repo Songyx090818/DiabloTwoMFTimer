@@ -10,10 +10,13 @@ public class ThemedCheckBox : CheckBox
 {
     public ThemedCheckBox()
     {
-        this.SetStyle(ControlStyles.UserPaint |
-                      ControlStyles.AllPaintingInWmPaint |
-                      ControlStyles.OptimizedDoubleBuffer |
-                      ControlStyles.ResizeRedraw, true);
+        this.SetStyle(
+            ControlStyles.UserPaint
+                | ControlStyles.AllPaintingInWmPaint
+                | ControlStyles.OptimizedDoubleBuffer
+                | ControlStyles.ResizeRedraw,
+            true
+        );
 
         this.Cursor = Cursors.Hand;
         this.Font = AppTheme.MainFont;

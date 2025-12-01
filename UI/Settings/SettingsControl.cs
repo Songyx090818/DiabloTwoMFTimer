@@ -127,7 +127,8 @@ public partial class SettingsControl : UserControl
     public static void MoveWindowToPosition(Form form, WindowPosition position)
     {
         Rectangle screenBounds = Screen.GetWorkingArea(form);
-        int x, y;
+        int x,
+            y;
         switch (position)
         {
             case WindowPosition.TopLeft:

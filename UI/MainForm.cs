@@ -43,7 +43,8 @@ public partial class MainForm : Form
         TimerControl timerControl,
         PomodoroControl pomodoroControl,
         SettingsControl settingsControl
-    ) : this()
+    )
+        : this()
     {
         _mainService = mainService;
         _appSettings = settings;
@@ -146,8 +147,12 @@ public partial class MainForm : Form
 
     private void SubscribeToMessages()
     {
-        _messenger.Subscribe<WindowPositionChangedMessage>(_ => this.SafeInvoke(() => _mainService.ApplyWindowSettings(this)));
-        _messenger.Subscribe<AlwaysOnTopChangedMessage>(_ => this.SafeInvoke(() => this.TopMost = _appSettings.AlwaysOnTop));
+        _messenger.Subscribe<WindowPositionChangedMessage>(_ =>
+            this.SafeInvoke(() => _mainService.ApplyWindowSettings(this))
+        );
+        _messenger.Subscribe<AlwaysOnTopChangedMessage>(_ =>
+            this.SafeInvoke(() => this.TopMost = _appSettings.AlwaysOnTop)
+        );
         _messenger.Subscribe<TimerSettingsChangedMessage>(msg => this.SafeInvoke(() => AdjustWindowHeight()));
     }
 

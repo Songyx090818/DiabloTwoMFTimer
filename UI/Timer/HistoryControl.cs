@@ -107,9 +107,16 @@ public partial class HistoryControl : UserControl
             {
                 int lastIndex = gridRunHistory.RowCount - 1;
                 gridRunHistory.Focus();
-                gridRunHistory.FirstDisplayedScrollingRowIndex = lastIndex;
-                gridRunHistory.CurrentCell = gridRunHistory.Rows[lastIndex].Cells[0];
-                gridRunHistory.Rows[lastIndex].Selected = true;
+                // 确保lastIndex在有效范围内
+                if (lastIndex >= 0 && lastIndex < gridRunHistory.RowCount)
+                {
+                    gridRunHistory.FirstDisplayedScrollingRowIndex = lastIndex;
+                    if (gridRunHistory.Rows.Count > lastIndex)
+                    {
+                        gridRunHistory.CurrentCell = gridRunHistory.Rows[lastIndex].Cells[0];
+                        gridRunHistory.Rows[lastIndex].Selected = true;
+                    }
+                }
             }
         });
     }
@@ -126,9 +133,17 @@ public partial class HistoryControl : UserControl
                 int firstVisible = gridRunHistory.RowCount - displayCount;
 
                 // 边界检查，防止负数
-                if (firstVisible < 0) firstVisible = 0;
+                if (firstVisible < 0)
+                    firstVisible = 0;
+                // 边界检查，防止超出最大行数
+                if (firstVisible >= gridRunHistory.RowCount)
+                    firstVisible = gridRunHistory.RowCount - 1;
 
-                gridRunHistory.FirstDisplayedScrollingRowIndex = firstVisible;
+                // 再次确保firstVisible在有效范围内（0到RowCount-1）
+                if (firstVisible >= 0 && firstVisible < gridRunHistory.RowCount)
+                {
+                    gridRunHistory.FirstDisplayedScrollingRowIndex = firstVisible;
+                }
             }
         });
     }

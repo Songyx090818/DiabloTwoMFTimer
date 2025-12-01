@@ -15,10 +15,13 @@ public class ThemedGroupBox : GroupBox
         this.Font = AppTheme.MainFont;
 
         // 启用重绘样式
-        this.SetStyle(ControlStyles.UserPaint |
-                      ControlStyles.AllPaintingInWmPaint |
-                      ControlStyles.OptimizedDoubleBuffer |
-                      ControlStyles.ResizeRedraw, true);
+        this.SetStyle(
+            ControlStyles.UserPaint
+                | ControlStyles.AllPaintingInWmPaint
+                | ControlStyles.OptimizedDoubleBuffer
+                | ControlStyles.ResizeRedraw,
+            true
+        );
     }
 
     protected override void OnPaint(PaintEventArgs e)

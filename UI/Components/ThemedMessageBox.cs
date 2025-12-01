@@ -9,9 +9,11 @@ namespace DiabloTwoMFTimer.UI.Components
     public class ThemedMessageBox : BaseForm
     {
         private Label lblMessage;
+        private MessageBoxButtons _buttons;
 
         public ThemedMessageBox(string message, string title, MessageBoxButtons buttons)
         {
+            this._buttons = buttons;
             this.Text = title;
             this.Size = new Size(400, 200); // 默认大小
 
@@ -24,7 +26,7 @@ namespace DiabloTwoMFTimer.UI.Components
                 AutoSize = false,
                 Dock = DockStyle.Fill,
                 TextAlign = ContentAlignment.MiddleCenter,
-                Padding = new Padding(20)
+                Padding = new Padding(20),
             };
 
             // 这是一个 Hack，因为 BaseForm 已经加了 TitleBar 和 Buttons
@@ -48,7 +50,10 @@ namespace DiabloTwoMFTimer.UI.Components
                     btnConfirm.Visible = true;
                     btnCancel.Visible = false;
                     // 居中 Confirm 按钮
-                    btnConfirm.Location = new Point((this.ClientSize.Width - btnConfirm.Width) / 2, btnConfirm.Location.Y);
+                    btnConfirm.Location = new Point(
+                        (this.ClientSize.Width - btnConfirm.Width) / 2,
+                        btnConfirm.Location.Y
+                    );
                     break;
 
                 case MessageBoxButtons.OKCancel:
@@ -64,7 +69,11 @@ namespace DiabloTwoMFTimer.UI.Components
         }
 
         // 静态调用方法
-        public static DialogResult Show(string message, string title = "Message", MessageBoxButtons buttons = MessageBoxButtons.OK)
+        public static DialogResult Show(
+            string message,
+            string title = "Message",
+            MessageBoxButtons buttons = MessageBoxButtons.OK
+        )
         {
             using var msgBox = new ThemedMessageBox(message, title, buttons);
             return msgBox.ShowDialog();
@@ -80,6 +89,32 @@ namespace DiabloTwoMFTimer.UI.Components
                 // 手动调整区域：TitleBar 高 35，底部留 50 给按钮
                 lblMessage.SetBounds(0, 35, this.ClientSize.Width, this.ClientSize.Height - 35 - 50);
             }
+        }
+
+        protected override void BtnConfirm_Click(object? sender, EventArgs e)
+        {
+            if (_buttons == MessageBoxButtons.YesNo)
+            {
+                this.DialogResult = DialogResult.Yes;
+            }
+            else
+            {
+                this.DialogResult = DialogResult.OK;
+            }
+            this.Close();
+        }
+
+        protected override void BtnCancel_Click(object? sender, EventArgs e)
+        {
+            if (_buttons == MessageBoxButtons.YesNo)
+            {
+                this.DialogResult = DialogResult.No;
+            }
+            else
+            {
+                this.DialogResult = DialogResult.Cancel;
+            }
+            this.Close();
         }
     }
 }

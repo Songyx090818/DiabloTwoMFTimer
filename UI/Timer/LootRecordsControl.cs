@@ -113,7 +113,8 @@ public partial class LootRecordsControl : UserControl
             {
                 int displayCount = gridLoot.DisplayedRowCount(false);
                 int firstVisible = gridLoot.RowCount - displayCount;
-                if (firstVisible < 0) firstVisible = 0;
+                if (firstVisible < 0)
+                    firstVisible = 0;
                 gridLoot.FirstDisplayedScrollingRowIndex = firstVisible;
             }
         });

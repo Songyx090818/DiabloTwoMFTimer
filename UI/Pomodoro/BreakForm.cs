@@ -163,7 +163,8 @@ public partial class BreakForm : Form
 
     private void HighlightButton(Button? btn, bool isActive)
     {
-        if (btn == null) return;
+        if (btn == null)
+            return;
         if (isActive)
         {
             btn.BackColor = Color.Gray;
@@ -200,8 +201,10 @@ public partial class BreakForm : Form
 
         if (_profileService == null || _profileService.CurrentProfile == null)
         {
-            if (lblStats != null) lblStats.Text = "暂无角色数据";
-            if (lblDuration != null) lblDuration.Text = "";
+            if (lblStats != null)
+                lblStats.Text = "暂无角色数据";
+            if (lblDuration != null)
+                lblDuration.Text = "";
             return;
         }
 
@@ -242,18 +245,18 @@ public partial class BreakForm : Form
         // 3. 计算并显示总时长 (新增功能)
         if (lblDuration != null)
         {
-            var validRecords = _profileService.CurrentProfile.Records
-                .Where(r => r.IsCompleted && r.StartTime >= start && r.StartTime <= end);
+            var validRecords = _profileService.CurrentProfile.Records.Where(r =>
+                r.IsCompleted && r.StartTime >= start && r.StartTime <= end
+            );
 
             double totalSeconds = validRecords.Sum(r => r.DurationSeconds);
             TimeSpan ts = TimeSpan.FromSeconds(totalSeconds);
 
             // 格式化时长显示
-            string durationText = totalSeconds < 60
-                ? $"{ts.Seconds}秒"
-                : (totalSeconds < 3600
-                    ? $"{ts.Minutes}分 {ts.Seconds}秒"
-                    : $"{ts.Hours}小时 {ts.Minutes}分");
+            string durationText =
+                totalSeconds < 60
+                    ? $"{ts.Seconds}秒"
+                    : (totalSeconds < 3600 ? $"{ts.Minutes}分 {ts.Seconds}秒" : $"{ts.Hours}小时 {ts.Minutes}分");
 
             lblDuration.Text = $"累计游戏时长: {durationText}";
         }
@@ -261,7 +264,8 @@ public partial class BreakForm : Form
 
     private void BreakForm_SizeChanged(object? sender, EventArgs e)
     {
-        if (pnlHeader == null) return;
+        if (pnlHeader == null)
+            return;
 
         int cx = this.ClientSize.Width / 2;
         int totalH = this.ClientSize.Height;
@@ -315,7 +319,8 @@ public partial class BreakForm : Form
         // 6. 统计内容 (填充剩余空间)
         int statsBottomLimit = btnY - 20;
         int statsHeight = statsBottomLimit - currentY;
-        if (statsHeight < 100) statsHeight = 100;
+        if (statsHeight < 100)
+            statsHeight = 100;
 
         lblStats.Width = totalW - 100;
         lblStats.Height = statsHeight;
@@ -326,9 +331,13 @@ public partial class BreakForm : Form
     {
         if (_mode == BreakFormMode.PomodoroBreak)
         {
-            if (e.State == PomodoroTimerState.Work &&
-                ((_breakType == PomodoroBreakType.ShortBreak && e.PreviousState == PomodoroTimerState.ShortBreak) ||
-                 (_breakType == PomodoroBreakType.LongBreak && e.PreviousState == PomodoroTimerState.LongBreak)))
+            if (
+                e.State == PomodoroTimerState.Work
+                && (
+                    (_breakType == PomodoroBreakType.ShortBreak && e.PreviousState == PomodoroTimerState.ShortBreak)
+                    || (_breakType == PomodoroBreakType.LongBreak && e.PreviousState == PomodoroTimerState.LongBreak)
+                )
+            )
             {
                 AutoCloseForm();
             }

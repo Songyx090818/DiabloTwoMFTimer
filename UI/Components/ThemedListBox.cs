@@ -18,7 +18,8 @@ namespace DiabloTwoMFTimer.UI.Components
 
         protected override void OnDrawItem(DrawItemEventArgs e)
         {
-            if (e.Index < 0) return;
+            if (e.Index < 0)
+                return;
 
             e.DrawBackground();
             bool isSelected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;

@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -41,17 +42,17 @@ namespace DiabloTwoMFTimer.UI.Common
 
             this.SuspendLayout();
 
-            // 
+            //
             // pnlTitleBar
-            // 
+            //
             this.pnlTitleBar.BackColor = AppTheme.SurfaceColor;
             this.pnlTitleBar.Dock = DockStyle.Top;
             this.pnlTitleBar.Height = 35;
             this.pnlTitleBar.MouseDown += PnlTitleBar_MouseDown;
 
-            // 
+            //
             // lblTitle
-            // 
+            //
             this.lblTitle.AutoSize = false;
             this.lblTitle.Dock = DockStyle.Fill;
             this.lblTitle.TextAlign = ContentAlignment.MiddleLeft;
@@ -60,9 +61,9 @@ namespace DiabloTwoMFTimer.UI.Common
             this.lblTitle.Padding = new Padding(10, 0, 0, 0);
             this.lblTitle.MouseDown += PnlTitleBar_MouseDown;
 
-            // 
+            //
             // btnClose
-            // 
+            //
             this.btnClose.Dock = DockStyle.Right;
             this.btnClose.Width = 40;
             this.btnClose.FlatStyle = FlatStyle.Flat;
@@ -77,27 +78,27 @@ namespace DiabloTwoMFTimer.UI.Common
             this.pnlTitleBar.Controls.Add(this.lblTitle);
             this.pnlTitleBar.Controls.Add(this.btnClose);
 
-            // 
+            //
             // btnConfirm
-            // 
+            //
             this.btnConfirm.Anchor = (AnchorStyles.Bottom | AnchorStyles.Right);
             this.btnConfirm.Location = new Point(197, 260); // 默认位置
             this.btnConfirm.Size = new Size(80, 30);
             this.btnConfirm.Text = "Confirm";
             this.btnConfirm.Click += new EventHandler(this.BtnConfirm_Click);
 
-            // 
+            //
             // btnCancel
-            // 
+            //
             this.btnCancel.Anchor = (AnchorStyles.Bottom | AnchorStyles.Right);
             this.btnCancel.Location = new Point(292, 260); // 默认位置
             this.btnCancel.Size = new Size(80, 30);
             this.btnCancel.Text = "Cancel";
             this.btnCancel.Click += new EventHandler(this.BtnCancel_Click);
 
-            // 
+            //
             // BaseForm
-            // 
+            //
             this.BackColor = AppTheme.BackColor;
             this.ClientSize = new Size(400, 310);
             this.Controls.Add(this.pnlTitleBar);
@@ -110,13 +111,15 @@ namespace DiabloTwoMFTimer.UI.Common
             this.ResumeLayout(false);
         }
 
+        [AllowNull]
         public override string Text
         {
             get => base.Text;
             set
             {
                 base.Text = value;
-                if (lblTitle != null) lblTitle.Text = value;
+                if (lblTitle != null)
+                    lblTitle.Text = value;
             }
         }
 
@@ -131,6 +134,7 @@ namespace DiabloTwoMFTimer.UI.Common
 
         [DllImport("user32.dll")]
         public static extern bool ReleaseCapture();
+
         [DllImport("user32.dll")]
         public static extern int SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
 
@@ -146,14 +150,18 @@ namespace DiabloTwoMFTimer.UI.Common
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
-            if (!this.DesignMode) UpdateUI();
+            if (!this.DesignMode)
+                UpdateUI();
         }
 
         protected virtual void UpdateUI()
         {
-            if (btnConfirm != null) btnConfirm.Text = LanguageManager.GetString("Confirm") ?? ConfirmButtonText;
-            if (btnCancel != null) btnCancel.Text = LanguageManager.GetString("Cancel") ?? CancelButtonText;
-            if (lblTitle != null) lblTitle.Text = this.Text;
+            if (btnConfirm != null)
+                btnConfirm.Text = LanguageManager.GetString("Confirm") ?? ConfirmButtonText;
+            if (btnCancel != null)
+                btnCancel.Text = LanguageManager.GetString("Cancel") ?? CancelButtonText;
+            if (lblTitle != null)
+                lblTitle.Text = this.Text;
         }
 
         protected virtual void BtnConfirm_Click(object? sender, EventArgs e)
@@ -170,7 +178,8 @@ namespace DiabloTwoMFTimer.UI.Common
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null)) components.Dispose();
+            if (disposing && (components != null))
+                components.Dispose();
             base.Dispose(disposing);
         }
     }
