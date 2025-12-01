@@ -499,6 +499,19 @@ public partial class TimerControl : UserControl
             // 隐藏掉落时：历史占满剩余空间 (100%)，掉落高度强行设为 0
             mainLayout.RowStyles[4] = new RowStyle(SizeType.Absolute, 0F);
         }
+
+        // --- 新增滚动逻辑 ---
+        // 使用 BeginInvoke 是关键：它会把这个操作排入 UI 线程的消息队列末尾
+        // 确保在 TableLayoutPanel 完成布局调整（重新计算高度）之后再执行滚动
+        // 否则，滚动计算时可能会用到旧的高度，导致滚不到底
+        this.BeginInvoke(new Action(() =>
+        {
+            historyControl?.ScrollToBottom();
+            if (isVisible)
+            {
+                lootRecordsControl?.ScrollToBottom();
+            }
+        }));
     }
 
     private void ToggleLootButton_Click(object? sender, EventArgs e)
@@ -510,9 +523,9 @@ public partial class TimerControl : UserControl
 
             // 调用封装的方法
             SetLootRecordsVisible(isVisible);
-
             // 更新应用设置
-
+            historyControl?.SelectLastRow();
+            // historyControl?.ClearSelection();
             _appSettings.TimerShowLootDrops = isVisible;
             _appSettings.Save();
             _messenger.Publish(new TimerShowLootDropsChangedMessage());

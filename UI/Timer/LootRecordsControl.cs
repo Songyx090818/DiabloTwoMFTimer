@@ -105,6 +105,20 @@ public partial class LootRecordsControl : UserControl
         });
     }
 
+    public void ScrollToBottom()
+    {
+        gridLoot.SafeInvoke(() =>
+        {
+            if (gridLoot.RowCount > 0)
+            {
+                int displayCount = gridLoot.DisplayedRowCount(false);
+                int firstVisible = gridLoot.RowCount - displayCount;
+                if (firstVisible < 0) firstVisible = 0;
+                gridLoot.FirstDisplayedScrollingRowIndex = firstVisible;
+            }
+        });
+    }
+
     public async Task<bool> DeleteSelectedLootAsync()
     {
         if (_currentProfile == null || gridLoot.SelectedRows.Count == 0)

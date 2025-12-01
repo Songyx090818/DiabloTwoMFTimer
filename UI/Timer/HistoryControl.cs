@@ -114,6 +114,25 @@ public partial class HistoryControl : UserControl
         });
     }
 
+    public void ScrollToBottom()
+    {
+        gridRunHistory.SafeInvoke(() =>
+        {
+            if (gridRunHistory.RowCount > 0)
+            {
+                // 计算逻辑：为了让最后一行刚好出现在底部，
+                // 我们将“第一行显示的索引”设为“总行数 - 一页能显示的行数”
+                int displayCount = gridRunHistory.DisplayedRowCount(false);
+                int firstVisible = gridRunHistory.RowCount - displayCount;
+
+                // 边界检查，防止负数
+                if (firstVisible < 0) firstVisible = 0;
+
+                gridRunHistory.FirstDisplayedScrollingRowIndex = firstVisible;
+            }
+        });
+    }
+
     public void ClearSelection()
     {
         gridRunHistory.SafeInvoke(() =>
