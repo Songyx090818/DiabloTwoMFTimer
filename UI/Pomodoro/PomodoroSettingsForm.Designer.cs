@@ -2,37 +2,46 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
+using DiabloTwoMFTimer.UI.Components;
+using DiabloTwoMFTimer.UI.Theme;
 
 namespace DiabloTwoMFTimer.UI.Pomodoro;
+
 partial class PomodoroSettingsForm
 {
+    private System.ComponentModel.IContainer components = null;
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing && (components != null))
+        {
+            components.Dispose();
+        }
+        base.Dispose(disposing);
+    }
+
     #region Windows Form Designer generated code
 
-    /// <summary>
-    /// Required method for Designer support - do not modify
-    /// the contents of this method with the code editor.
-    /// </summary>
     private void InitializeComponent()
     {
-        // 初始化控件
-        this.lblWorkTime = new System.Windows.Forms.Label();
-        this.lblShortBreakTime = new System.Windows.Forms.Label();
-        this.lblLongBreakTime = new System.Windows.Forms.Label();
-        this.lblWarningLongTime = new System.Windows.Forms.Label();
-        this.lblWarningShortTime = new System.Windows.Forms.Label();
+        // 使用 ThemedLabel
+        this.lblWorkTime = new ThemedLabel();
+        this.lblShortBreakTime = new ThemedLabel();
+        this.lblLongBreakTime = new ThemedLabel();
+        this.lblWarningLongTime = new ThemedLabel();
+        this.lblWarningShortTime = new ThemedLabel();
 
-        this.lblWorkMinUnit = new System.Windows.Forms.Label();
-        this.lblShortBreakMinUnit = new System.Windows.Forms.Label();
-        this.lblLongBreakMinUnit = new System.Windows.Forms.Label();
-        this.lblWarningLongTimeUnit = new System.Windows.Forms.Label();
-        this.lblWarningShortTimeUnit = new System.Windows.Forms.Label();
+        this.lblWorkMinUnit = new ThemedLabel();
+        this.lblShortBreakMinUnit = new ThemedLabel();
+        this.lblLongBreakMinUnit = new ThemedLabel();
+        this.lblWarningLongTimeUnit = new ThemedLabel();
+        this.lblWarningShortTimeUnit = new ThemedLabel();
 
-        this.lblWorkSecUnit = new System.Windows.Forms.Label();
-        this.lblShortBreakSecUnit = new System.Windows.Forms.Label();
-        this.lblLongBreakSecUnit = new System.Windows.Forms.Label();
-        this.lblWarningLongTimeUnit = new System.Windows.Forms.Label();
-        this.lblWarningShortTimeUnit = new System.Windows.Forms.Label();
+        this.lblWorkSecUnit = new ThemedLabel();
+        this.lblShortBreakSecUnit = new ThemedLabel();
+        this.lblLongBreakSecUnit = new ThemedLabel();
 
+        // NumericUpDown
         this.nudWorkTimeMin = new System.Windows.Forms.NumericUpDown();
         this.nudWorkTimeSec = new System.Windows.Forms.NumericUpDown();
         this.nudShortBreakTimeMin = new System.Windows.Forms.NumericUpDown();
@@ -54,67 +63,73 @@ partial class PomodoroSettingsForm
         this.SuspendLayout();
 
         // 布局常量
-        int labelX = 30; // 标题X坐标
-        int inputMinX = 140; // 分钟输入框X坐标
-        int labelMinX = 215; // "分"字X坐标
-        int inputSecX = 250; // 秒输入框X坐标
-        int labelSecX = 325; // "秒"字X坐标
-        int inputWarningX = 140; // 提示时间输入框X坐标
-        int labelWarningX = 215; // 提示时间单位X坐标
+        int labelX = 30;
+        int inputMinX = 140;
+        int labelMinX = 215;
+        int inputSecX = 250;
+        int labelSecX = 325;
+        int inputWarningX = 140;
+        int labelWarningX = 215;
 
-        int row1Y = 30; // 第一行Y
-        int row2Y = 70; // 第二行Y
-        int row3Y = 110; // 第三行Y
-        int row4Y = 150; // 第四行Y
-        int row5Y = 190; // 第五行Y
-
-        // 文本对齐偏移量：Label通常比InputBox位置要靠下一点点才能视觉居中
+        // Y轴坐标 (全部 +35 偏移)
+        int row1Y = 30 + 35;
+        int row2Y = 70 + 35;
+        int row3Y = 110 + 35;
+        int row4Y = 150 + 35;
+        int row5Y = 190 + 35;
         int textOffsetY = 4;
 
-        // --- 第一行：工作时间 ---
+        // --- 样式设置辅助 ---
+        void SetNudStyle(NumericUpDown nud)
+        {
+            nud.BackColor = AppTheme.SurfaceColor;
+            nud.ForeColor = AppTheme.TextColor;
+            nud.BorderStyle = BorderStyle.FixedSingle;
+        }
 
-        // 标题
+        SetNudStyle(nudWorkTimeMin);
+        SetNudStyle(nudWorkTimeSec);
+        SetNudStyle(nudShortBreakTimeMin);
+        SetNudStyle(nudShortBreakTimeSec);
+        SetNudStyle(nudLongBreakTimeMin);
+        SetNudStyle(nudLongBreakTimeSec);
+        SetNudStyle(nudWarningLongTime);
+        SetNudStyle(nudWarningShortTime);
+
+        // --- 第一行：工作时间 ---
         this.lblWorkTime.AutoSize = true;
         this.lblWorkTime.Location = new System.Drawing.Point(labelX, row1Y + textOffsetY);
         this.lblWorkTime.Name = "lblWorkTime";
-        this.lblWorkTime.Size = new System.Drawing.Size(100, 15);
-        this.lblWorkTime.Text = "工作时间:"; // 设计时默认显示
+        this.lblWorkTime.Text = "工作时间:";
 
-        // 分钟输入
         this.nudWorkTimeMin.Location = new System.Drawing.Point(inputMinX, row1Y);
-        this.nudWorkTimeMin.Maximum = new decimal([999, 0, 0, 0]);
+        this.nudWorkTimeMin.Maximum = new decimal(new int[] { 999, 0, 0, 0 });
         this.nudWorkTimeMin.Name = "nudWorkTimeMin";
         this.nudWorkTimeMin.Size = new System.Drawing.Size(70, 25);
 
-        // 分钟单位
         this.lblWorkMinUnit.AutoSize = true;
         this.lblWorkMinUnit.Location = new System.Drawing.Point(labelMinX, row1Y + textOffsetY);
         this.lblWorkMinUnit.Name = "lblWorkMinUnit";
-        this.lblWorkMinUnit.Size = new System.Drawing.Size(22, 15);
         this.lblWorkMinUnit.Text = "分";
 
-        // 秒输入
         this.nudWorkTimeSec.Location = new System.Drawing.Point(inputSecX, row1Y);
-        this.nudWorkTimeSec.Maximum = new decimal([59, 0, 0, 0]);
+        this.nudWorkTimeSec.Maximum = new decimal(new int[] { 59, 0, 0, 0 });
         this.nudWorkTimeSec.Name = "nudWorkTimeSec";
         this.nudWorkTimeSec.Size = new System.Drawing.Size(70, 25);
 
-        // 秒单位
         this.lblWorkSecUnit.AutoSize = true;
         this.lblWorkSecUnit.Location = new System.Drawing.Point(labelSecX, row1Y + textOffsetY);
         this.lblWorkSecUnit.Name = "lblWorkSecUnit";
-        this.lblWorkSecUnit.Size = new System.Drawing.Size(22, 15);
         this.lblWorkSecUnit.Text = "秒";
 
         // --- 第二行：短休息 ---
-
         this.lblShortBreakTime.AutoSize = true;
         this.lblShortBreakTime.Location = new System.Drawing.Point(labelX, row2Y + textOffsetY);
         this.lblShortBreakTime.Name = "lblShortBreakTime";
         this.lblShortBreakTime.Text = "短休息时间:";
 
         this.nudShortBreakTimeMin.Location = new System.Drawing.Point(inputMinX, row2Y);
-        this.nudShortBreakTimeMin.Maximum = new decimal([999, 0, 0, 0]);
+        this.nudShortBreakTimeMin.Maximum = new decimal(new int[] { 999, 0, 0, 0 });
         this.nudShortBreakTimeMin.Name = "nudShortBreakTimeMin";
         this.nudShortBreakTimeMin.Size = new System.Drawing.Size(70, 25);
 
@@ -124,7 +139,7 @@ partial class PomodoroSettingsForm
         this.lblShortBreakMinUnit.Text = "分";
 
         this.nudShortBreakTimeSec.Location = new System.Drawing.Point(inputSecX, row2Y);
-        this.nudShortBreakTimeSec.Maximum = new decimal([59, 0, 0, 0]);
+        this.nudShortBreakTimeSec.Maximum = new decimal(new int[] { 59, 0, 0, 0 });
         this.nudShortBreakTimeSec.Name = "nudShortBreakTimeSec";
         this.nudShortBreakTimeSec.Size = new System.Drawing.Size(70, 25);
 
@@ -134,14 +149,13 @@ partial class PomodoroSettingsForm
         this.lblShortBreakSecUnit.Text = "秒";
 
         // --- 第三行：长休息 ---
-
         this.lblLongBreakTime.AutoSize = true;
         this.lblLongBreakTime.Location = new System.Drawing.Point(labelX, row3Y + textOffsetY);
         this.lblLongBreakTime.Name = "lblLongBreakTime";
         this.lblLongBreakTime.Text = "长休息时间:";
 
         this.nudLongBreakTimeMin.Location = new System.Drawing.Point(inputMinX, row3Y);
-        this.nudLongBreakTimeMin.Maximum = new decimal([999, 0, 0, 0]);
+        this.nudLongBreakTimeMin.Maximum = new decimal(new int[] { 999, 0, 0, 0 });
         this.nudLongBreakTimeMin.Name = "nudLongBreakTimeMin";
         this.nudLongBreakTimeMin.Size = new System.Drawing.Size(70, 25);
 
@@ -151,7 +165,7 @@ partial class PomodoroSettingsForm
         this.lblLongBreakMinUnit.Text = "分";
 
         this.nudLongBreakTimeSec.Location = new System.Drawing.Point(inputSecX, row3Y);
-        this.nudLongBreakTimeSec.Maximum = new decimal([59, 0, 0, 0]);
+        this.nudLongBreakTimeSec.Maximum = new decimal(new int[] { 59, 0, 0, 0 });
         this.nudLongBreakTimeSec.Name = "nudLongBreakTimeSec";
         this.nudLongBreakTimeSec.Size = new System.Drawing.Size(70, 25);
 
@@ -160,14 +174,14 @@ partial class PomodoroSettingsForm
         this.lblLongBreakSecUnit.Name = "lblLongBreakSecUnit";
         this.lblLongBreakSecUnit.Text = "秒";
 
-        // --- 第四行：提前长时间提示 ---
+        // --- 第四行：提示1 ---
         this.lblWarningLongTime.AutoSize = true;
         this.lblWarningLongTime.Location = new System.Drawing.Point(labelX, row4Y + textOffsetY);
         this.lblWarningLongTime.Name = "lblWarningLongTime";
         this.lblWarningLongTime.Text = "提前长时间提示:";
 
         this.nudWarningLongTime.Location = new System.Drawing.Point(inputWarningX, row4Y);
-        this.nudWarningLongTime.Maximum = new decimal([300, 0, 0, 0]);
+        this.nudWarningLongTime.Maximum = new decimal(new int[] { 300, 0, 0, 0 });
         this.nudWarningLongTime.Name = "nudWarningLongTime";
         this.nudWarningLongTime.Size = new System.Drawing.Size(70, 25);
 
@@ -176,14 +190,14 @@ partial class PomodoroSettingsForm
         this.lblWarningLongTimeUnit.Name = "lblWarningLongTimeUnit";
         this.lblWarningLongTimeUnit.Text = "秒";
 
-        // --- 第五行：提前短时间提示 ---
+        // --- 第五行：提示2 ---
         this.lblWarningShortTime.AutoSize = true;
         this.lblWarningShortTime.Location = new System.Drawing.Point(labelX, row5Y + textOffsetY);
         this.lblWarningShortTime.Name = "lblWarningShortTime";
         this.lblWarningShortTime.Text = "提前短时间提示:";
 
         this.nudWarningShortTime.Location = new System.Drawing.Point(inputWarningX, row5Y);
-        this.nudWarningShortTime.Maximum = new decimal([60, 0, 0, 0]);
+        this.nudWarningShortTime.Maximum = new decimal(new int[] { 60, 0, 0, 0 });
         this.nudWarningShortTime.Name = "nudWarningShortTime";
         this.nudWarningShortTime.Size = new System.Drawing.Size(70, 25);
 
@@ -192,20 +206,19 @@ partial class PomodoroSettingsForm
         this.lblWarningShortTimeUnit.Name = "lblWarningShortTimeUnit";
         this.lblWarningShortTimeUnit.Text = "秒";
 
-        // --- 按钮 (继承自 BaseForm) ---
-        this.btnConfirm.Location = new System.Drawing.Point(147, 230);
-        this.btnConfirm.Text = "保存";
+        // --- 按钮位置调整 (继承自 BaseForm) ---
+        // 原来是 230，现在改为 265 (+35偏移)
+        this.btnConfirm.Location = new System.Drawing.Point(147, 265);
+        this.btnCancel.Location = new System.Drawing.Point(273, 265);
 
-        this.btnCancel.Location = new System.Drawing.Point(273, 230);
-
-        // --- Form 设置 ---
+        // --- Form ---
         this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
         this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-        this.ClientSize = new System.Drawing.Size(420, 290); // 调整了窗口大小以适应新的控件
+        // 高度增加到 330 以容纳所有内容和底部按钮
+        this.ClientSize = new System.Drawing.Size(420, 330);
         this.Name = "PomodoroSettingsForm";
         this.Text = "番茄时钟设置";
 
-        // 添加控件
         this.Controls.Add(this.lblWorkTime);
         this.Controls.Add(this.nudWorkTimeMin);
         this.Controls.Add(this.lblWorkMinUnit);
@@ -232,7 +245,6 @@ partial class PomodoroSettingsForm
         this.Controls.Add(this.nudWarningShortTime);
         this.Controls.Add(this.lblWarningShortTimeUnit);
 
-        // 保持按钮在最上层
         this.Controls.SetChildIndex(this.btnConfirm, 0);
         this.Controls.SetChildIndex(this.btnCancel, 0);
 
@@ -251,34 +263,25 @@ partial class PomodoroSettingsForm
 
     #endregion
 
-    // 主要标签
-    private Label lblWorkTime;
-    private Label lblShortBreakTime;
-    private Label lblLongBreakTime;
-
-    // 单位标签 (分)
-    private Label lblWorkMinUnit;
-    private Label lblShortBreakMinUnit;
-    private Label lblLongBreakMinUnit;
-
-    // 输入框
-    private NumericUpDown nudWorkTimeMin;
-    private NumericUpDown nudWorkTimeSec;
-    private NumericUpDown nudShortBreakTimeMin;
-    private NumericUpDown nudShortBreakTimeSec;
-    private NumericUpDown nudLongBreakTimeMin;
-    private NumericUpDown nudLongBreakTimeSec;
-
-    // 单位标签 (秒)
-    private Label lblWorkSecUnit;
-    private Label lblShortBreakSecUnit;
-    private Label lblLongBreakSecUnit;
-
-    // 控件声明
-    private Label lblWarningLongTime;
-    private Label lblWarningShortTime;
-    private Label lblWarningLongTimeUnit;
-    private Label lblWarningShortTimeUnit;
-    private NumericUpDown nudWarningLongTime;
-    private NumericUpDown nudWarningShortTime;
+    private ThemedLabel lblWorkTime;
+    private ThemedLabel lblShortBreakTime;
+    private ThemedLabel lblLongBreakTime;
+    private ThemedLabel lblWorkMinUnit;
+    private ThemedLabel lblShortBreakMinUnit;
+    private ThemedLabel lblLongBreakMinUnit;
+    private System.Windows.Forms.NumericUpDown nudWorkTimeMin;
+    private System.Windows.Forms.NumericUpDown nudWorkTimeSec;
+    private System.Windows.Forms.NumericUpDown nudShortBreakTimeMin;
+    private System.Windows.Forms.NumericUpDown nudShortBreakTimeSec;
+    private System.Windows.Forms.NumericUpDown nudLongBreakTimeMin;
+    private System.Windows.Forms.NumericUpDown nudLongBreakTimeSec;
+    private ThemedLabel lblWorkSecUnit;
+    private ThemedLabel lblShortBreakSecUnit;
+    private ThemedLabel lblLongBreakSecUnit;
+    private ThemedLabel lblWarningLongTime;
+    private ThemedLabel lblWarningShortTime;
+    private ThemedLabel lblWarningLongTimeUnit;
+    private ThemedLabel lblWarningShortTimeUnit;
+    private System.Windows.Forms.NumericUpDown nudWarningLongTime;
+    private System.Windows.Forms.NumericUpDown nudWarningShortTime;
 }

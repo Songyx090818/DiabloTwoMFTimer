@@ -47,18 +47,23 @@ public partial class SwitchCharacterForm : BaseForm
         {
             LogManager.WriteDebugLog("SwitchCharacterForm", "[详细调试] 开始加载角色档案名称...");
             var profileNames = _profileService.GetAllProfileNames();
-
+            string? currentName = _profileService.CurrentProfile?.Name;
+            int targetIndex = 0; // 默认选中第0个
             lstCharacters.Items.Clear();
-
             foreach (var profileName in profileNames)
             {
                 var profileItem = new ProfileItem(profileName);
                 lstCharacters.Items.Add(profileItem);
+
+                if (string.Equals(profileName, currentName, StringComparison.OrdinalIgnoreCase))
+                {
+                    targetIndex = lstCharacters.Items.Count - 1; // 当前角色档案的索引
+                }
             }
 
             if (lstCharacters.Items.Count > 0)
             {
-                lstCharacters.SelectedIndex = 0;
+                lstCharacters.SelectedIndex = targetIndex;
             }
 
             UpdateEmptyListMessage();

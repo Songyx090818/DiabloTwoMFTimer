@@ -164,7 +164,7 @@ namespace DiabloTwoMFTimer.UI.Timer
             this.toggleLootButton.Size = new System.Drawing.Size(120, 36);
             this.toggleLootButton.Text = "Show Loot";
             this.toggleLootButton.Anchor = (System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right);
-            this.toggleLootButton.Margin = new System.Windows.Forms.Padding(0, 0, 10, 25);
+            this.toggleLootButton.Margin = new System.Windows.Forms.Padding(0, 0, 10, 15);
             this.toggleLootButton.Click += new System.EventHandler(this.ToggleLootButton_Click);
 
             this.bottomInfoLayout.Controls.Add(this.characterSceneControl, 0, 0);

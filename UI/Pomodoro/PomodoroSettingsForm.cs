@@ -164,9 +164,4 @@ public partial class PomodoroSettingsForm : BaseForm
 
         base.BtnConfirm_Click(sender, e);
     }
-
-    protected override void Dispose(bool disposing)
-    {
-        base.Dispose(disposing);
-    }
 }

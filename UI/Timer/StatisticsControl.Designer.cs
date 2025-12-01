@@ -39,7 +39,7 @@ namespace DiabloTwoMFTimer.UI.Timer
             // 2. 关闭 AutoSize 以便由 Dock 控制宽度
             lblRunCount.AutoSize = false;
             // 3. 设定固定高度
-            lblRunCount.Height = 40;
+            lblRunCount.Height = 35;
             lblRunCount.Name = "lblRunCount";
             // 4. 核心：文字居中对齐
             lblRunCount.TextAlign = ContentAlignment.MiddleCenter;

@@ -19,23 +19,7 @@ namespace DiabloTwoMFTimer.UI.Timer
             this.lblCharacterDisplay = new ThemedLabel();
             this.lblSceneDisplay = new ThemedLabel();
             this.SuspendLayout();
-            //
-            // lblCharacterDisplay
-            //
-            this.lblCharacterDisplay.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.lblCharacterDisplay.Font = new System.Drawing.Font(
-                "Microsoft YaHei UI",
-                12F,
-                System.Drawing.FontStyle.Regular,
-                System.Drawing.GraphicsUnit.Point,
-                ((byte)(134))
-            );
-            this.lblCharacterDisplay.Location = new System.Drawing.Point(0, 0);
-            this.lblCharacterDisplay.Name = "lblCharacterDisplay";
-            this.lblCharacterDisplay.Size = new System.Drawing.Size(290, 25);
-            this.lblCharacterDisplay.TabIndex = 0;
-            this.lblCharacterDisplay.Text = "初始化角色";
-            this.lblCharacterDisplay.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+
             //
             // lblSceneDisplay
             //
@@ -47,12 +31,30 @@ namespace DiabloTwoMFTimer.UI.Timer
                 System.Drawing.GraphicsUnit.Point,
                 ((byte)(134))
             );
-            this.lblSceneDisplay.Location = new System.Drawing.Point(0, 25);
+            this.lblSceneDisplay.Location = new System.Drawing.Point(0, 0);
             this.lblSceneDisplay.Name = "lblSceneDisplay";
             this.lblSceneDisplay.Size = new System.Drawing.Size(290, 25);
             this.lblSceneDisplay.TabIndex = 1;
             this.lblSceneDisplay.Text = "初始化场景";
             this.lblSceneDisplay.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            //
+            // lblCharacterDisplay
+            //
+            this.lblCharacterDisplay.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.lblCharacterDisplay.Font = new System.Drawing.Font(
+                "Microsoft YaHei UI",
+                12F,
+                System.Drawing.FontStyle.Regular,
+                System.Drawing.GraphicsUnit.Point,
+                ((byte)(134))
+            );
+            this.lblCharacterDisplay.Location = new System.Drawing.Point(0, 25);
+            this.lblCharacterDisplay.Name = "lblCharacterDisplay";
+            this.lblCharacterDisplay.Size = new System.Drawing.Size(290, 25);
+            this.lblCharacterDisplay.TabIndex = 0;
+            this.lblCharacterDisplay.Text = "初始化角色";
+            this.lblCharacterDisplay.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+
             //
             // CharacterSceneControl
             //

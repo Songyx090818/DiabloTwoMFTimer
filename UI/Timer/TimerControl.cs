@@ -84,6 +84,7 @@ public partial class TimerControl : UserControl
             // 根据设置初始化番茄时间显示
             InitializePomodoroVisibility();
             // 【关键】首次加载时，清除所有选中状态，防止默认选中第一行掉落
+            ScrollToBottom();
             ClearAllSelections();
             // 更新界面状态
             UpdateUI();
@@ -499,7 +500,11 @@ public partial class TimerControl : UserControl
             // 隐藏掉落时：历史占满剩余空间 (100%)，掉落高度强行设为 0
             mainLayout.RowStyles[4] = new RowStyle(SizeType.Absolute, 0F);
         }
+        ScrollToBottom();
+    }
 
+    private void ScrollToBottom()
+    {
         // --- 新增滚动逻辑 ---
         // 使用 BeginInvoke 是关键：它会把这个操作排入 UI 线程的消息队列末尾
         // 确保在 TableLayoutPanel 完成布局调整（重新计算高度）之后再执行滚动
@@ -507,7 +512,7 @@ public partial class TimerControl : UserControl
         this.BeginInvoke(new Action(() =>
         {
             historyControl?.ScrollToBottom();
-            if (isVisible)
+            if (lootRecordsControl?.Visible == true)
             {
                 lootRecordsControl?.ScrollToBottom();
             }

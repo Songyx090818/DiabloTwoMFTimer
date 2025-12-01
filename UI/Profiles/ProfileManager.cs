@@ -436,7 +436,7 @@ public partial class ProfileManager : UserControl
             return;
 
         string confirmMsg = $"确定要删除角色: {currentProfile.Name}?";
-        if (MessageBox.Show(confirmMsg, "删除角色", MessageBoxButtons.YesNo) == DialogResult.Yes)
+        if (DiabloTwoMFTimer.UI.Components.ThemedMessageBox.Show(confirmMsg, "删除角色", MessageBoxButtons.YesNo) == DialogResult.Yes)
         {
             // 使用ProfileService删除角色档案
             bool deleteResult = _profileService.DeleteCharacter(currentProfile);
