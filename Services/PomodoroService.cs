@@ -48,25 +48,32 @@ public class PomodoroTimerService : IPomodoroTimerService
         }
     }
 
-    // 处理计时器运行状态变化事件
-    private void OnTimerRunningStateChanged(bool _)
+    private void TriggerStartFromTimer()
     {
         // 当计时器开启时，如果番茄时钟启动则启动番茄时钟（如果番茄时钟已经开启则不处理）
-        if (!_isRunning
-        && _timerService?.IsRunning == true
-        && _appSettings?.TimerSyncStartPomodoro == true)
+        if (_timerService?.IsRunning == true
+                && _appSettings?.TimerSyncStartPomodoro == true)
         {
             Start();
         }
     }
 
+    // 处理计时器运行状态变化事件
+    private void OnTimerRunningStateChanged(bool _)
+    {
+        TriggerStartFromTimer();
+    }
+
     // 处理计时器暂停状态变化事件
     private void OnTimerPauseStateChanged(bool isPaused)
     {
+        if (!isPaused)
+        {
+            TriggerStartFromTimer();
+        }
         // 当计时器暂停时，如果番茄钟正在运行且设置了同步暂停，则暂停番茄钟
-        if (isPaused
-        && _currentState == PomodoroTimerState.Work
-        && _appSettings?.TimerSyncPausePomodoro == true && _isRunning)
+        else if (isPaused &&
+        _appSettings?.TimerSyncPausePomodoro == true && _isRunning)
         {
             Pause();
         }
