@@ -388,6 +388,11 @@ public partial class TimerControl : UserControl
     {
         LoadProfileHistoryData();
         UpdateUI();
+        // 使用BeginInvoke确保在UI更新完成后执行滚动
+        this.BeginInvoke(new Action(() =>
+        {
+            ScrollToBottom();
+        }));
     }
 
     public void HandleApplicationClosing()
