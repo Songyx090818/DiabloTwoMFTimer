@@ -25,7 +25,7 @@ namespace DiabloTwoMFTimer.UI.Timer
             // 【优化】不需要场景列
             DataGridViewTextBoxColumn colIndex = new DataGridViewTextBoxColumn();
             colIndex.HeaderText = "#";
-            colIndex.Width = 50;
+            colIndex.Width = 80;
             colIndex.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
 
             DataGridViewTextBoxColumn colName = new DataGridViewTextBoxColumn();
@@ -34,7 +34,7 @@ namespace DiabloTwoMFTimer.UI.Timer
 
             DataGridViewTextBoxColumn colTime = new DataGridViewTextBoxColumn();
             colTime.HeaderText = "Time";
-            colTime.Width = 120;
+            colTime.Width = 140;
             colTime.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
 
             this.gridLoot.Columns.AddRange(new DataGridViewColumn[] { colIndex, colName, colTime });

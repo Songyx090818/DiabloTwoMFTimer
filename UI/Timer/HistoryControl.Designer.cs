@@ -26,7 +26,7 @@ namespace DiabloTwoMFTimer.UI.Timer
             // ... 列配置保持不变 ...
             DataGridViewTextBoxColumn colIndex = new DataGridViewTextBoxColumn();
             colIndex.HeaderText = "#";
-            colIndex.Width = 50;
+            colIndex.Width = 80;
             colIndex.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             DataGridViewTextBoxColumn colTime = new DataGridViewTextBoxColumn();
             colTime.HeaderText = "Time";
