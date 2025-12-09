@@ -16,10 +16,18 @@ public partial class GeneralSettingsControl : UserControl
         public override string ToString() => Name;
     }
 
+    private class OpacityOption
+    {
+        public string Name { get; set; } = "";
+        public double Value { get; set; }
+        public override string ToString() => Name;
+    }
+
     public GeneralSettingsControl()
     {
         InitializeComponent();
         InitializeScaleOptions();
+        InitializeOpacityOptions(); // 新增初始化
     }
 
     private void InitializeScaleOptions()
@@ -34,6 +42,18 @@ public partial class GeneralSettingsControl : UserControl
         cmbUiScale.Items.Add(new ScaleOption { Name = "200% (4K)", Value = 2.0f });
         cmbUiScale.Items.Add(new ScaleOption { Name = "250%", Value = 2.5f });
         cmbUiScale.SelectedIndex = 0;
+    }
+
+    private void InitializeOpacityOptions()
+    {
+        if (cmbOpacity == null) return;
+        cmbOpacity.Items.Clear();
+        // 添加 100% 到 10%
+        for (int i = 100; i >= 10; i -= 10)
+        {
+            cmbOpacity.Items.Add(new OpacityOption { Name = $"{i}%", Value = i / 100.0 });
+        }
+        cmbOpacity.SelectedIndex = 0; // 默认 100%
     }
 
     public void LoadSettings(IAppSettings settings)
@@ -85,6 +105,23 @@ public partial class GeneralSettingsControl : UserControl
                 }
                 cmbUiScale.SelectedIndex = targetIndex;
             }
+
+            // 5. Opacity (加载逻辑)
+            if (cmbOpacity != null)
+            {
+                double current = settings.Opacity;
+                int targetIndex = 0;
+                // 查找最接近的选项
+                for (int i = 0; i < cmbOpacity.Items.Count; i++)
+                {
+                    if (cmbOpacity.Items[i] is OpacityOption opt && Math.Abs(opt.Value - current) < 0.01)
+                    {
+                        targetIndex = i;
+                        break;
+                    }
+                }
+                cmbOpacity.SelectedIndex = targetIndex;
+            }
         });
     }
 
@@ -108,8 +145,9 @@ public partial class GeneralSettingsControl : UserControl
                 englishRadioButton!.Text = LanguageManager.GetString("English");
 
                 alwaysOnTopCheckBox!.Text = LanguageManager.GetString("AlwaysOnTop");
+                grpOpacity!.Text = LanguageManager.GetString("Opacity");
 
-                if (grpUiScale != null) grpUiScale.Text = "界面大小 (需重启)";
+                grpUiScale!.Text = LanguageManager.GetString("UiScale");
             }
             catch { }
         });
@@ -144,6 +182,18 @@ public partial class GeneralSettingsControl : UserControl
                 return option.Value;
             }
             return 0f;
+        }
+    }
+
+    public double SelectedOpacity
+    {
+        get
+        {
+            if (cmbOpacity?.SelectedItem is OpacityOption option)
+            {
+                return option.Value;
+            }
+            return 1.0;
         }
     }
 }

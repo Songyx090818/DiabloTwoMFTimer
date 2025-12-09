@@ -5,9 +5,10 @@ namespace DiabloTwoMFTimer.Interfaces;
 public interface IAppSettings
 {
     public string WindowPosition { get; set; }
+    double Opacity { get; set; } // 新增：透明度 (0.1 ~ 1.0)
     public float UiScale { get; set; }
-    public bool AlwaysOnTop { get; set; }
     public string Language { get; set; }
+    public bool AlwaysOnTop { get; set; }
 
     // 角色档案设置
     public string LastUsedProfile { get; set; }

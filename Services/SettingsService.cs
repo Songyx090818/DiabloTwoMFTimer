@@ -27,6 +27,7 @@ public class AppSettings : IAppSettings
 
     // 窗口设置
     public string WindowPosition { get; set; } = "TopLeft";
+    public double Opacity { get; set; } = 1.0;
     public float UiScale { get; set; } = 0f;
     public bool AlwaysOnTop { get; set; } = true;
     public string Language { get; set; } = "Chinese";

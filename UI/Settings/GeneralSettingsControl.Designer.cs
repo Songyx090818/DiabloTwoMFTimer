@@ -34,6 +34,9 @@ partial class GeneralSettingsControl
 
         this.alwaysOnTopCheckBox = new DiabloTwoMFTimer.UI.Components.ThemedCheckBox();
 
+        this.grpOpacity = new DiabloTwoMFTimer.UI.Components.ThemedGroupBox();
+        this.cmbOpacity = new DiabloTwoMFTimer.UI.Components.ThemedComboBox();
+
         this.grpUiScale = new DiabloTwoMFTimer.UI.Components.ThemedGroupBox();
         this.cmbUiScale = new DiabloTwoMFTimer.UI.Components.ThemedComboBox();
 
@@ -58,22 +61,24 @@ partial class GeneralSettingsControl
         this.tlpMain.Controls.Add(this.groupBoxPosition, 0, 0);
         // 2. 语言
         this.tlpMain.Controls.Add(this.groupBoxLanguage, 0, 1);
-        // 3. 界面缩放 (调整到了始终置顶前面)
-        this.tlpMain.Controls.Add(this.grpUiScale, 0, 2);
+        // 3. 不透明度
+        this.tlpMain.Controls.Add(this.grpOpacity, 0, 2);      // 新增在第2行
+        // 4 界面缩放 (调整到了始终置顶前面)
+        this.tlpMain.Controls.Add(this.grpUiScale, 0, 3);      // 新增在第3行
         // 4. 始终置顶
-        this.tlpMain.Controls.Add(this.alwaysOnTopCheckBox, 0, 3);
+        this.tlpMain.Controls.Add(this.alwaysOnTopCheckBox, 0, 4);
 
         this.tlpMain.Dock = System.Windows.Forms.DockStyle.Top; // 【关键】设为 Top 而不是 Fill，让它能撑开高度
         this.tlpMain.Location = new System.Drawing.Point(0, 0);
         this.tlpMain.Name = "tlpMain";
         // 【关键】去除 Padding (Margin)，紧凑布局
         this.tlpMain.Padding = new System.Windows.Forms.Padding(0);
-        this.tlpMain.RowCount = 4;
+        this.tlpMain.RowCount = 5;
         this.tlpMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.AutoSize));
         this.tlpMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.AutoSize));
         this.tlpMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.AutoSize));
         this.tlpMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.AutoSize));
-        this.tlpMain.Size = new System.Drawing.Size(350, 280); // 初始高度不重要，会自动撑开
+        this.tlpMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.AutoSize));
         this.tlpMain.TabIndex = 0;
 
         // 
@@ -128,6 +133,28 @@ partial class GeneralSettingsControl
         SetRadio(radioBottomRight, "右下");
 
         // 
+        // grpOpacity (新增)
+        // 
+        this.grpOpacity.AutoSize = true;
+        this.grpOpacity.Controls.Add(this.cmbOpacity);
+        this.grpOpacity.Dock = System.Windows.Forms.DockStyle.Fill;
+        this.grpOpacity.Location = new System.Drawing.Point(3, 175); // 这里的坐标会自动调整，关键是加入 tlp 的顺序
+        this.grpOpacity.Name = "grpOpacity";
+        this.grpOpacity.Padding = new System.Windows.Forms.Padding(3, 20, 3, 3);
+        this.grpOpacity.TabIndex = 2; // 索引设为 2
+        this.grpOpacity.TabStop = false;
+        this.grpOpacity.Text = "窗口透明度";
+
+        // 
+        // cmbOpacity
+        // 
+        this.cmbOpacity.Dock = System.Windows.Forms.DockStyle.Top;
+        this.cmbOpacity.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+        this.cmbOpacity.Location = new System.Drawing.Point(3, 20);
+        this.cmbOpacity.Name = "cmbOpacity";
+        this.cmbOpacity.TabIndex = 0;
+
+        // 
         // groupBoxLanguage
         // 
         this.groupBoxLanguage.AutoSize = true;
@@ -136,7 +163,6 @@ partial class GeneralSettingsControl
         this.groupBoxLanguage.Location = new System.Drawing.Point(3, 109);
         this.groupBoxLanguage.Name = "groupBoxLanguage";
         this.groupBoxLanguage.Padding = new System.Windows.Forms.Padding(3, 20, 3, 3);
-        this.groupBoxLanguage.Size = new System.Drawing.Size(344, 60);
         this.groupBoxLanguage.TabIndex = 1;
         this.groupBoxLanguage.TabStop = false;
         this.groupBoxLanguage.Text = "语言";
@@ -155,7 +181,6 @@ partial class GeneralSettingsControl
         this.tlpLanguage.Name = "tlpLanguage";
         this.tlpLanguage.RowCount = 1;
         this.tlpLanguage.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.AutoSize));
-        this.tlpLanguage.Size = new System.Drawing.Size(338, 37);
         this.tlpLanguage.TabIndex = 0;
 
         SetRadio(chineseRadioButton, "Chinese"); chineseRadioButton.Checked = true;
@@ -170,10 +195,9 @@ partial class GeneralSettingsControl
         this.grpUiScale.Location = new System.Drawing.Point(3, 175);
         this.grpUiScale.Name = "grpUiScale";
         this.grpUiScale.Padding = new System.Windows.Forms.Padding(3, 20, 3, 3);
-        this.grpUiScale.Size = new System.Drawing.Size(344, 53);
         this.grpUiScale.TabIndex = 2;
         this.grpUiScale.TabStop = false;
-        this.grpUiScale.Text = "界面大小 (需重启)";
+        this.grpUiScale.Text = "界面大小";
 
         // 
         // cmbUiScale
@@ -182,7 +206,6 @@ partial class GeneralSettingsControl
         this.cmbUiScale.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
         this.cmbUiScale.Location = new System.Drawing.Point(3, 20);
         this.cmbUiScale.Name = "cmbUiScale";
-        this.cmbUiScale.Size = new System.Drawing.Size(338, 28);
         this.cmbUiScale.TabIndex = 0;
 
         // 
@@ -195,7 +218,6 @@ partial class GeneralSettingsControl
         this.alwaysOnTopCheckBox.Location = new System.Drawing.Point(13, 241); // 这里的 Location 只是初始值，会被 TableLayout 覆盖
         this.alwaysOnTopCheckBox.Margin = new System.Windows.Forms.Padding(13, 10, 3, 10);
         this.alwaysOnTopCheckBox.Name = "alwaysOnTopCheckBox";
-        this.alwaysOnTopCheckBox.Size = new System.Drawing.Size(334, 24);
         this.alwaysOnTopCheckBox.TabIndex = 3;
         this.alwaysOnTopCheckBox.Text = "总在最前";
 
@@ -232,7 +254,6 @@ partial class GeneralSettingsControl
     private System.Windows.Forms.TableLayoutPanel tlpMain;
     private System.Windows.Forms.TableLayoutPanel tlpPosition;
     private System.Windows.Forms.TableLayoutPanel tlpLanguage;
-
     private DiabloTwoMFTimer.UI.Components.ThemedGroupBox groupBoxPosition;
     private DiabloTwoMFTimer.UI.Components.ThemedGroupBox groupBoxLanguage;
     private DiabloTwoMFTimer.UI.Components.ThemedRadioButton radioTopLeft;
@@ -247,4 +268,6 @@ partial class GeneralSettingsControl
 
     private DiabloTwoMFTimer.UI.Components.ThemedGroupBox grpUiScale;
     private DiabloTwoMFTimer.UI.Components.ThemedComboBox cmbUiScale;
+    private DiabloTwoMFTimer.UI.Components.ThemedGroupBox grpOpacity;
+    private DiabloTwoMFTimer.UI.Components.ThemedComboBox cmbOpacity;
 }

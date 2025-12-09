@@ -120,7 +120,7 @@ public partial class SettingsControl : UserControl
         LogManager.WriteDebugLog("SettingsControl", $"保存设置 timerSettings.ScreenshotOnLoot={timerSettings.ScreenshotOnLoot}");
         _appSettings.ScreenshotOnLoot = timerSettings.ScreenshotOnLoot;
         _appSettings.HideWindowOnScreenshot = timerSettings.HideWindowOnScreenshot;
-
+        _appSettings.Opacity = generalSettings.SelectedOpacity;
         // 保存缩放设置
         float oldScale = _appSettings.UiScale;
         float newScale = generalSettings.SelectedUiScale;
@@ -129,6 +129,7 @@ public partial class SettingsControl : UserControl
         _appSettings.Save();
 
         string langCode = (generalSettings.SelectedLanguage == LanguageOption.Chinese) ? "zh-CN" : "en-US";
+        _messenger.Publish(new OpacityChangedMessage());
         _messenger.Publish(new LanguageChangedMessage(langCode));
         _messenger.Publish(
             new TimerSettingsChangedMessage(

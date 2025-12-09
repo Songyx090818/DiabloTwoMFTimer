@@ -25,3 +25,5 @@ public class HideMainWindowMessage { }
 
 // 【新增】请求显示主窗口消息
 public class ShowMainWindowMessage { }
+
+public class OpacityChangedMessage { }

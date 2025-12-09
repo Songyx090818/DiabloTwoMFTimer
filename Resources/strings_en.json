@@ -152,5 +152,7 @@
   "LootTableItemName": "Item Name",
   "LootTableScene": "Scene",
   "Export": "Export",
+  "Opacity": "Window Opacity",
+  "UiScale": "UI Scale",
   "LootTableRun": "Run"
 }

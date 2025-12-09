@@ -135,6 +135,7 @@ public partial class MainForm : System.Windows.Forms.Form
         AdjustWindowHeight();
         this.StartPosition = FormStartPosition.Manual;
         this.ShowInTaskbar = true;
+        this.Opacity = _appSettings.Opacity;
         this.TopMost = _appSettings.AlwaysOnTop;
     }
 
@@ -162,9 +163,6 @@ public partial class MainForm : System.Windows.Forms.Form
         };
 
         _mainService.OnRequestRecordLoot += () => this.SafeInvoke(ShowRecordLootDialog);
-
-        _messenger.Subscribe<HideMainWindowMessage>(_ => this.SafeInvoke(() => this.Opacity = 0));
-        _messenger.Subscribe<ShowMainWindowMessage>(_ => this.SafeInvoke(() => this.Opacity = 1));
     }
 
     private void SubscribeToMessages()
@@ -175,6 +173,11 @@ public partial class MainForm : System.Windows.Forms.Form
         _messenger.Subscribe<AlwaysOnTopChangedMessage>(_ =>
             this.SafeInvoke(() => this.TopMost = _appSettings.AlwaysOnTop)
         );
+        _messenger.Subscribe<OpacityChangedMessage>(_ =>
+            this.SafeInvoke(() => this.Opacity = _appSettings.Opacity)
+        );
+        _messenger.Subscribe<HideMainWindowMessage>(_ => this.SafeInvoke(() => this.Opacity = 0));
+        _messenger.Subscribe<ShowMainWindowMessage>(_ => this.SafeInvoke(() => this.Opacity = _appSettings.Opacity));
         _messenger.Subscribe<TimerSettingsChangedMessage>(msg => this.SafeInvoke(() => AdjustWindowHeight()));
     }
 

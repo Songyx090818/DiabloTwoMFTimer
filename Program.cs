@@ -50,7 +50,7 @@ static class Program
         try
         {
             // 等待3秒，给旧进程退出的时间
-            return mutex.WaitOne(3000, false);
+            return mutex.WaitOne(300, false);
         }
         catch (AbandonedMutexException)
         {
