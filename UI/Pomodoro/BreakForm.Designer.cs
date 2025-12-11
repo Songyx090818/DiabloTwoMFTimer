@@ -1,4 +1,6 @@
-using System;
+using DiabloTwoMFTimer.UI.Components;
+using DiabloTwoMFTimer.UI.Theme;
+using DiabloTwoMFTimer.Utils;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -21,141 +23,155 @@ partial class BreakForm
 
     private void InitializeComponent()
     {
-        this.AutoScaleMode = AutoScaleMode.Font;
-        this.ClientSize = new Size(1024, 768);
-        this.Name = "BreakForm";
-        this.Text = "统计信息";
+        this.headerControl = new DiabloTwoMFTimer.UI.Components.ThemedWindowHeader();
+        this.btnClose = new DiabloTwoMFTimer.UI.Components.ThemedModalButton();
+        this.btnSkip = new DiabloTwoMFTimer.UI.Components.ThemedModalButton();
 
-        // 1. 顶部 Header 区域
-        pnlHeader = new Panel
-        {
-            Dock = DockStyle.Top,
-            AutoSize = true,
-            AutoSizeMode = AutoSizeMode.GrowAndShrink,
-            BackColor = Color.Transparent,
-            Padding = new Padding(0, 0, 0, Utils.ScaleHelper.Scale(20)),
-        };
+        this.lblMessage = new System.Windows.Forms.Label();
+        this.lblTimer = new System.Windows.Forms.Label();
+        this.pomodoroStatusDisplay = new DiabloTwoMFTimer.UI.Components.PomodoroStatusDisplay();
+        this.lblDuration = new System.Windows.Forms.Label();
+        this.lblStats = new System.Windows.Forms.Label();
 
-        lblTitle = new Label
-        {
-            AutoSize = true,
-            Font = Theme.AppTheme.TitleFont,
-            ForeColor = Color.Gray,
-            TextAlign = ContentAlignment.MiddleLeft,
-            Text = _mode == BreakFormMode.PomodoroBreak ? "REST & RECOVER" : "STATISTICS",
-            Location = new Point(Utils.ScaleHelper.Scale(20), Utils.ScaleHelper.Scale(20)),
-        };
+        this.SuspendLayout();
 
-        // 切换按钮容器
-        pnlToggles = new FlowLayoutPanel
-        {
-            AutoSize = true,
-            FlowDirection = FlowDirection.LeftToRight,
-            BackColor = Color.Transparent,
-            Location = new Point(Utils.ScaleHelper.Scale(20), Utils.ScaleHelper.Scale(60)),
-        };
+        // 
+        // headerControl
+        // 
+        this.headerControl.BackColor = System.Drawing.Color.Transparent;
+        this.headerControl.Dock = System.Windows.Forms.DockStyle.Top;
+        this.headerControl.Location = new System.Drawing.Point(0, 0);
+        this.headerControl.Name = "headerControl";
+        this.headerControl.Size = new System.Drawing.Size(1024, 100); // 高度由 SizeChanged 调整
+        this.headerControl.TabIndex = 0;
+        this.headerControl.Title = "TITLE";
 
-        btnToggleSession = CreateToggleButton("本轮战况", StatViewType.Session);
-        btnToggleToday = CreateToggleButton("今日累计", StatViewType.Today);
-        btnToggleWeek = CreateToggleButton("本周累计", StatViewType.Week);
+        // 
+        // btnClose
+        // 
+        this.btnClose.Name = "btnClose";
+        this.btnClose.TabIndex = 6;
+        this.btnClose.Text = "关闭";
+        this.btnClose.SetThemeDanger();
+        this.btnClose.Click += (s, e) => this.Close();
 
-        pnlToggles.Controls.Add(btnToggleSession);
-        pnlToggles.Controls.Add(btnToggleToday);
-        pnlToggles.Controls.Add(btnToggleWeek);
-
-        pnlHeader.Controls.Add(lblTitle);
-        pnlHeader.Controls.Add(pnlToggles);
-
-        // 2. 提示语
-        lblMessage = new Label
-        {
-            AutoSize = false,
-            Size = new Size(Utils.ScaleHelper.Scale(800), Utils.ScaleHelper.Scale(60)),
-            Font = Theme.AppTheme.BigTitleFont,
-            ForeColor = Color.White,
-            TextAlign = ContentAlignment.MiddleCenter,
-            Text = "休息一下",
-        };
-
-        // 3. 倒计时 (字体加大，颜色醒目)
-        lblTimer = new Label
-        {
-            AutoSize = true,
-            Font = Theme.AppTheme.BigTimeFont,
-            ForeColor = Color.LightGreen,
-            TextAlign = ContentAlignment.MiddleCenter,
-            Text = "00:00",
-        };
-
-        // 4. 新增：番茄状态显示
-        pomodoroStatusDisplay = new DiabloTwoMFTimer.UI.Components.PomodoroStatusDisplay
-        {
-            Size = new Size(Utils.ScaleHelper.Scale(400), Utils.ScaleHelper.Scale(40)),
-            IconSize = Utils.ScaleHelper.Scale(24),
-            IconSpacing = Utils.ScaleHelper.Scale(8)
-        };
-
-        // 5. 新增：总时长标签
-        lblDuration = new Label
-        {
-            AutoSize = true,
-            Font = Theme.AppTheme.MainFont,
-            ForeColor = Color.LightGray,
-            TextAlign = ContentAlignment.MiddleCenter,
-            Text = "总投入时间: --",
-        };
-
-        // 6. 统计内容
-        lblStats = new Label
-        {
-            AutoSize = false,
-            Size = new Size(Utils.ScaleHelper.Scale(800), Utils.ScaleHelper.Scale(400)),
-            Font = Theme.AppTheme.ConsoleFont,
-            ForeColor = Color.Gold,
-            TextAlign = ContentAlignment.TopCenter,
-            Text = "Loading...",
-        };
-
-        // 7. 底部按钮
-        btnClose = CreateFlatButton("关闭", Color.IndianRed);
-        btnClose.Click += (s, e) => this.Close();
-
-        btnSkip = CreateFlatButton("跳过休息", Color.SteelBlue);
-        btnSkip.Click += (s, e) =>
+        // 
+        // btnSkip
+        // 
+        this.btnSkip.Name = "btnSkip";
+        this.btnSkip.TabIndex = 7;
+        this.btnSkip.Text = "跳过休息";
+        this.btnSkip.SetThemePrimary();
+        this.btnSkip.Click += (s, e) =>
         {
             _timerService.SkipBreak();
             this.Close();
         };
 
-        // 添加控件 (顺序很重要，但这里主要靠 SizeChanged 手动布局)
-        this.Controls.Add(pnlHeader);
-        this.Controls.Add(lblMessage);
-        this.Controls.Add(lblTimer);           // 调整顺序
-        this.Controls.Add(pomodoroStatusDisplay); // 新增
-        this.Controls.Add(lblDuration);        // 新增
-        this.Controls.Add(lblStats);
-        this.Controls.Add(btnSkip);
-        this.Controls.Add(btnClose);
+        // 
+        // lblMessage (提示语)
+        // 
+        this.lblMessage.AutoSize = false;
+        this.lblMessage.BackColor = System.Drawing.Color.Transparent;
+        this.lblMessage.Font = AppTheme.BigTitleFont;
+        this.lblMessage.ForeColor = System.Drawing.Color.White;
+        this.lblMessage.Location = new System.Drawing.Point(112, 120);
+        this.lblMessage.Name = "lblMessage";
+        this.lblMessage.Size = new System.Drawing.Size(800, 60);
+        this.lblMessage.TabIndex = 1;
+        this.lblMessage.Text = "休息一下";
+        this.lblMessage.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
 
-        this.FormClosing += BreakForm_FormClosing;
-        this.SizeChanged += BreakForm_SizeChanged;
+        // 
+        // lblTimer (倒计时)
+        // 
+        this.lblTimer.AutoSize = true;
+        this.lblTimer.BackColor = System.Drawing.Color.Transparent;
+        this.lblTimer.Font = AppTheme.BigTimeFont;
+        this.lblTimer.ForeColor = System.Drawing.Color.LightGreen;
+        this.lblTimer.Location = new System.Drawing.Point(462, 200);
+        this.lblTimer.Name = "lblTimer";
+        this.lblTimer.Size = new System.Drawing.Size(100, 50);
+        this.lblTimer.TabIndex = 2;
+        this.lblTimer.Text = "00:00";
+        this.lblTimer.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+
+        // 
+        // pomodoroStatusDisplay
+        // 
+        this.pomodoroStatusDisplay.BackColor = System.Drawing.Color.Transparent;
+        this.pomodoroStatusDisplay.IconSize = 24;
+        this.pomodoroStatusDisplay.IconSpacing = 8;
+        this.pomodoroStatusDisplay.Location = new System.Drawing.Point(312, 270);
+        this.pomodoroStatusDisplay.Name = "pomodoroStatusDisplay";
+        this.pomodoroStatusDisplay.Size = new System.Drawing.Size(400, 40);
+        this.pomodoroStatusDisplay.SmallIconImage = null;
+        this.pomodoroStatusDisplay.TabIndex = 3;
+        this.pomodoroStatusDisplay.Text = "pomodoroStatusDisplay1";
+        this.pomodoroStatusDisplay.TotalCompletedCount = 0;
+
+        // 
+        // lblDuration (总时长)
+        // 
+        this.lblDuration.AutoSize = true;
+        this.lblDuration.BackColor = System.Drawing.Color.Transparent;
+        this.lblDuration.Font = AppTheme.MainFont;
+        this.lblDuration.ForeColor = System.Drawing.Color.LightGray;
+        this.lblDuration.Location = new System.Drawing.Point(462, 330);
+        this.lblDuration.Name = "lblDuration";
+        this.lblDuration.Size = new System.Drawing.Size(100, 20);
+        this.lblDuration.TabIndex = 4;
+        this.lblDuration.Text = "总投入时间: --";
+        this.lblDuration.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+
+        // 
+        // lblStats (统计文本)
+        // 
+        this.lblStats.AutoSize = false;
+        this.lblStats.BackColor = System.Drawing.Color.Transparent;
+        this.lblStats.Font = AppTheme.ConsoleFont;
+        this.lblStats.ForeColor = System.Drawing.Color.Gold;
+        this.lblStats.Location = new System.Drawing.Point(112, 370);
+        this.lblStats.Name = "lblStats";
+        this.lblStats.Size = new System.Drawing.Size(800, 300);
+        this.lblStats.TabIndex = 5;
+        this.lblStats.Text = "Loading...";
+        this.lblStats.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+
+        // 
+        // BreakForm
+        // 
+        this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
+        this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(28)))), ((int)(((byte)(28)))), ((int)(((byte)(28)))));
+        this.ClientSize = new System.Drawing.Size(1024, 768);
+        this.Controls.Add(this.btnSkip);
+        this.Controls.Add(this.btnClose);
+        this.Controls.Add(this.lblStats);
+        this.Controls.Add(this.lblDuration);
+        this.Controls.Add(this.pomodoroStatusDisplay);
+        this.Controls.Add(this.lblTimer);
+        this.Controls.Add(this.lblMessage);
+        this.Controls.Add(this.headerControl);
+        this.DoubleBuffered = true;
+        this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
+        this.Name = "BreakForm";
+        this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+        this.Text = "统计信息";
+        this.TopMost = true;
+        this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
+        this.ResumeLayout(false);
+        this.PerformLayout();
     }
 
     #endregion
 
-    private Panel pnlHeader;
-    private Label lblTitle;
-    private FlowLayoutPanel pnlToggles;
-    private Button btnToggleSession;
-    private Button btnToggleToday;
-    private Button btnToggleWeek;
+    private ThemedWindowHeader headerControl;
+    private ThemedModalButton btnClose;
+    private ThemedModalButton btnSkip;
 
-    private Label lblMessage;
-    private Label lblTimer;
-    private DiabloTwoMFTimer.UI.Components.PomodoroStatusDisplay pomodoroStatusDisplay; // 新增
-    private Label lblDuration; // 新增
-    private Label lblStats;
-
-    private Button btnClose;
-    private Button btnSkip;
+    private System.Windows.Forms.Label lblMessage;
+    private System.Windows.Forms.Label lblTimer;
+    private DiabloTwoMFTimer.UI.Components.PomodoroStatusDisplay pomodoroStatusDisplay;
+    private System.Windows.Forms.Label lblDuration;
+    private System.Windows.Forms.Label lblStats;
 }

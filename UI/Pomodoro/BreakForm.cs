@@ -1,27 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq; // 必须引用，用于 Sum
+using System.Linq;
 using System.Windows.Forms;
 using DiabloTwoMFTimer.Interfaces;
 using DiabloTwoMFTimer.Models;
+using DiabloTwoMFTimer.UI.Components;
+using DiabloTwoMFTimer.UI.Theme;
 using DiabloTwoMFTimer.Utils;
 
 namespace DiabloTwoMFTimer.UI.Pomodoro;
-
-// 定义窗口模式
-public enum BreakFormMode
-{
-    PomodoroBreak,
-    StatisticsView,
-}
-
-public enum StatViewType
-{
-    Session,
-    Today,
-    Week,
-}
 
 public partial class BreakForm : System.Windows.Forms.Form
 {
@@ -35,6 +23,11 @@ public partial class BreakForm : System.Windows.Forms.Form
 
     private StatViewType _currentViewType;
     private bool _isAutoClosed = false;
+
+    // 动态生成的切换按钮
+    private Button btnToggleSession = null!;
+    private Button btnToggleToday = null!;
+    private Button btnToggleWeek = null!;
 
     private readonly List<string> _shortBreakMessages = new()
     {
@@ -70,28 +63,63 @@ public partial class BreakForm : System.Windows.Forms.Form
         _currentViewType = (_mode == BreakFormMode.PomodoroBreak) ? StatViewType.Session : StatViewType.Today;
 
         InitializeComponent();
-        SetupForm();
-        UpdateContent();
-        UpdateLayoutState();
+        InitializeToggleButtons();
 
-        this.BackColor = Color.FromArgb(28, 28, 28);
+        // 强制设置所有标签为非自动大小，以便统一宽度对齐
+        ConfigureLabelStyles();
+
+        UpdateLayoutState();
+        UpdateContent();
 
         if (_mode == BreakFormMode.PomodoroBreak)
         {
             _timerService.TimeUpdated += TimerService_TimeUpdated;
             _timerService.PomodoroTimerStateChanged += TimerService_PomodoroTimerStateChanged;
-
-            // 立即刷新一次显示，确保用户看到正确的时间而不是 00:00
-            // 此时 Service 中的时间已经是正确的
             UpdateTimerDisplay();
         }
+
+        this.SizeChanged += BreakForm_SizeChanged;
     }
 
-    // 【关键优化】将耗时操作移至 OnLoad
     protected override void OnLoad(EventArgs e)
     {
         base.OnLoad(e);
         RefreshStatistics();
+        // 触发一次布局计算，确保初始位置正确
+        BreakForm_SizeChanged(this, EventArgs.Empty);
+    }
+
+    private void ConfigureLabelStyles()
+    {
+        // 统一设置标签属性：关闭 AutoSize，启用居中对齐
+        void SetStyle(Label lbl)
+        {
+            if (lbl == null) return;
+            lbl.AutoSize = false;
+            lbl.TextAlign = ContentAlignment.MiddleCenter;
+        }
+
+        SetStyle(lblMessage);
+        SetStyle(lblTimer);
+        SetStyle(lblDuration);
+
+        // lblStats 是多行文本，通常 TopCenter 更自然
+        if (lblStats != null)
+        {
+            lblStats.AutoSize = false;
+            lblStats.TextAlign = ContentAlignment.TopCenter;
+        }
+    }
+
+    private void InitializeToggleButtons()
+    {
+        btnToggleSession = CreateToggleButton("本轮战况", StatViewType.Session);
+        btnToggleToday = CreateToggleButton("今日累计", StatViewType.Today);
+        btnToggleWeek = CreateToggleButton("本周累计", StatViewType.Week);
+
+        headerControl.AddToggleButton(btnToggleSession);
+        headerControl.AddToggleButton(btnToggleToday);
+        headerControl.AddToggleButton(btnToggleWeek);
     }
 
     private Button CreateToggleButton(string text, StatViewType type)
@@ -101,14 +129,12 @@ public partial class BreakForm : System.Windows.Forms.Form
             Text = text,
             AutoSize = true,
             AutoSizeMode = AutoSizeMode.GrowAndShrink,
-            // 增加左右内边距，保证文字与边框的距离
-            Padding = new Padding(20, 5, 20, 5),
-            // 设置最小高度，确保按钮不会太扁，高度保持原有的 43
-            MinimumSize = new Size(0, 43),
-            Font = Theme.AppTheme.MainFont,
+            Padding = new Padding(ScaleHelper.Scale(25), ScaleHelper.Scale(5), ScaleHelper.Scale(25), ScaleHelper.Scale(5)),
+            MinimumSize = new Size(0, ScaleHelper.Scale(43)),
+            Font = AppTheme.MainFont,
             FlatStyle = FlatStyle.Flat,
             Cursor = Cursors.Hand,
-            TextAlign = ContentAlignment.MiddleCenter, // 显式指定居中
+            TextAlign = ContentAlignment.MiddleCenter,
             UseCompatibleTextRendering = true,
             Tag = type,
         };
@@ -117,60 +143,16 @@ public partial class BreakForm : System.Windows.Forms.Form
         return btn;
     }
 
-    private Button CreateFlatButton(string text, Color hoverColor)
-    {
-        var btn = new Button
-        {
-            Text = text,
-            // --- 修复开始 ---
-            // 1. 启用自动调整大小，根据文字内容撑开宽度
-            AutoSize = true,
-            AutoSizeMode = AutoSizeMode.GrowAndShrink,
-            Size = new Size(ScaleHelper.Scale(160), ScaleHelper.Scale(50)),
-            Font = Theme.AppTheme.MainFont,
-            FlatStyle = FlatStyle.Flat,
-            ForeColor = Color.White,
-            Cursor = Cursors.Hand,
-            BackColor = Color.FromArgb(60, 60, 60),
-
-            // 2. 动态计算内边距 (Padding)
-            Padding = new Padding(
-                ScaleHelper.Scale(10),
-                ScaleHelper.Scale(5),
-                ScaleHelper.Scale(10),
-                ScaleHelper.Scale(5)
-            ),
-
-            // 3. 动态计算最小高度 (MinimumSize)
-            // 保持基准高度 43 的缩放比例，确保高度足以容纳缩放后的字体
-            MinimumSize = new Size(0, ScaleHelper.Scale(43)),
-            // --- 修复结束 ---
-            TextAlign = ContentAlignment.MiddleCenter, // 显式指定居中
-            UseCompatibleTextRendering = true,
-        };
-        btn.FlatAppearance.BorderSize = 0;
-        btn.FlatAppearance.MouseOverBackColor = hoverColor;
-        return btn;
-    }
-
-    private void SetupForm()
-    {
-        this.StartPosition = FormStartPosition.CenterScreen;
-        this.WindowState = FormWindowState.Maximized;
-        this.FormBorderStyle = FormBorderStyle.None;
-        this.TopMost = true;
-        this.DoubleBuffered = true;
-    }
-
     private void UpdateLayoutState()
     {
+        headerControl.Title = _mode == BreakFormMode.PomodoroBreak ? "REST & RECOVER" : "STATISTICS";
+
         if (_mode == BreakFormMode.StatisticsView)
         {
             lblMessage.Visible = false;
             lblTimer.Visible = false;
-            pomodoroStatusDisplay.Visible = false; // 统计模式隐藏番茄
+            pomodoroStatusDisplay.Visible = false;
             btnSkip.Visible = false;
-            btnToggleSession.Visible = true;
         }
         else
         {
@@ -178,9 +160,88 @@ public partial class BreakForm : System.Windows.Forms.Form
             lblTimer.Visible = true;
             pomodoroStatusDisplay.Visible = true;
             btnSkip.Visible = true;
-            btnToggleSession.Visible = true;
         }
-        this.PerformLayout();
+    }
+
+    // --- 核心布局逻辑 ---
+    private void BreakForm_SizeChanged(object? sender, EventArgs e)
+    {
+        int w = this.ClientSize.Width;
+        int h = this.ClientSize.Height;
+        int cx = w / 2;
+
+        // 1. Header
+        int headerHeight = ScaleHelper.Scale(110);
+        headerControl.Height = headerHeight;
+
+        // Header 内部按钮居中
+        var togglePanel = headerControl.TogglePanel;
+        if (togglePanel != null)
+        {
+            togglePanel.PerformLayout();
+            togglePanel.Left = (w - togglePanel.Width) / 2;
+        }
+
+        // --- 核心修改：统一内容宽度 ---
+        // 所有中间的控件都使用这个宽度，并且 X 坐标统一
+        int contentWidth = w - ScaleHelper.Scale(100);
+        int contentLeft = (w - contentWidth) / 2;
+
+        // 辅助方法：统一设置控件位置和宽度
+        void LayoutCenterControl(Control ctrl, int y, int height)
+        {
+            ctrl.Location = new Point(contentLeft, y);
+            ctrl.Size = new Size(contentWidth, height);
+        }
+
+        int currentY = headerHeight + ScaleHelper.Scale(40);
+
+        // 2. 提示语
+        if (_mode == BreakFormMode.PomodoroBreak)
+        {
+            // 提示语
+            LayoutCenterControl(lblMessage, currentY, ScaleHelper.Scale(60));
+            currentY = lblMessage.Bottom + ScaleHelper.Scale(30);
+
+            // 倒计时
+            LayoutCenterControl(lblTimer, currentY, ScaleHelper.Scale(60)); // 高度给足，防止大字体切边
+            currentY = lblTimer.Bottom + ScaleHelper.Scale(10);
+
+            // 番茄状态 (PomodoroStatusDisplay 内部自绘逻辑已支持基于 Width 居中)
+            LayoutCenterControl(pomodoroStatusDisplay, currentY, ScaleHelper.Scale(40));
+            currentY = pomodoroStatusDisplay.Bottom + ScaleHelper.Scale(20);
+        }
+        else
+        {
+            currentY = headerHeight + ScaleHelper.Scale(20);
+        }
+
+        // 3. 总时长 (现在和上面的控件完全对齐)
+        LayoutCenterControl(lblDuration, currentY, ScaleHelper.Scale(30));
+        currentY = lblDuration.Bottom + ScaleHelper.Scale(20);
+
+        // 4. 底部按钮
+        int btnY = h - ScaleHelper.Scale(100);
+        if (_mode == BreakFormMode.PomodoroBreak)
+        {
+            int spacing = ScaleHelper.Scale(40);
+            int totalBtnW = btnSkip.Width + btnClose.Width + spacing;
+            int startX = (w - totalBtnW) / 2;
+
+            btnSkip.Location = new Point(startX, btnY);
+            btnClose.Location = new Point(btnSkip.Right + spacing, btnY);
+        }
+        else
+        {
+            btnClose.Location = new Point(cx - (btnClose.Width / 2), btnY);
+        }
+
+        // 5. 统计内容 (填充剩余空间)
+        int statsBottomLimit = btnY - ScaleHelper.Scale(20);
+        int statsHeight = statsBottomLimit - currentY;
+        if (statsHeight < 100) statsHeight = 100;
+
+        LayoutCenterControl(lblStats, currentY, statsHeight);
     }
 
     private void SwitchView(StatViewType type)
@@ -198,8 +259,7 @@ public partial class BreakForm : System.Windows.Forms.Form
 
     private void HighlightButton(Button? btn, bool isActive)
     {
-        if (btn == null)
-            return;
+        if (btn == null) return;
         if (isActive)
         {
             btn.BackColor = Color.Gray;
@@ -228,7 +288,6 @@ public partial class BreakForm : System.Windows.Forms.Form
     {
         UpdateButtonStyles();
 
-        // 1. 更新番茄钟状态
         if (pomodoroStatusDisplay != null)
         {
             pomodoroStatusDisplay.TotalCompletedCount = _timerService.CompletedPomodoros;
@@ -236,10 +295,8 @@ public partial class BreakForm : System.Windows.Forms.Form
 
         if (_profileService == null || _profileService.CurrentProfile == null)
         {
-            if (lblStats != null)
-                lblStats.Text = "暂无角色数据";
-            if (lblDuration != null)
-                lblDuration.Text = "";
+            if (lblStats != null) lblStats.Text = "暂无角色数据";
+            if (lblDuration != null) lblDuration.Text = "";
             return;
         }
 
@@ -247,7 +304,6 @@ public partial class BreakForm : System.Windows.Forms.Form
         DateTime end = DateTime.Now;
         string title = "";
 
-        // 确定时间范围
         switch (_currentViewType)
         {
             case StatViewType.Session:
@@ -272,12 +328,10 @@ public partial class BreakForm : System.Windows.Forms.Form
                 break;
         }
 
-        // 2. 获取统计文本
         string content = _statsService.GetDetailedSummary(start, end);
         if (lblStats != null)
             lblStats.Text = $"{title}\n\n{content}";
 
-        // 3. 计算并显示总时长 (新增功能)
         if (lblDuration != null)
         {
             var validRecords = _profileService.CurrentProfile.Records.Where(r =>
@@ -287,7 +341,6 @@ public partial class BreakForm : System.Windows.Forms.Form
             double totalSeconds = validRecords.Sum(r => r.DurationSeconds);
             TimeSpan ts = TimeSpan.FromSeconds(totalSeconds);
 
-            // 格式化时长显示
             string durationText =
                 totalSeconds < 60
                     ? $"{ts.Seconds}秒"
@@ -297,82 +350,12 @@ public partial class BreakForm : System.Windows.Forms.Form
         }
     }
 
-    private void BreakForm_SizeChanged(object? sender, EventArgs e)
-    {
-        if (pnlHeader == null)
-            return;
-
-        int cx = this.ClientSize.Width / 2;
-        int totalH = this.ClientSize.Height;
-        int totalW = this.ClientSize.Width;
-
-        // 1. Header
-        pnlToggles.PerformLayout();
-        pnlToggles.Left = (totalW - pnlToggles.Width) / 2;
-
-        int currentY = 150; // 起始高度
-
-        // 2. 提示语 (仅休息模式)
-        if (_mode == BreakFormMode.PomodoroBreak)
-        {
-            lblMessage.Width = totalW - 100;
-            lblMessage.Location = new Point(50, currentY);
-            currentY = lblMessage.Bottom + 50;
-
-            // 3. 倒计时 (移到这里)
-            // 确保 Label AutoSize = true, 居中计算
-            lblTimer.Location = new Point(cx - (lblTimer.Width / 2), currentY);
-            currentY = lblTimer.Bottom + 10;
-
-            // 4. 番茄状态 (新增)
-            pomodoroStatusDisplay.Location = new Point(cx - (pomodoroStatusDisplay.Width / 2), currentY);
-            currentY = pomodoroStatusDisplay.Bottom + 20;
-        }
-        else
-        {
-            currentY += 50;
-        }
-
-        // 5. 总时长 (新增)
-        lblDuration.Location = new Point(cx - (lblDuration.Width / 2), currentY);
-        currentY = lblDuration.Bottom + 40;
-
-        // --- 底部按钮 ---
-        int btnY = totalH - 200;
-        if (_mode == BreakFormMode.PomodoroBreak)
-        {
-            int spacing = 40;
-            int totalBtnW = btnClose.Width + btnSkip.Width + spacing;
-            btnSkip.Location = new Point(cx - (totalBtnW / 2), btnY);
-            btnClose.Location = new Point(btnSkip.Right + spacing, btnY);
-        }
-        else
-        {
-            btnClose.Location = new Point(cx - (btnClose.Width / 2), btnY);
-        }
-
-        // 6. 统计内容 (填充剩余空间)
-        int statsBottomLimit = btnY - 20;
-        int statsHeight = statsBottomLimit - currentY;
-        if (statsHeight < 100)
-            statsHeight = 100;
-
-        lblStats.Width = totalW - 100;
-        lblStats.Height = statsHeight;
-        lblStats.Location = new Point(50, currentY);
-    }
-
     private void TimerService_PomodoroTimerStateChanged(object? sender, PomodoroTimerStateChangedEventArgs e)
     {
         if (_mode == BreakFormMode.PomodoroBreak)
         {
-            if (
-                e.State == PomodoroTimerState.Work
-                && (
-                    (_breakType == PomodoroBreakType.ShortBreak && e.PreviousState == PomodoroTimerState.ShortBreak)
-                    || (_breakType == PomodoroBreakType.LongBreak && e.PreviousState == PomodoroTimerState.LongBreak)
-                )
-            )
+            if (e.State == PomodoroTimerState.Work &&
+               (e.PreviousState == PomodoroTimerState.ShortBreak || e.PreviousState == PomodoroTimerState.LongBreak))
             {
                 AutoCloseForm();
             }
@@ -394,9 +377,7 @@ public partial class BreakForm : System.Windows.Forms.Form
     {
         this.SafeInvoke(() =>
         {
-            var t = _timerService.TimeLeft;
-            if (lblTimer != null)
-                lblTimer.Text = $"{(int)t.TotalMinutes:00}:{t.Seconds:00}";
+            UpdateTimerDisplay();
             CheckBreakTimeEnded();
         });
     }
@@ -413,10 +394,7 @@ public partial class BreakForm : System.Windows.Forms.Form
         if (!_isAutoClosed && !this.IsDisposed)
         {
             _isAutoClosed = true;
-            this.SafeInvoke(() =>
-            {
-                this.Close();
-            });
+            this.SafeInvoke(() => this.Close());
         }
     }
 

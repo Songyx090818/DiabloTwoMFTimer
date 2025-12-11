@@ -23,6 +23,19 @@ public enum PomodoroMode
     Manual,    // 手动模式：双向都需要手动触发
 }
 
+public enum BreakFormMode
+{
+    PomodoroBreak,
+    StatisticsView,
+}
+
+public enum StatViewType
+{
+    Session,
+    Today,
+    Week,
+}
+
 public class PomodoroTimeSettings
 {
     public int WorkTimeMinutes { get; set; } = 25;

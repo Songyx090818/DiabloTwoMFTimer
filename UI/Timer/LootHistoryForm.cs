@@ -11,43 +11,18 @@ using DiabloTwoMFTimer.Utils;
 
 namespace DiabloTwoMFTimer.UI.Timer;
 
-public class LootHistoryForm : System.Windows.Forms.Form
+public partial class LootHistoryForm : System.Windows.Forms.Form
 {
     private readonly IProfileService _profileService;
     private readonly ISceneService _sceneService;
     private readonly IStatisticsService _statisticsService;
 
-    // --- UI Controls ---
-    private Panel pnlHeader = null!;
-    private Label lblTitle = null!;
-    private FlowLayoutPanel pnlToggles = null!;
     private Button btnToday = null!;
     private Button btnWeek = null!;
     private Button btnCustom = null!;
 
-    // 底部关闭按钮
-    private Button btnClose = null!;
-
-    // 自定义时间面板
-    private Panel pnlCustomDate = null!;
-    private ThemedDateTimePicker dtpStart = null!;
-    private ThemedDateTimePicker dtpEnd = null!;
-    private ThemedButton btnSearch = null!;
-    private Label lblFrom = null!;
-    private Label lblTo = null!;
-
-    // 数据显示容器
-    private Panel pnlGridContainer = null!;
-    private ThemedDataGridView gridLoot = null!;
-
-    // 状态
     private enum ViewMode { Today, Week, Custom }
     private ViewMode _currentMode = ViewMode.Today;
-
-    // 常量定义
-    private const int HeaderHeight = 100;
-    private const int CustomDatePanelHeight = 50;
-    private const int GridTopPadding = 10;
 
     public LootHistoryForm(
         IProfileService profileService,
@@ -59,145 +34,39 @@ public class LootHistoryForm : System.Windows.Forms.Form
         _statisticsService = statisticsService;
 
         InitializeComponent();
+        InitializeToggleButtons();
 
-        // 订阅语言变化事件
         LanguageManager.OnLanguageChanged += LanguageChanged;
 
-        // 默认加载今日数据
+        // 绑定布局事件
+        this.SizeChanged += LootHistoryForm_SizeChanged;
+
+        UpdateLanguageText();
         SwitchMode(ViewMode.Today);
     }
 
-    private void LanguageChanged(object? sender, EventArgs e)
+    private void InitializeToggleButtons()
     {
-        // 更新标题文本
-        lblTitle.Text = LanguageManager.GetString("LootHistoryTitle");
+        btnToday = CreateToggleButton("Today", ViewMode.Today);
+        btnWeek = CreateToggleButton("Week", ViewMode.Week);
+        btnCustom = CreateToggleButton("Custom", ViewMode.Custom);
 
-        // 更新切换按钮文本
-        btnToday.Text = LanguageManager.GetString("LootToday");
-        btnWeek.Text = LanguageManager.GetString("LootThisWeek");
-        btnCustom.Text = LanguageManager.GetString("LootCustom");
-
-        // 更新搜索按钮文本
-        btnSearch.Text = LanguageManager.GetString("LootSearch");
-
-        // 更新关闭按钮文本
-        btnClose.Text = LanguageManager.GetString("LootClose");
-
-        // 更新表格列标题
-        SetupGridColumns();
+        headerControl.AddToggleButton(btnToday);
+        headerControl.AddToggleButton(btnWeek);
+        headerControl.AddToggleButton(btnCustom);
     }
-
-    private void InitializeComponent()
-    {
-        this.SuspendLayout();
-
-        // 1. 窗体基础设置
-        this.FormBorderStyle = FormBorderStyle.None;
-        this.WindowState = FormWindowState.Maximized;
-        this.BackColor = Color.FromArgb(28, 28, 28);
-        this.StartPosition = FormStartPosition.CenterScreen;
-        this.DoubleBuffered = true;
-        this.TopMost = true; // 确保在最上层
-
-        // 2. 顶部 Header 区域
-        pnlHeader = new Panel
-        {
-            Dock = DockStyle.Top,
-            Height = HeaderHeight,
-            BackColor = Color.Transparent,
-        };
-
-        lblTitle = new Label
-        {
-            AutoSize = false,
-            Size = new Size(300, 40),
-            Font = new Font("微软雅黑", 14F, FontStyle.Bold),
-            ForeColor = Color.Gray,
-            TextAlign = ContentAlignment.MiddleLeft,
-            Text = LanguageManager.GetString("LootHistoryTitle"),
-            Location = new Point(20, 30)
-        };
-
-        // 切换按钮容器
-        pnlToggles = new FlowLayoutPanel
-        {
-            AutoSize = true,
-            FlowDirection = FlowDirection.LeftToRight,
-            BackColor = Color.Transparent,
-        };
-
-        btnToday = CreateToggleButton(LanguageManager.GetString("LootToday"), ViewMode.Today);
-        btnWeek = CreateToggleButton(LanguageManager.GetString("LootThisWeek"), ViewMode.Week);
-        btnCustom = CreateToggleButton(LanguageManager.GetString("LootCustom"), ViewMode.Custom);
-
-        pnlToggles.Controls.Add(btnToday);
-        pnlToggles.Controls.Add(btnWeek);
-        pnlToggles.Controls.Add(btnCustom);
-
-        pnlHeader.Controls.Add(lblTitle);
-        pnlHeader.Controls.Add(pnlToggles);
-
-        // 3. 自定义时间选择面板
-        pnlCustomDate = new Panel
-        {
-            Dock = DockStyle.Top,
-            Height = CustomDatePanelHeight,
-            Visible = false, // 初始隐藏，但我们会预留它的位置
-            BackColor = Color.Transparent
-        };
-
-        // 初始化时间控件
-        lblFrom = new ThemedLabel { Text = "From:", AutoSize = true };
-        dtpStart = new ThemedDateTimePicker { Width = 180 };
-        lblTo = new ThemedLabel { Text = "To:", AutoSize = true };
-        dtpEnd = new ThemedDateTimePicker { Width = 180 };
-
-        btnSearch = new ThemedButton
-        {
-            Text = LanguageManager.GetString("LootSearch"),
-            Size = new Size(80, 30),
-            BorderRadius = 4
-        };
-        btnSearch.Click += (s, e) => LoadData(dtpStart.Value, dtpEnd.Value);
-
-        pnlCustomDate.Controls.AddRange(new Control[] { lblFrom, dtpStart, lblTo, dtpEnd, btnSearch });
-
-        // 4. 数据表格容器
-        pnlGridContainer = new Panel
-        {
-            BackColor = Color.Transparent,
-        };
-
-        gridLoot = new ThemedDataGridView();
-        SetupGridColumns();
-        pnlGridContainer.Controls.Add(gridLoot);
-
-        // 5. 底部关闭按钮
-        btnClose = CreateFlatButton(LanguageManager.GetString("LootClose"), Color.IndianRed);
-        btnClose.Click += (s, e) => this.Close();
-
-        // 6. 添加控件 (注意 Dock 顺序: 也就是代码中添加的顺序是反的，最后添加的在最顶层)
-        // 这里我们要确保 CustomDate 在 Header 下面
-        this.Controls.Add(pnlGridContainer); // Fill
-        this.Controls.Add(pnlCustomDate);    // Top (Bottom of Dock Stack)
-        this.Controls.Add(pnlHeader);        // Top (Top of Dock Stack)
-        this.Controls.Add(btnClose);         // Manual
-
-        // 7. 绑定布局事件
-        this.SizeChanged += LootHistoryForm_SizeChanged;
-
-        this.ResumeLayout(false);
-    }
-
-    // --- 样式工厂方法 ---
 
     private Button CreateToggleButton(string text, ViewMode tag)
     {
         var btn = new Button
         {
             Text = text,
-            Size = new Size(120, 43),
-            Font = new Font("微软雅黑", 10F),
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            // 增加内边距让按钮看起来更宽敞
+            Padding = new Padding(ScaleHelper.Scale(25), ScaleHelper.Scale(5), ScaleHelper.Scale(25), ScaleHelper.Scale(5)),
+            MinimumSize = new Size(0, ScaleHelper.Scale(43)),
+            Font = AppTheme.MainFont,
             FlatStyle = FlatStyle.Flat,
             Cursor = Cursors.Hand,
             TextAlign = ContentAlignment.MiddleCenter,
@@ -209,82 +78,136 @@ public class LootHistoryForm : System.Windows.Forms.Form
         return btn;
     }
 
-    private Button CreateFlatButton(string text, Color hoverColor)
-    {
-        var btn = new Button
-        {
-            Text = text,
-            Size = new Size(160, 50),
-            Font = new Font("微软雅黑", 11F),
-            FlatStyle = FlatStyle.Flat,
-            ForeColor = Color.White,
-            Cursor = Cursors.Hand,
-            BackColor = Color.FromArgb(60, 60, 60),
-        };
-        btn.FlatAppearance.BorderSize = 0;
-        btn.FlatAppearance.MouseOverBackColor = hoverColor;
-        return btn;
-    }
-
-    // --- 布局逻辑 (核心修改) ---
-
+    // --- 核心布局逻辑 ---
     private void LootHistoryForm_SizeChanged(object? sender, EventArgs e)
     {
-        int cx = this.ClientSize.Width / 2;
         int w = this.ClientSize.Width;
         int h = this.ClientSize.Height;
+        int cx = w / 2;
 
-        // 1. Header 居中 Toggles
-        pnlToggles.Location = new Point(cx - (pnlToggles.Width / 2), 30);
+        // 1. 设置 Header 高度 (固定)
+        int headerHeight = ScaleHelper.Scale(110);
+        headerControl.Height = headerHeight;
 
-        // 2. Custom Date Panel 居中
-        // 即使不可见，我们计算它的布局逻辑也不影响性能
-        int spacing = 15;
-        int datePanelContentWidth = lblFrom.Width + dtpStart.Width + lblTo.Width + dtpEnd.Width + btnSearch.Width + (spacing * 4);
-        int startX = (w - datePanelContentWidth) / 2;
-        int dateY = 10; // 面板内的相对 Y
+        // 【解决问题1：顶部按钮居中】
+        // 访问 ThemedWindowHeader 暴露的 FlowLayoutPanel
+        var togglePanel = headerControl.TogglePanel;
+        if (togglePanel != null)
+        {
+            // 确保 Panel 大小已计算
+            togglePanel.PerformLayout();
+            // 计算居中 X 坐标
+            togglePanel.Left = (w - togglePanel.Width) / 2;
+        }
 
-        lblFrom.Location = new Point(startX, dateY + 4);
-        dtpStart.Location = new Point(lblFrom.Right + spacing, dateY);
-        lblTo.Location = new Point(dtpStart.Right + spacing, dateY + 4);
-        dtpEnd.Location = new Point(lblTo.Right + spacing, dateY);
-        btnSearch.Location = new Point(dtpEnd.Right + spacing, dateY - 2);
+        // 2. 预留给自定义日期栏的高度 (固定保留，解决表格跳动问题)
+        int datePanelHeight = ScaleHelper.Scale(60);
+        int datePanelTop = headerHeight; // 紧接 Header 下方
 
-        // 3. 关闭按钮 (底部居中)
-        int btnY = h - 100;
+        // 配置 pnlCustomDate (始终占据这个位置和大小)
+        pnlCustomDate.Location = new Point(0, datePanelTop);
+        pnlCustomDate.Size = new Size(w, datePanelHeight);
+
+        // 【解决问题2 & 3：对齐日期控件和按钮】
+        LayoutCustomDatePanel(w, datePanelHeight);
+
+        // 3. 配置表格容器
+        // 【解决问题4：表格位移】
+        // 表格的 Top 永远是 (Header高度 + DatePanel高度 + 间距)，无论 DatePanel 是否可见
+        int gridTopPadding = ScaleHelper.Scale(10);
+        int gridTop = datePanelTop + datePanelHeight + gridTopPadding;
+
+        // 底部留白给关闭按钮
+        int bottomMargin = ScaleHelper.Scale(100);
+        int gridHeight = h - gridTop - bottomMargin;
+        if (gridHeight < 100) gridHeight = 100;
+
+        // 限制表格最大宽度，避免在 4K 屏上太宽难看
+        int maxGridWidth = ScaleHelper.Scale(1200);
+        int gridWidth = Math.Min(w - ScaleHelper.Scale(60), maxGridWidth); // 左右留30间距
+
+        pnlGridContainer.Size = new Size(gridWidth, gridHeight);
+        pnlGridContainer.Location = new Point((w - gridWidth) / 2, gridTop);
+
+        // 4. 配置关闭按钮 (底部居中)
+        int btnY = h - ScaleHelper.Scale(80);
         btnClose.Location = new Point(cx - (btnClose.Width / 2), btnY);
-
-        // --- 核心修改：固定 Grid 的起始位置 ---
-
-        // 无论 pnlCustomDate 是否可见，我们总是把 Grid 放在 Header + CustomDatePanel 之下
-        // 这样切换时，表格顶部位置永远不动，上方只是留白或显示控件
-        int fixedGridTop = pnlHeader.Bottom + CustomDatePanelHeight + GridTopPadding;
-
-        int gridBottom = btnY - 30;
-        int gridHeight = gridBottom - fixedGridTop;
-
-        // 限制表格最大宽度
-        int maxGridWidth = 1000;
-        int gridWidth = Math.Min(w - 100, maxGridWidth);
-
-        pnlGridContainer.Size = new Size(gridWidth, Math.Max(100, gridHeight));
-        pnlGridContainer.Location = new Point(cx - (gridWidth / 2), fixedGridTop);
-
-        gridLoot.Dock = DockStyle.Fill;
     }
 
-    // --- 业务逻辑 ---
+    private void LayoutCustomDatePanel(int panelWidth, int panelHeight)
+    {
+        // 1. 【核心】统一参数设置
+        // 增加一点高度，让控件看起来更饱满
+        int ctrlHeight = ScaleHelper.Scale(36);
+        int datePickerWidth = ScaleHelper.Scale(160);
+        int btnWidth = ScaleHelper.Scale(80);
+        int spacing = ScaleHelper.Scale(10); // 间距稍微收紧一点
+
+        // 2. 【核心】统一字体 (这是解决字体大小不一致的关键)
+        // 强制所有控件使用相同的主题字体，确保视觉大小一致
+        Font unifiedFont = AppTheme.MainFont;
+
+        lblFrom.Font = unifiedFont;
+        lblTo.Font = unifiedFont;
+        dtpStart.Font = unifiedFont;
+        dtpEnd.Font = unifiedFont;
+        btnSearch.Font = unifiedFont;
+
+        // 3. 【核心】统一 Label 样式以实现完美垂直居中
+        // 关闭 AutoSize，手动设置高度与输入框一致，并开启垂直居中对齐
+        void ConfigureLabel(Label lbl)
+        {
+            lbl.AutoSize = false;
+            lbl.Height = ctrlHeight;
+            lbl.TextAlign = ContentAlignment.MiddleRight; // 文字靠右，紧贴输入框
+            // 动态计算文字所需宽度 + 少量留白
+            Size size = TextRenderer.MeasureText(lbl.Text, unifiedFont);
+            lbl.Width = size.Width + ScaleHelper.Scale(5);
+        }
+
+        ConfigureLabel(lblFrom);
+        ConfigureLabel(lblTo);
+
+        // 4. 设置输入控件尺寸
+        dtpStart.Size = new Size(datePickerWidth, ctrlHeight);
+        dtpEnd.Size = new Size(datePickerWidth, ctrlHeight);
+        btnSearch.Size = new Size(btnWidth, ctrlHeight);
+
+        // 5. 计算居中位置
+        int totalContentWidth =
+            lblFrom.Width + spacing +
+            dtpStart.Width + spacing +
+            lblTo.Width + spacing +
+            dtpEnd.Width + spacing +
+            btnSearch.Width;
+
+        int startX = (panelWidth - totalContentWidth) / 2;
+
+        // 【核心】因为所有控件高度一致(ctrlHeight)，这里只需要计算一次 Y 坐标
+        int commonY = (panelHeight - ctrlHeight) / 2;
+
+        // 6. 逐个定位 (所有控件的 Y 坐标都使用 commonY，绝对对齐)
+        lblFrom.Location = new Point(startX, commonY);
+
+        dtpStart.Location = new Point(lblFrom.Right + spacing, commonY);
+
+        lblTo.Location = new Point(dtpStart.Right + spacing, commonY);
+
+        dtpEnd.Location = new Point(lblTo.Right + spacing, commonY);
+
+        btnSearch.Location = new Point(dtpEnd.Right + spacing, commonY);
+    }
 
     private void SwitchMode(ViewMode mode)
     {
         _currentMode = mode;
         UpdateButtonStyles();
 
-        // 切换时间面板的可见性
+        // 切换日期面板可见性
         pnlCustomDate.Visible = (mode == ViewMode.Custom);
 
-        // 注意：由于我们现在的布局逻辑是固定的，
-        // 这里切换 Visible 不会导致 Grid 跳动，只会填补空白区域。
+        // 注意：LootHistoryForm_SizeChanged 中 gridTop 是根据固定高度计算的
+        // 所以即使 pnlCustomDate 隐藏了，那里也是留白的，表格不会跳动。
 
         DateTime start = DateTime.Now;
         DateTime end = DateTime.Now;
@@ -293,12 +216,10 @@ public class LootHistoryForm : System.Windows.Forms.Form
         {
             case ViewMode.Today:
                 start = DateTime.Today;
-                end = DateTime.Now;
                 LoadData(start, end);
                 break;
             case ViewMode.Week:
                 start = _statisticsService.GetStartOfWeek();
-                end = DateTime.Now;
                 LoadData(start, end);
                 break;
             case ViewMode.Custom:
@@ -332,21 +253,51 @@ public class LootHistoryForm : System.Windows.Forms.Form
         }
     }
 
+    private void LanguageChanged(object? sender, EventArgs e)
+    {
+        UpdateLanguageText();
+        // 语言改变可能导致 Label 宽度变化，重新布局以保持居中
+        LootHistoryForm_SizeChanged(this, EventArgs.Empty);
+    }
+
+    private void UpdateLanguageText()
+    {
+        this.SafeInvoke(() =>
+        {
+            headerControl.Title = LanguageManager.GetString("LootHistoryTitle");
+            btnToday.Text = LanguageManager.GetString("LootToday");
+            btnWeek.Text = LanguageManager.GetString("LootThisWeek");
+            btnCustom.Text = LanguageManager.GetString("LootCustom");
+            btnSearch.Text = LanguageManager.GetString("LootSearch");
+            btnClose.Text = LanguageManager.GetString("LootClose");
+            SetupGridColumns();
+        });
+    }
+
+    private void BtnSearch_Click(object sender, EventArgs e)
+    {
+        LoadData(dtpStart.Value, dtpEnd.Value);
+    }
+
+    private void BtnClose_Click(object sender, EventArgs e)
+    {
+        this.Close();
+    }
+
     private void SetupGridColumns()
     {
         gridLoot.Columns.Clear();
-        gridLoot.ColumnHeadersHeight = 40;
-        gridLoot.RowTemplate.Height = 35;
+        gridLoot.ColumnHeadersHeight = ScaleHelper.Scale(40);
+        gridLoot.RowTemplate.Height = ScaleHelper.Scale(35);
         gridLoot.BackgroundColor = Color.FromArgb(32, 32, 32);
 
         var colTime = new DataGridViewTextBoxColumn
         {
             HeaderText = LanguageManager.GetString("LootTableDropTime"),
-            Width = 200,
+            Width = ScaleHelper.Scale(200),
             DataPropertyName = "DropTime",
             DefaultCellStyle = new DataGridViewCellStyle { Format = "yyyy-MM-dd HH:mm", Alignment = DataGridViewContentAlignment.MiddleCenter }
         };
-        colTime.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
 
         var colName = new DataGridViewTextBoxColumn
         {
@@ -360,20 +311,18 @@ public class LootHistoryForm : System.Windows.Forms.Form
         var colScene = new DataGridViewTextBoxColumn
         {
             HeaderText = LanguageManager.GetString("LootTableScene"),
-            Width = 220,
+            Width = ScaleHelper.Scale(220),
             DataPropertyName = "SceneName",
             DefaultCellStyle = new DataGridViewCellStyle { Alignment = DataGridViewContentAlignment.MiddleCenter }
         };
-        colScene.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
 
         var colRun = new DataGridViewTextBoxColumn
         {
             HeaderText = LanguageManager.GetString("LootTableRun"),
-            Width = 100,
+            Width = ScaleHelper.Scale(100),
             DataPropertyName = "RunCount",
             DefaultCellStyle = new DataGridViewCellStyle { Alignment = DataGridViewContentAlignment.MiddleCenter }
         };
-        colRun.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
 
         gridLoot.Columns.AddRange([colTime, colName, colScene, colRun]);
     }
@@ -399,5 +348,11 @@ public class LootHistoryForm : System.Windows.Forms.Form
         var bindingSource = new BindingSource();
         bindingSource.DataSource = displayList;
         gridLoot.DataSource = bindingSource;
+    }
+
+    protected override void OnFormClosed(FormClosedEventArgs e)
+    {
+        LanguageManager.OnLanguageChanged -= LanguageChanged;
+        base.OnFormClosed(e);
     }
 }

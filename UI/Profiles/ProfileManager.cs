@@ -480,7 +480,7 @@ public partial class ProfileManager : UserControl
             _appSettings,
             _profileService,
             _statisticsService,
-            DiabloTwoMFTimer.UI.Pomodoro.BreakFormMode.StatisticsView // <--- 关键：指定为查看模式
+            Models.BreakFormMode.StatisticsView // <--- 关键：指定为查看模式
         );
 
         statsForm.Show(this.FindForm()); // 使用 Show() 允许非模态，或者 ShowDialog() 模态显示
