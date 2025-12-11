@@ -58,9 +58,9 @@ partial class GeneralSettingsControl
 
         // --- 顺序调整 ---
         this.tlpMain.Controls.Add(this.groupBoxPosition, 0, 0);
-        this.tlpMain.Controls.Add(this.groupBoxLanguage, 0, 1);
-        this.tlpMain.Controls.Add(this.grpOpacity, 0, 2);
-        this.tlpMain.Controls.Add(this.grpUiScale, 0, 3);
+        this.tlpMain.Controls.Add(this.grpOpacity, 0, 1);
+        this.tlpMain.Controls.Add(this.grpUiScale, 0, 2);
+        this.tlpMain.Controls.Add(this.groupBoxLanguage, 0, 3);
         this.tlpMain.Controls.Add(this.alwaysOnTopCheckBox, 0, 4);
 
         this.tlpMain.Dock = System.Windows.Forms.DockStyle.Top;
@@ -82,7 +82,6 @@ partial class GeneralSettingsControl
         this.groupBoxPosition.AutoSize = true;
         this.groupBoxPosition.Controls.Add(this.tlpPosition);
         this.groupBoxPosition.Dock = System.Windows.Forms.DockStyle.Fill;
-        // Padding 10 之后，这里的 margin 可以稍微小一点，或者保持一致
         this.groupBoxPosition.Location = new System.Drawing.Point(13, 13);
         this.groupBoxPosition.Name = "groupBoxPosition";
         this.groupBoxPosition.Padding = new System.Windows.Forms.Padding(3, 20, 3, 3);
@@ -151,6 +150,28 @@ partial class GeneralSettingsControl
         this.cmbOpacity.TabIndex = 0;
 
         // 
+        // grpUiScale
+        // 
+        this.grpUiScale.AutoSize = true;
+        this.grpUiScale.Controls.Add(this.cmbUiScale);
+        this.grpUiScale.Dock = System.Windows.Forms.DockStyle.Fill;
+        this.grpUiScale.Location = new System.Drawing.Point(3, 175);
+        this.grpUiScale.Name = "grpUiScale";
+        this.grpUiScale.Padding = new System.Windows.Forms.Padding(3, 20, 3, 3);
+        this.grpUiScale.TabIndex = 2;
+        this.grpUiScale.TabStop = false;
+        this.grpUiScale.Text = "界面大小";
+
+        // 
+        // cmbUiScale
+        // 
+        this.cmbUiScale.Dock = System.Windows.Forms.DockStyle.Top;
+        this.cmbUiScale.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+        this.cmbUiScale.Location = new System.Drawing.Point(3, 20);
+        this.cmbUiScale.Name = "cmbUiScale";
+        this.cmbUiScale.TabIndex = 0;
+
+        // 
         // groupBoxLanguage
         // 
         this.groupBoxLanguage.AutoSize = true;
@@ -181,28 +202,6 @@ partial class GeneralSettingsControl
 
         SetRadio(chineseRadioButton, "Chinese"); chineseRadioButton.Checked = true;
         SetRadio(englishRadioButton, "English");
-
-        // 
-        // grpUiScale
-        // 
-        this.grpUiScale.AutoSize = true;
-        this.grpUiScale.Controls.Add(this.cmbUiScale);
-        this.grpUiScale.Dock = System.Windows.Forms.DockStyle.Fill;
-        this.grpUiScale.Location = new System.Drawing.Point(3, 175);
-        this.grpUiScale.Name = "grpUiScale";
-        this.grpUiScale.Padding = new System.Windows.Forms.Padding(3, 20, 3, 3);
-        this.grpUiScale.TabIndex = 2;
-        this.grpUiScale.TabStop = false;
-        this.grpUiScale.Text = "界面大小";
-
-        // 
-        // cmbUiScale
-        // 
-        this.cmbUiScale.Dock = System.Windows.Forms.DockStyle.Top;
-        this.cmbUiScale.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-        this.cmbUiScale.Location = new System.Drawing.Point(3, 20);
-        this.cmbUiScale.Name = "cmbUiScale";
-        this.cmbUiScale.TabIndex = 0;
 
         // 
         // alwaysOnTopCheckBox

@@ -14,6 +14,19 @@ public static class AppTheme
     // 强调色 (暗黑金)
     public static Color AccentColor = Color.FromArgb(199, 179, 119);
 
+    // 套装绿色 (Set Items) -> 用于 Success
+    public static Color SetColor = Color.FromArgb(0, 255, 0);
+
+    // 稀有黄色 (Rare Items) -> 用于 Warning
+    public static Color RareColor = Color.FromArgb(255, 255, 0);
+
+    // 魔法蓝色 (Magic Items) -> 用于 Info
+    // 稍微调亮一点以适应深色背景，原版偏深蓝 (69, 69, 255)
+    public static Color MagicColor = Color.FromArgb(100, 100, 255);
+
+    // 错误/生命红色 (Error) -> 用于 Error
+    public static Color ErrorColor = Color.FromArgb(255, 80, 80);
+
     // 文本颜色
     public static Color TextColor = Color.FromArgb(240, 240, 240);
 
