@@ -52,8 +52,7 @@ public class PomodoroTimerService : IPomodoroTimerService
         _timerService = timerService;
         _appSettings = appSettings;
 
-        // 初始化定时器 (100ms 精度以保证显示流畅)
-        _timer = new System.Timers.Timer(100);
+        _timer = new System.Timers.Timer(60);
         _timer.AutoReset = true; // 确保它会循环触发
         _timer.Elapsed += OnTimerTick; // 注意：事件名从 Tick 变成了 Elapse
 
@@ -289,10 +288,12 @@ public class PomodoroTimerService : IPomodoroTimerService
         // 只有在整秒附近才触发，避免多次触发
         if (Math.Abs(totalSeconds - warnLong) < 0.05)
         {
+            LogManager.WriteDebugLog("Pomodoro", $"工作时间警告：{warnLong}秒");
             Toast.Info(LanguageManager.GetString("PomodoroWorkEndingLong", warnLong));
         }
         else if (Math.Abs(totalSeconds - warnShort) < 0.05)
         {
+            LogManager.WriteDebugLog("Pomodoro", $"工作时间警告：{warnShort}秒");
             Toast.Info(LanguageManager.GetString("PomodoroWorkEndingShort", warnShort));
         }
     }
