@@ -38,11 +38,13 @@ public class MainServices(
     private const int HOTKEY_ID_PAUSE = 2;
     private const int HOTKEY_ID_DELETE_HISTORY = 3;
     private const int HOTKEY_ID_RECORD_LOOT = 4;
+    private const int HOTKEY_ID_SHOW_LEADER_KEY_FORM = 5;
 
     private Keys _currentStartOrNextRunHotkey;
     private Keys _currentPauseHotkey;
     private Keys _currentDeleteHistoryHotkey;
     private Keys _currentRecordLootHotkey;
+    private Keys _currentShowLeaderKeyFormHotkey;
 
     [DllImport("user32.dll")]
     private static extern bool RegisterHotKey(IntPtr hWnd, int id, int fsModifiers, int vk);
@@ -68,6 +70,7 @@ public class MainServices(
         _currentPauseHotkey = _appSettings.HotkeyPause;
         _currentDeleteHistoryHotkey = _appSettings.HotkeyDeleteHistory;
         _currentRecordLootHotkey = _appSettings.HotkeyRecordLoot;
+        _currentShowLeaderKeyFormHotkey = _appSettings.HotkeyShowLeaderKeyForm;
 
         InitializeLanguageSupport();
         RegisterHotkeys();
@@ -103,7 +106,6 @@ public class MainServices(
 
         int id = m.WParam.ToInt32();
 
-
         switch (id)
         {
             case HOTKEY_ID_STARTSTOP:
@@ -123,6 +125,10 @@ public class MainServices(
             case HOTKEY_ID_RECORD_LOOT:
                 OnRequestTabChange?.Invoke(Models.TabPage.Timer);
                 OnRequestRecordLoot?.Invoke();
+                break;
+
+            case HOTKEY_ID_SHOW_LEADER_KEY_FORM:
+                _messenger.Publish(new ShowLeaderKeyFormMessage());
                 break;
         }
     }
@@ -152,6 +158,7 @@ public class MainServices(
         _currentPauseHotkey = _appSettings.HotkeyPause;
         _currentDeleteHistoryHotkey = _appSettings.HotkeyDeleteHistory;
         _currentRecordLootHotkey = _appSettings.HotkeyRecordLoot;
+        _currentShowLeaderKeyFormHotkey = _appSettings.HotkeyShowLeaderKeyForm;
 
         RegisterHotkeys();
         Utils.LogManager.WriteDebugLog("MainServices", "热键已重新注册");
@@ -202,6 +209,7 @@ public class MainServices(
             RegisterHotKey(_currentPauseHotkey, HOTKEY_ID_PAUSE);
             RegisterHotKey(_currentDeleteHistoryHotkey, HOTKEY_ID_DELETE_HISTORY);
             RegisterHotKey(_currentRecordLootHotkey, HOTKEY_ID_RECORD_LOOT);
+            RegisterHotKey(_currentShowLeaderKeyFormHotkey, HOTKEY_ID_SHOW_LEADER_KEY_FORM);
         }
     }
 
@@ -213,6 +221,7 @@ public class MainServices(
             UnregisterHotKey(_windowHandle, HOTKEY_ID_PAUSE);
             UnregisterHotKey(_windowHandle, HOTKEY_ID_DELETE_HISTORY);
             UnregisterHotKey(_windowHandle, HOTKEY_ID_RECORD_LOOT);
+            UnregisterHotKey(_windowHandle, HOTKEY_ID_SHOW_LEADER_KEY_FORM);
         }
     }
 

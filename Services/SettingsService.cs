@@ -62,6 +62,7 @@ public class AppSettings : IAppSettings
     public Keys HotkeyPause { get; set; } = Keys.Space | Keys.Control;
     public Keys HotkeyDeleteHistory { get; set; } = Keys.D | Keys.Control;
     public Keys HotkeyRecordLoot { get; set; } = Keys.A | Keys.Alt;
+    public Keys HotkeyShowLeaderKeyForm { get; set; } = Keys.G | Keys.Control;
 
     // 保存设置
     public void Save()

@@ -28,8 +28,10 @@ public class ShowMainWindowMessage { }
 
 public class OpacityChangedMessage { }
 
-// 【新增】请求截图消息 (携带掉落名称)
+// 请求截图消息 (携带掉落名称)
 public class ScreenshotRequestedMessage(string lootName)
 {
     public string LootName { get; } = lootName;
 }
+
+public class ShowLeaderKeyFormMessage { }

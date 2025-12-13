@@ -32,7 +32,11 @@ public partial class MainForm : System.Windows.Forms.Form
     private readonly SettingsControl _settingsControl = null!;
     private NotifyIcon _notifyIcon = null!;
     private ContextMenuStrip _trayMenu = null!;
+    private readonly ICommandDispatcher _commandDispatcher = null!;
+    private readonly CommandInitializer _commandInitializer = null!;
+    private LeaderKeyForm _leaderKeyForm = null!;
     private System.ComponentModel.IContainer _components = null!;
+
 
     public MainForm()
     {
@@ -51,7 +55,9 @@ public partial class MainForm : System.Windows.Forms.Form
         ProfileManager profileManager,
         TimerControl timerControl,
         PomodoroControl pomodoroControl,
-        SettingsControl settingsControl
+        SettingsControl settingsControl,
+        ICommandDispatcher commandDispatcher,
+        CommandInitializer commandInitializer
     )
         : this()
     {
@@ -64,8 +70,12 @@ public partial class MainForm : System.Windows.Forms.Form
         _timerControl = timerControl;
         _pomodoroControl = pomodoroControl;
         _settingsControl = settingsControl;
+        _commandDispatcher = commandDispatcher;
+        _commandInitializer = commandInitializer;
         _messenger = messenger;
 
+        _commandInitializer.Initialize();
+        _leaderKeyForm = new LeaderKeyForm(_commandDispatcher);
         InitializeChildControls();
         InitializeForm();
         InitializeSystemTray();
@@ -280,6 +290,20 @@ public partial class MainForm : System.Windows.Forms.Form
         _messenger.Subscribe<ShowMainWindowMessage>(_ => this.SafeInvoke(() => this.Opacity = _appSettings.Opacity));
         _messenger.Subscribe<TimerSettingsChangedMessage>(msg => this.SafeInvoke(() => AdjustWindowHeight()));
         _messenger.Subscribe<ScreenshotRequestedMessage>(OnScreenshotRequested);
+        _messenger.Subscribe<ShowLeaderKeyFormMessage>(_ => this.SafeInvoke(() =>
+        {
+            if (!_leaderKeyForm.Visible)
+            {
+                // 确保显示在当前屏幕 (多屏支持)
+                _leaderKeyForm.StartPosition = FormStartPosition.Manual;
+                var screen = Screen.FromControl(this);
+                _leaderKeyForm.Location = new Point(screen.Bounds.X, screen.Bounds.Bottom - _leaderKeyForm.Height);
+                _leaderKeyForm.Width = screen.Bounds.Width;
+
+                _leaderKeyForm.Show();
+                _leaderKeyForm.Activate();
+            }
+        }));
     }
     private void OnScreenshotRequested(ScreenshotRequestedMessage message)
     {
@@ -298,6 +322,7 @@ public partial class MainForm : System.Windows.Forms.Form
             catch (Exception ex)
             {
                 LogManager.WriteErrorLog("MainForm", "延迟截图失败", ex);
+                Utils.Toast.Error(LanguageManager.GetString("ScreenshotFailed") ?? "截图失败");
             }
         }));
     }
@@ -332,6 +357,7 @@ public partial class MainForm : System.Windows.Forms.Form
         catch (Exception ex)
         {
             LogManager.WriteErrorLog("MainForm", "截图流程异常", ex);
+            Utils.Toast.Error(LanguageManager.GetString("ScreenshotFailed") ?? "截图失败");
         }
         finally
         {

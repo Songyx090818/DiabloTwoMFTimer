@@ -41,6 +41,7 @@ public interface IAppSettings
     public Keys HotkeyPause { get; set; }
     public Keys HotkeyDeleteHistory { get; set; }
     public Keys HotkeyRecordLoot { get; set; }
+    public Keys HotkeyShowLeaderKeyForm { get; set; }
 
     // 方法
     void Save();

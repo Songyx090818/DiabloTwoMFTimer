@@ -103,8 +103,8 @@ public class CloseOptionForm : BaseForm
         _chkClose.Text = LanguageManager.GetString("CloseOptionExitApp");
 
         // 确保 BaseForm 的按钮使用我们新定义的颜色 (如果 BaseForm 没有自动应用)
-        if (this.btnConfirm != null) this.btnConfirm.BackColor = AppTheme.ButtonBackColor;
-        if (this.btnCancel != null) this.btnCancel.BackColor = AppTheme.ButtonBackColor;
+        if (this.btnConfirm != null) this.btnConfirm.BackColor = AppTheme.Colors.ButtonBackColor;
+        if (this.btnCancel != null) this.btnCancel.BackColor = AppTheme.Colors.ButtonBackColor;
     }
 
     private void OnLanguageChanged(object? sender, EventArgs e)
