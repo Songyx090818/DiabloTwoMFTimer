@@ -173,5 +173,9 @@
   "CloseOptionExitApp": "Exit Application",
   "DeleteHistoryConfirm": "Are you sure you want to delete this time record?\n\nRun #: {{0}}\nDuration: {{1}}",
   "DeleteLootConfirm": "Are you sure you want to delete this loot record?\n\nItem: {{0}}\nScene: {{1}}\nTime: {{2}}",
+  "HotkeyNone": "None",
+  "HotkeyPressToSetDetail": "Press key to set (Esc to cancel, Backspace to clear)",
+  "HotkeyLeader": "Leader Hotkey",
+  "PleasePressKey": "Please press a key",
   "DeleteConfirmTitle": "Delete Confirm"
 }

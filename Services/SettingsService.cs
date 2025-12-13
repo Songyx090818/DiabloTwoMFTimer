@@ -58,11 +58,11 @@ public class AppSettings : IAppSettings
     public int PomodoroWarningShortTime { get; set; } = 3; // 番茄钟短时间提示（实际值）
     public bool GenerateRoomName { get; set; } = true; // 是否生成房间名称
 
+    public Keys HotkeyLeader { get; set; } = Keys.Space | Keys.Control;
     public Keys HotkeyStartOrNext { get; set; } = Keys.Q | Keys.Alt;
-    public Keys HotkeyPause { get; set; } = Keys.Space | Keys.Control;
+    public Keys HotkeyPause { get; set; } = Keys.P | Keys.Control;
     public Keys HotkeyDeleteHistory { get; set; } = Keys.D | Keys.Control;
     public Keys HotkeyRecordLoot { get; set; } = Keys.A | Keys.Alt;
-    public Keys HotkeyShowLeaderKeyForm { get; set; } = Keys.G | Keys.Control;
 
     // 保存设置
     public void Save()

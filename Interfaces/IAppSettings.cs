@@ -37,11 +37,11 @@ public interface IAppSettings
     public Models.PomodoroMode PomodoroMode { get; set; }
 
     // 热键设置
+    public Keys HotkeyLeader { get; set; }
     public Keys HotkeyStartOrNext { get; set; }
     public Keys HotkeyPause { get; set; }
     public Keys HotkeyDeleteHistory { get; set; }
     public Keys HotkeyRecordLoot { get; set; }
-    public Keys HotkeyShowLeaderKeyForm { get; set; }
 
     // 方法
     void Save();
