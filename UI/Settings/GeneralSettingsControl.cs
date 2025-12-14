@@ -41,7 +41,7 @@ public partial class GeneralSettingsControl : UserControl
         cmbUiScale.Items.Add(new ScaleOption { Name = "Auto", Value = 0f });
         cmbUiScale.Items.Add(new ScaleOption { Name = "100% (1080P)", Value = 1.0f });
         cmbUiScale.Items.Add(new ScaleOption { Name = "150% (2K)", Value = 1.5f });
-        cmbUiScale.Items.Add(new ScaleOption { Name = "175%", Value = 1.6f });
+        cmbUiScale.Items.Add(new ScaleOption { Name = "175%", Value = 1.75f });
         cmbUiScale.Items.Add(new ScaleOption { Name = "200% (4K)", Value = 2.0f });
         cmbUiScale.Items.Add(new ScaleOption { Name = "250%", Value = 2.5f });
         cmbUiScale.SelectedIndex = 0;
@@ -72,7 +72,7 @@ public partial class GeneralSettingsControl : UserControl
             if (groupBoxLanguage != null)
             {
                 var langOption = AppSettings.StringToLanguage(settings.Language);
-                if (langOption == SettingsControl.LanguageOption.English)
+                if (langOption == Models.LanguageOption.English)
                     englishRadioButton!.Checked = true;
                 else
                     chineseRadioButton!.Checked = true;
@@ -84,19 +84,13 @@ public partial class GeneralSettingsControl : UserControl
                 var position = AppSettings.StringToWindowPosition(settings.WindowPosition);
                 switch (position)
                 {
-                    case SettingsControl.WindowPosition.TopCenter:
-                        radioTopCenter!.Checked = true;
-                        break;
-                    case SettingsControl.WindowPosition.TopRight:
+                    case Models.WindowPosition.TopRight:
                         radioTopRight!.Checked = true;
                         break;
-                    case SettingsControl.WindowPosition.BottomLeft:
+                    case Models.WindowPosition.BottomLeft:
                         radioBottomLeft!.Checked = true;
                         break;
-                    case SettingsControl.WindowPosition.BottomCenter:
-                        radioBottomCenter!.Checked = true;
-                        break;
-                    case SettingsControl.WindowPosition.BottomRight:
+                    case Models.WindowPosition.BottomRight:
                         radioBottomRight!.Checked = true;
                         break;
                     default:
@@ -171,28 +165,42 @@ public partial class GeneralSettingsControl : UserControl
     }
 
     // Properties
-    public SettingsControl.WindowPosition SelectedPosition
+    public Models.WindowPosition SelectedPosition
     {
         get
         {
-            if (radioTopCenter?.Checked ?? false)
-                return SettingsControl.WindowPosition.TopCenter;
             if (radioTopRight?.Checked ?? false)
-                return SettingsControl.WindowPosition.TopRight;
+                return Models.WindowPosition.TopRight;
             if (radioBottomLeft?.Checked ?? false)
-                return SettingsControl.WindowPosition.BottomLeft;
-            if (radioBottomCenter?.Checked ?? false)
-                return SettingsControl.WindowPosition.BottomCenter;
+                return Models.WindowPosition.BottomLeft;
             if (radioBottomRight?.Checked ?? false)
-                return SettingsControl.WindowPosition.BottomRight;
-            return SettingsControl.WindowPosition.TopLeft;
+                return Models.WindowPosition.BottomRight;
+            return Models.WindowPosition.TopLeft;
+        }
+        set
+        {
+            switch (value)
+            {
+                case Models.WindowPosition.TopLeft:
+                    radioTopLeft!.Checked = true;
+                    break;
+                case Models.WindowPosition.TopRight:
+                    radioTopRight!.Checked = true;
+                    break;
+                case Models.WindowPosition.BottomLeft:
+                    radioBottomLeft!.Checked = true;
+                    break;
+                case Models.WindowPosition.BottomRight:
+                    radioBottomRight!.Checked = true;
+                    break;
+            }
         }
     }
 
-    public SettingsControl.LanguageOption SelectedLanguage =>
+    public Models.LanguageOption SelectedLanguage =>
         (chineseRadioButton?.Checked ?? false)
-            ? SettingsControl.LanguageOption.Chinese
-            : SettingsControl.LanguageOption.English;
+            ? Models.LanguageOption.Chinese
+            : Models.LanguageOption.English;
 
     public bool IsAlwaysOnTop => alwaysOnTopCheckBox?.Checked ?? false;
 

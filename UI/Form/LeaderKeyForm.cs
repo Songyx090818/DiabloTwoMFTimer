@@ -34,7 +34,7 @@ public partial class LeaderKeyForm : System.Windows.Forms.Form
     // 【新增】当前等待输入的节点
     private KeyMapNode? _pendingInputNode = null;
 
-    private new System.Windows.Forms.Timer _animTimer = null!;
+    private System.Windows.Forms.Timer _animTimer = null!;
     private bool _isClosing = false;
     private const double TARGET_OPACITY = 0.95; // 目标透明度
     private const double ANIMATION_SPEED = 0.15; // 动画速度 (越大越快)

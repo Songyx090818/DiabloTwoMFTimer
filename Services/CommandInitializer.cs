@@ -137,7 +137,7 @@ public class CommandInitializer
             () =>
             {
                 _pomodoroTimerService.SwitchToNextState();
-                Utils.Toast.Info($"已切换到 {_pomodoroTimerService.CurrentState}");
+                Utils.Toast.Success($"已切换到 {_pomodoroTimerService.CurrentState}");
             }
         );
 
@@ -181,6 +181,24 @@ public class CommandInitializer
             }
         );
 
+        _dispatcher.Register(
+            "App.SetPosition",
+            (arg) =>
+            {
+                if (Enum.TryParse(arg?.ToString(), true, out Models.WindowPosition position))
+                {
+                    _appSettings.WindowPosition = position.ToString();
+                    _appSettings.Save();
+                    _messenger.Publish(new WindowPositionChangedMessage());
+                    Utils.Toast.Success($"已设置位置为 {position}");
+                }
+                else
+                {
+                    Utils.Toast.Error("请输入有效的位置");
+                }
+            }
+        );
+
         _dispatcher.Register("App.SetOpacity", (arg) =>
         {
             if (double.TryParse(arg?.ToString(), out double val))
@@ -192,8 +210,31 @@ public class CommandInitializer
                     return;
                 }
                 _appSettings.Opacity = val;
+                _appSettings.Save();
                 _messenger.Publish(new OpacityChangedMessage());
-                Utils.Toast.Info($"已设置透明度为 {val}");
+                Utils.Toast.Success($"已设置透明度为 {val}");
+            }
+        });
+        _dispatcher.Register("App.SetSize", (arg) =>
+        {
+            if (float.TryParse(arg?.ToString(), out float val) && val >= 1.0f && val <= 2.5f)
+            {
+                var result = DiabloTwoMFTimer.UI.Components.ThemedMessageBox.Show(
+                "界面缩放设置已保存。需要重启程序才能完全生效。\n\n是否立即重启？",
+                "需要重启",
+                MessageBoxButtons.YesNo
+            ); // 使用 YesNo 按钮
+                _appSettings.UiScale = val;
+                _appSettings.Save();
+                if (result == DialogResult.Yes)
+                {
+                    Application.Restart();
+                    Application.Exit();
+                }
+            }
+            else
+            {
+                Utils.Toast.Error("请输入 1.0 - 2.5 之间的数值");
             }
         });
 

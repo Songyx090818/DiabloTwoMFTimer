@@ -185,6 +185,12 @@ public class KeyMapRepository : IKeyMapRepository
                 [
                     new()
                     {
+                        Key = "q",
+                        Text = "角色页 (Char)",
+                        Action = "Nav.Profile",
+                    },
+                    new()
+                    {
                         Key = "w",
                         Text = "计时页 (Timer)",
                         Action = "Nav.Timer",
@@ -194,12 +200,6 @@ public class KeyMapRepository : IKeyMapRepository
                         Key = "e",
                         Text = "番茄钟 (Pomodoro)",
                         Action = "Nav.Pomodoro",
-                    },
-                    new()
-                    {
-                        Key = "q",
-                        Text = "角色页 (Char)",
-                        Action = "Nav.Profile",
                     },
                     new()
                     {
@@ -235,6 +235,22 @@ public class KeyMapRepository : IKeyMapRepository
                         Action = "App.SetOpacity",
                         RequiresInput = true,
                         InputHint = "输入 0.1 - 1.0 之间的数值",
+                    },
+                    new KeyMapNode
+                    {
+                        Key = "r",
+                        Text = "设置位置 (SetPosition)",
+                        Action = "App.SetPosition",
+                        RequiresInput = true,
+                        InputHint = "0 左上 1 右上 2 左下 3 右下",
+                    },
+                    new KeyMapNode
+                    {
+                        Key = "t",
+                        Text = "设置大小 (SetSize)",
+                        Action = "App.SetSize",
+                        RequiresInput = true,
+                        InputHint = "输入 1.0 - 2.5 之间的数值,注意修改后需要重新启动程序",
                     },
                     new()
                     {

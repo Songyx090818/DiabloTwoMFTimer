@@ -115,34 +115,34 @@ public class AppSettings : IAppSettings
 
     // UI相关转换方法
     // 将设置窗口的位置枚举转换为字符串
-    public static string WindowPositionToString(UI.Settings.SettingsControl.WindowPosition position)
+    public static string WindowPositionToString(Models.WindowPosition position)
     {
         return position.ToString();
     }
 
     // 将字符串转换为设置窗口的位置枚举
-    public static UI.Settings.SettingsControl.WindowPosition StringToWindowPosition(string positionStr)
+    public static Models.WindowPosition StringToWindowPosition(string positionStr)
     {
-        if (Enum.TryParse<UI.Settings.SettingsControl.WindowPosition>(positionStr, out var position))
+        if (Enum.TryParse<Models.WindowPosition>(positionStr, out var position))
         {
             return position;
         }
-        return UI.Settings.SettingsControl.WindowPosition.TopLeft;
+        return Models.WindowPosition.TopLeft;
     }
 
     // 将语言选项转换为字符串
-    public static string LanguageToString(UI.Settings.SettingsControl.LanguageOption language)
+    public static string LanguageToString(Models.LanguageOption language)
     {
         return language.ToString();
     }
 
     // 将字符串转换为语言选项
-    public static UI.Settings.SettingsControl.LanguageOption StringToLanguage(string languageStr)
+    public static Models.LanguageOption StringToLanguage(string languageStr)
     {
-        if (Enum.TryParse<UI.Settings.SettingsControl.LanguageOption>(languageStr, out var language))
+        if (Enum.TryParse<Models.LanguageOption>(languageStr, out var language))
         {
             return language;
         }
-        return UI.Settings.SettingsControl.LanguageOption.Chinese;
+        return Models.LanguageOption.Chinese;
     }
 }

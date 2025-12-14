@@ -12,22 +12,6 @@ namespace DiabloTwoMFTimer.UI.Settings;
 
 public partial class SettingsControl : UserControl
 {
-    public enum WindowPosition
-    {
-        TopLeft,
-        TopCenter,
-        TopRight,
-        BottomLeft,
-        BottomCenter,
-        BottomRight,
-    }
-
-    public enum LanguageOption
-    {
-        Chinese,
-        English,
-    }
-
     private readonly IAppSettings _appSettings = null!;
     private readonly IMessenger _messenger = null!;
 
@@ -191,20 +175,12 @@ public partial class SettingsControl : UserControl
                 x = screenBounds.Left;
                 y = screenBounds.Top;
                 break;
-            case WindowPosition.TopCenter:
-                x = screenBounds.Left + (screenBounds.Width - form.Width) / 2;
-                y = screenBounds.Top;
-                break;
             case WindowPosition.TopRight:
                 x = screenBounds.Right - form.Width;
                 y = screenBounds.Top;
                 break;
             case WindowPosition.BottomLeft:
                 x = screenBounds.Left;
-                y = screenBounds.Bottom - form.Height;
-                break;
-            case WindowPosition.BottomCenter:
-                x = screenBounds.Left + (screenBounds.Width - form.Width) / 2;
                 y = screenBounds.Bottom - form.Height;
                 break;
             case WindowPosition.BottomRight:
