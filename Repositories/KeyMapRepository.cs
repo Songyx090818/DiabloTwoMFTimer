@@ -73,41 +73,74 @@ public class KeyMapRepository : IKeyMapRepository
     /// </summary>
     private List<KeyMapNode> GenerateDefaultKeyMap()
     {
-        return new List<KeyMapNode>
-        {
+        return
+        [
+            new KeyMapNode
+            {
+                Key = "s",
+                Text = "开始 (Start)",
+                Action = "Timer.Next"
+            },
+            new KeyMapNode
+            {
+                Key = "d",
+                Text = "暂停 (Pause)",
+                Action = "Timer.Pause"
+            },
             new KeyMapNode
             {
                 Key = "t",
                 Text = "计时器 (Timer)",
-                Children = new List<KeyMapNode>
-                {
-                    new KeyMapNode { Key = "s", Text = "开始 (Start)", Action = "Timer.Start" },
-                    new KeyMapNode { Key = "p", Text = "暂停 (Pause)", Action = "Timer.Pause" },
-                    new KeyMapNode { Key = "r", Text = "重置 (Reset)", Action = "Timer.Reset" },
-                    new KeyMapNode { Key = "e", Text = "停止 (Stop)", Action = "Timer.Stop" }
-                }
+                Children =
+                [
+                    new() { Key = "s", Text = "启动 (Start)", Action = "Timer.Start" },
+                    new() { Key = "p", Text = "暂停 (Pause)", Action = "Timer.Pause" },
+                    new() { Key = "r", Text = "重置 (Reset)", Action = "Timer.Reset" }
+                ]
             },
             new KeyMapNode
             {
-                Key = "r",
+                Key = "e",
+                Text = "番茄钟 (Pomodoro)",
+                Children =
+                [
+                    new() { Key = "s", Text = "启动 (Start)", Action = "Pomodoro.Start" },
+                    new() { Key = "p", Text = "暂停 (Pause)", Action = "Pomodoro.Pause" },
+                    new() { Key = "r", Text = "重置 (Reset)", Action = "Pomodoro.Reset" }
+                ]
+            },
+            new KeyMapNode
+            {
+                Key = "r", // Add
                 Text = "记录 (Record)",
-                Children = new List<KeyMapNode>
-                {
-                    new KeyMapNode { Key = "d", Text = "删除最后一条", Action = "Record.DeleteLast" },
-                    new KeyMapNode { Key = "u", Text = "撤销删除", Action = "Record.UndoDelete" }
-                }
+                Children =
+                [
+                    new() { Key = "l", Text = "添加掉落 (Loot)", Action = "Loot.Add" },
+                    new() { Key = "d", Text = "删除上一次 (Delete Last)", Action = "Record.DeleteLast" }
+                ]
             },
             new KeyMapNode
             {
-                Key = "u",
-                Text = "工具 (Utils)",
-                Children = new List<KeyMapNode>
-                {
-                    new KeyMapNode { Key = "s", Text = "截图 (Screenshot)", Action = "System.Screenshot" },
-                    new KeyMapNode { Key = "c", Text = "设置 (Config)", Action = "System.Settings" },
-                    new KeyMapNode { Key = "q", Text = "退出程序", Action = "App.Exit" }
-                }
+                Key = "g", // Go / Goto
+                Text = "导航 (Go)",
+                Children =
+                [
+                    new() { Key = "2", Text = "计时页 (Timer)", Action = "Nav.Timer" },
+                    new() { Key = "3", Text = "番茄钟 (Pomodoro)", Action = "Nav.Pomodoro" },
+                    new() { Key = "1", Text = "角色页 (Char)", Action = "Nav.Profile" },
+                    new() { Key = "4", Text = "设置 (Settings)", Action = "Nav.Settings" }
+                ]
+            },
+            new KeyMapNode
+            {
+                Key = "s",
+                Text = "系统 (System)",
+                Children =
+                [
+                    new() { Key = "s", Text = "截图 (Screenshot)", Action = "System.Screenshot" },
+                    new() { Key = "q", Text = "退出程序 (Quit)", Action = "App.Exit" }
+                ]
             }
-        };
+        ];
     }
 }

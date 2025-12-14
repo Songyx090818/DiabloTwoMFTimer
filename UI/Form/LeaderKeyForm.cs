@@ -6,6 +6,7 @@ using System.Threading.Tasks; // 引用 Task
 using System.Windows.Forms;
 using DiabloTwoMFTimer.Interfaces;
 using DiabloTwoMFTimer.Models;
+using DiabloTwoMFTimer.Repositories;
 using DiabloTwoMFTimer.UI.Components;
 using DiabloTwoMFTimer.UI.Theme;
 using DiabloTwoMFTimer.Utils;
@@ -19,16 +20,20 @@ public partial class LeaderKeyForm : System.Windows.Forms.Form
     // UI 控件
     private FlowLayoutPanel _breadcrumbPanel = null!; // 面包屑导航栏
     private FlowLayoutPanel _itemsPanel = null!;      //按键选项区域
-    // private ThemedLabel _lblPrompt = null!;           // 提示文字
+                                                      // private ThemedLabel _lblPrompt = null!;           // 提示文字
 
     // 状态数据
     private readonly Stack<KeyMapNode> _pathStack = new(); // 记录当前路径
-    private List<KeyMapNode> _currentNodes;                // 当前显示的节点列表
+    private List<KeyMapNode> _currentNodes = null!;       // 当前显示的节点列表
+
+    private readonly IKeyMapRepository _keyMapRepository;
+
 
     // 构造函数：支持依赖注入，但也允许为空方便测试
-    public LeaderKeyForm(ICommandDispatcher? commandDispatcher = null)
+    public LeaderKeyForm(ICommandDispatcher? commandDispatcher = null, IKeyMapRepository? keyMapRepository = null)
     {
-        _commandDispatcher = commandDispatcher;
+        _commandDispatcher = commandDispatcher ?? throw new ArgumentNullException(nameof(commandDispatcher));
+        _keyMapRepository = keyMapRepository ?? throw new ArgumentNullException(nameof(keyMapRepository));
 
         // 1. 窗体基础设置
         this.FormBorderStyle = FormBorderStyle.None;
@@ -44,7 +49,7 @@ public partial class LeaderKeyForm : System.Windows.Forms.Form
 
         // 3. 加载初始数据 (如果没传入数据，使用测试数据)
         // 实际使用时，应该从 KeyMapRepository 获取
-        _currentNodes = GetMockData();
+        RefreshData();
         RefreshUI();
     }
 
@@ -194,9 +199,9 @@ public partial class LeaderKeyForm : System.Windows.Forms.Form
                 _pathStack.Pop();
                 // 重新获取上一层的节点列表
                 if (_pathStack.Count > 0)
-                    _currentNodes = _pathStack.Peek().Children ?? new List<KeyMapNode>();
+                    _currentNodes = _pathStack.Peek().Children ?? [];
                 else
-                    _currentNodes = GetMockData(); // 回到根目录
+                    _currentNodes = _keyMapRepository.LoadKeyMap();
 
                 RefreshUI();
             }
@@ -257,14 +262,21 @@ public partial class LeaderKeyForm : System.Windows.Forms.Form
             ThemedMessageBox.Show($"[演示模式] 执行命令:\n{node.Action}\n\n描述: {node.Text}", "Leader Key Action");
         }
 
+        LogManager.WriteDebugLog("LeaderKeyForm", $"执行操作: {node.Action}");
         // 执行完重置状态，下次打开回到根目录
         ResetState();
     }
 
     private void ResetState()
     {
+        LogManager.WriteDebugLog("LeaderKeyForm", $"重置状态: 清空路径栈");
         _pathStack.Clear();
-        _currentNodes = GetMockData();
+        // 确保 _currentNodes 不为空
+        if (_currentNodes == null || _currentNodes.Count == 0)
+        {
+            // 再次尝试重新加载，或者给个空列表
+            _currentNodes = [];
+        }
         RefreshUI();
     }
 
@@ -288,32 +300,34 @@ public partial class LeaderKeyForm : System.Windows.Forms.Form
         return string.Empty;
     }
 
-    // 测试数据 (模拟 YAML 读取结果)
-    private List<KeyMapNode> GetMockData()
+    /// <summary>
+    /// 公开一个刷新数据的方法，方便在修改配置后热重载
+    /// </summary>
+    public void RefreshData()
     {
-        return new List<KeyMapNode>
+        try
         {
-            new KeyMapNode
-            {
-                Key = "t", Text = "计时器 (Timer)",
-                Children = new List<KeyMapNode>
-                {
-                    new KeyMapNode { Key = "s", Text = "开始 (Start)", Action = "Timer.Start" },
-                    new KeyMapNode { Key = "p", Text = "暂停 (Pause)", Action = "Timer.Pause" },
-                    new KeyMapNode { Key = "r", Text = "重置 (Reset)", Action = "Timer.Reset" }
-                }
-            },
-            new KeyMapNode
-            {
-                Key = "r", Text = "记录管理 (Records)",
-                Children = new List<KeyMapNode>
-                {
-                    new KeyMapNode { Key = "d", Text = "删除掉落", Action = "Loot.Delete" },
-                    new KeyMapNode { Key = "t", Text = "删除时间", Action = "History.Delete" }
-                }
-            },
-            new KeyMapNode { Key = "s", Text = "截图 (Screenshot)", Action = "System.Screenshot" },
-            new KeyMapNode { Key = "q", Text = "退出程序", Action = "App.Exit" }
-        };
+            _currentNodes = _keyMapRepository.LoadKeyMap();
+        }
+        catch (Exception ex)
+        {
+            // 如果读取失败，至少保证程序不崩，给一个错误提示节点
+            _currentNodes =
+            [
+                new KeyMapNode { Text = $"配置加载失败: {ex.Message}", Key = "!" }
+            ];
+        }
+        ResetState();
+    }
+
+    protected override void OnVisibleChanged(EventArgs e)
+    {
+        base.OnVisibleChanged(e);
+
+        // 当窗口变为可见时，强制重置到根目录
+        if (this.Visible)
+        {
+            ResetState();
+        }
     }
 }

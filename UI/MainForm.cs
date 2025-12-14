@@ -33,6 +33,7 @@ public partial class MainForm : System.Windows.Forms.Form
     private NotifyIcon _notifyIcon = null!;
     private ContextMenuStrip _trayMenu = null!;
     private readonly ICommandDispatcher _commandDispatcher = null!;
+    private readonly IKeyMapRepository _keyMapRepository = null!;
     private readonly CommandInitializer _commandInitializer = null!;
     private LeaderKeyForm _leaderKeyForm = null!;
     private System.ComponentModel.IContainer _components = null!;
@@ -57,7 +58,8 @@ public partial class MainForm : System.Windows.Forms.Form
         PomodoroControl pomodoroControl,
         SettingsControl settingsControl,
         ICommandDispatcher commandDispatcher,
-        CommandInitializer commandInitializer
+        CommandInitializer commandInitializer,
+        IKeyMapRepository keyMapRepository
     )
         : this()
     {
@@ -69,13 +71,14 @@ public partial class MainForm : System.Windows.Forms.Form
         _profileManager = profileManager;
         _timerControl = timerControl;
         _pomodoroControl = pomodoroControl;
+        _keyMapRepository = keyMapRepository;
         _settingsControl = settingsControl;
         _commandDispatcher = commandDispatcher;
         _commandInitializer = commandInitializer;
         _messenger = messenger;
 
         _commandInitializer.Initialize();
-        _leaderKeyForm = new LeaderKeyForm(_commandDispatcher);
+        _leaderKeyForm = new LeaderKeyForm(_commandDispatcher, _keyMapRepository);
         InitializeChildControls();
         InitializeForm();
         InitializeSystemTray();

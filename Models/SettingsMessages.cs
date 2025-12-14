@@ -35,3 +35,6 @@ public class ScreenshotRequestedMessage(string lootName)
 }
 
 public class ShowLeaderKeyFormMessage { }
+
+public class ShowBreakFormMessage { }
+public class ShowPomodoroSettingsFormMessage { }
