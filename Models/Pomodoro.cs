@@ -44,6 +44,7 @@ public class PomodoroTimeSettings
     public int ShortBreakSeconds { get; set; } = 0;
     public int LongBreakMinutes { get; set; } = 15;
     public int LongBreakSeconds { get; set; } = 0;
+    public PomodoroMode PomodoroMode { get; set; } = PomodoroMode.Automatic;
 }
 
 // 番茄钟事件参数类

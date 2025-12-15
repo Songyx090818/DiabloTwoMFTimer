@@ -48,6 +48,7 @@ public static class AppTheme
         public static Font Console { get; private set; } = null!; // 等宽 (原 ConsoleFont)
 
         // 计时器专用
+        public static Font RomanTimer { get; private set; } = null!; // (原 BigTimeFont)
         public static Font TimerBig { get; private set; } = null!; // (原 BigTimeFont)
         public static Font TimerFull { get; private set; } = null!; // (原 FullTimeFont)
         public static Font BigTitle { get; private set; } = null!; // (原 BigTitleFont)
@@ -71,6 +72,7 @@ public static class AppTheme
             BigTitle = new Font("微软雅黑", ScaleHelper.ScaleFont(BaseBigFontSize), FontStyle.Bold);
 
             Console = new Font("Consolas", ScaleHelper.ScaleFont(BaseMainFontSize), FontStyle.Regular);
+            RomanTimer = new Font("Times New Roman", ScaleHelper.ScaleFont(BaseBigTimeFontSize), FontStyle.Bold);
 
             TimerBig = new Font("Verdana", ScaleHelper.ScaleFont(BaseBigTimeFontSize), FontStyle.Bold);
             TimerFull = new Font("Consolas", BaseFullTimeFontSize, FontStyle.Bold); // 这个通常不缩放或者特殊处理

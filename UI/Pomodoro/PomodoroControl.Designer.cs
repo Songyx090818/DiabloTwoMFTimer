@@ -1,4 +1,5 @@
 using System.Drawing;
+using System.Windows.Forms;
 using DiabloTwoMFTimer.UI.Components;
 using DiabloTwoMFTimer.Utils;
 
@@ -176,5 +177,7 @@ partial class PomodoroControl
 
     private PomodoroTimeDisplayLabel lblPomodoroTime;
     private DiabloTwoMFTimer.UI.Components.PomodoroStatusDisplay pomodoroStatusDisplay1;
+
+    private Label _lblModeMark;
     #endregion
 }

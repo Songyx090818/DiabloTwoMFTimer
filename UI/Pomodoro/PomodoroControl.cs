@@ -1,8 +1,10 @@
 using System;
+using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using DiabloTwoMFTimer.Interfaces;
 using DiabloTwoMFTimer.Models;
+using DiabloTwoMFTimer.UI.Theme;
 using DiabloTwoMFTimer.Utils;
 
 namespace DiabloTwoMFTimer.UI.Pomodoro;
@@ -37,6 +39,7 @@ public partial class PomodoroControl : UserControl
         _statsService = statsService;
         _messenger = messenger;
 
+        InitializeModeMark();
         LoadSettings();
         lblPomodoroTime.BindService(_timerService);
         SubscribeEvents();
@@ -48,6 +51,29 @@ public partial class PomodoroControl : UserControl
         this.btnShowStats.Click += BtnShowStats_Click;
 
         UpdateUI();
+    }
+
+    private void InitializeModeMark()
+    {
+        _lblModeMark = new Label
+        {
+            // 使用衬线体显示罗马数字更有质感，或者用 Consolas 保持代码风
+            // 这里推荐 Times New Roman 粗体，更有 Diablo/极简 风格
+            Font = AppTheme.Fonts.RomanTimer,
+            ForeColor = AppTheme.Colors.Primary, // 使用您的砂金色
+            BackColor = Color.Transparent,
+            AutoSize = true,
+            TextAlign = ContentAlignment.MiddleCenter,
+            Text = "I", // 默认值
+        };
+
+        // 布局定位：建议放在左上角，或者计时器的正上方/正下方
+        // 这里示例放在右上角，作为状态角标
+        _lblModeMark.Location = new Point(this.Width - 60, 10);
+        _lblModeMark.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+
+        this.Controls.Add(_lblModeMark);
+        _lblModeMark.BringToFront();
     }
 
     private void SubscribeEvents()
@@ -126,6 +152,7 @@ public partial class PomodoroControl : UserControl
             _timerService.Settings.ShortBreakSeconds = settingsForm.ShortBreakSeconds;
             _timerService.Settings.LongBreakMinutes = settingsForm.LongBreakMinutes;
             _timerService.Settings.LongBreakSeconds = settingsForm.LongBreakSeconds;
+            // _timerService.Settings.PomodoroMode = settingsForm;
 
             _appSettings.PomodoroWarningLongTime = settingsForm.WarningLongTime;
             _appSettings.PomodoroWarningShortTime = settingsForm.WarningShortTime;
@@ -189,6 +216,32 @@ public partial class PomodoroControl : UserControl
         // 仅在休息时间启用统计按钮
         btnShowStats.Enabled = _timerService.CanShowStats;
         btnNextState.Enabled = _timerService.IsRunning;
+
+        switch (_appSettings.PomodoroMode)
+        {
+            case PomodoroMode.Automatic:
+                _lblModeMark.Text = "I";
+                // 可选：专注模式下高亮
+                _lblModeMark.ForeColor = AppTheme.Colors.Primary;
+                // 如果有 ToolTip，可以加上: _toolTip.SetToolTip(_lblModeMark, "Focus (专注)");
+                break;
+
+            case PomodoroMode.SemiAuto:
+                _lblModeMark.Text = "II";
+                // 可选：休息模式下稍微变暗，或者用绿色表示放松
+                _lblModeMark.ForeColor = AppTheme.Colors.Success;
+                break;
+
+            case PomodoroMode.Manual:
+                _lblModeMark.Text = "III";
+                _lblModeMark.ForeColor = AppTheme.Colors.Info;
+                break;
+
+            default:
+                _lblModeMark.Text = "";
+                break;
+        }
+
 
         UpdateCountDisplay();
     }
@@ -257,6 +310,7 @@ public partial class PomodoroControl : UserControl
 
     private void SaveSettings()
     {
+        // _appSettings.PomodoroMode = _timerService.Settings.PomodoroMode;
         _appSettings.WorkTimeMinutes = _timerService.Settings.WorkTimeMinutes;
         _appSettings.WorkTimeSeconds = _timerService.Settings.WorkTimeSeconds;
         _appSettings.ShortBreakMinutes = _timerService.Settings.ShortBreakMinutes;
