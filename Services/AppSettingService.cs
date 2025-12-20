@@ -20,7 +20,7 @@ public class AppSettings : IAppSettings
         .Build();
 
     // 窗口设置
-    public string WindowPosition { get; set; } = "TopLeft";
+    public string WindowPosition { get; set; } = "TopRight";
     public double Opacity { get; set; } = 1.0;
     public float UiScale { get; set; } = 0f;
     public bool AlwaysOnTop { get; set; } = true;

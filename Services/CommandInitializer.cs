@@ -1,6 +1,3 @@
-using System;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using DiabloTwoMFTimer.Interfaces;
 using DiabloTwoMFTimer.Models; // 引用 TabPage 枚举
 
@@ -14,6 +11,7 @@ public class CommandInitializer
     private readonly IMainService _mainService;
     private readonly IAppSettings _appSettings;
     private readonly IProfileService _profileService;
+    private readonly IWindowCMDService _windowCMDService;
 
     // UI 相关的动作通常需要通过 Messenger 或者直接注入 Controller (不太推荐)
     // 这里我们通过 Messenger 发送指令，或者直接调用 Service
@@ -26,7 +24,8 @@ public class CommandInitializer
         IMainService mainService,
         IAppSettings appSettings,
         IMessenger messenger,
-        IProfileService profileService
+        IProfileService profileService,
+        IWindowCMDService windowCMDService
     )
     {
         _dispatcher = dispatcher;
@@ -36,6 +35,7 @@ public class CommandInitializer
         _appSettings = appSettings;
         _messenger = messenger;
         _profileService = profileService;
+        _windowCMDService = windowCMDService;
     }
 
     public void Initialize()
@@ -91,12 +91,10 @@ public class CommandInitializer
                 if (_pomodoroTimerService.IsRunning)
                 {
                     _pomodoroTimerService.Pause();
-                    Utils.Toast.Info("番茄钟已暂停");
                 }
                 else
                 {
                     _pomodoroTimerService.Start();
-                    Utils.Toast.Success("番茄钟已启动");
                 }
             }
         );
@@ -125,11 +123,11 @@ public class CommandInitializer
                 if (int.TryParse(arg?.ToString(), out int minutes) && minutes > 0 && minutes <= 59)
                 {
                     _pomodoroTimerService.AddMinutes(minutes);
-                    Utils.Toast.Info($"已增加 {minutes} 分钟");
+                    Utils.Toast.Info(Utils.LanguageManager.GetString("PomodoroAddedMinutes", minutes));
                 }
                 else
                 {
-                    Utils.Toast.Error("请输入 1 - 59 之间的数值");
+                    Utils.Toast.Error(Utils.LanguageManager.GetString("PomodoroInvalidMinutesRange"));
                 }
             }
         );
@@ -139,7 +137,7 @@ public class CommandInitializer
             () =>
             {
                 _pomodoroTimerService.SwitchToNextState();
-                Utils.Toast.Success($"已切换到 {_pomodoroTimerService.CurrentState}");
+                Utils.Toast.Success(Utils.LanguageManager.GetString("PomodoroStateSwitched", _pomodoroTimerService.CurrentState));
             }
         );
 
@@ -189,97 +187,6 @@ public class CommandInitializer
             {
                 _mainService.SetActiveTabPage(Models.TabPage.Timer);
                 _messenger.Publish(new ToggleLootVisibilityMessage());
-            }
-        );
-
-        // --- 系统/导航 ---
-        _dispatcher.Register(
-            "App.Exit",
-            () =>
-            {
-                _mainService.HandleApplicationClosing();
-                Application.Exit();
-            }
-        );
-
-        // 最小化到托盘
-        _dispatcher.Register(
-            "App.Minimize",
-            () =>
-            {
-                _messenger.Publish(new MinimizeToTrayMessage());
-            }
-        );
-
-        // 从托盘恢复 (这个命令通常通过全局 LeaderKey 触发)
-        _dispatcher.Register(
-            "App.Restore",
-            () =>
-            {
-                _messenger.Publish(new RestoreFromTrayMessage());
-            }
-        );
-
-        _dispatcher.Register(
-            "App.SetPosition",
-            (arg) =>
-            {
-                if (Enum.TryParse(arg?.ToString(), true, out Models.WindowPosition position))
-                {
-                    _appSettings.WindowPosition = position.ToString();
-                    _appSettings.Save();
-                    _messenger.Publish(new WindowPositionChangedMessage());
-                    Utils.Toast.Success($"已设置位置为 {position}");
-                }
-                else
-                {
-                    Utils.Toast.Error("请输入有效的位置");
-                }
-            }
-        );
-
-        _dispatcher.Register(
-            "App.SetOpacity",
-            (arg) =>
-            {
-                if (double.TryParse(arg?.ToString(), out double val))
-                {
-                    // 调用调整透明度的逻辑
-                    if (val < 0.1 || val > 1.0)
-                    {
-                        Utils.Toast.Error("透明度值必须在 0.1-1.0 之间");
-                        return;
-                    }
-                    _appSettings.Opacity = val;
-                    _appSettings.Save();
-                    _messenger.Publish(new OpacityChangedMessage());
-                    Utils.Toast.Success($"已设置透明度为 {val}");
-                }
-            }
-        );
-        _dispatcher.Register(
-            "App.SetSize",
-            (arg) =>
-            {
-                if (float.TryParse(arg?.ToString(), out float val) && val >= 1.0f && val <= 2.5f)
-                {
-                    var result = DiabloTwoMFTimer.UI.Components.ThemedMessageBox.Show(
-                        "界面缩放设置已保存。需要重启程序才能完全生效。\n\n是否立即重启？",
-                        "需要重启",
-                        MessageBoxButtons.YesNo
-                    ); // 使用 YesNo 按钮
-                    _appSettings.UiScale = val;
-                    _appSettings.Save();
-                    if (result == DialogResult.Yes)
-                    {
-                        Application.Restart();
-                        Application.Exit();
-                    }
-                }
-                else
-                {
-                    Utils.Toast.Error("请输入 1.0 - 2.5 之间的数值");
-                }
             }
         );
 
@@ -346,7 +253,7 @@ public class CommandInitializer
                 }
                 else
                 {
-                    Utils.Toast.Error($"未输入场景名称");
+                    Utils.Toast.Error(Utils.LanguageManager.GetString("SceneNameNotProvided"));
                 }
             }
         );
@@ -365,7 +272,7 @@ public class CommandInitializer
                 _appSettings.ShowNavigation = !_appSettings.ShowNavigation;
                 _appSettings.Save();
                 _messenger.Publish(new NavigationVisibilityChangedMessage());
-                Utils.Toast.Success($"导航栏已{(_appSettings.ShowNavigation ? "显示" : "隐藏")}");
+                Utils.Toast.Success(Utils.LanguageManager.GetString(_appSettings.ShowNavigation ? "NavigationShown" : "NavigationHidden"));
             }
         );
 
@@ -385,14 +292,36 @@ public class CommandInitializer
                     }
                     else
                     {
-                        Utils.Toast.Error("请输入 1-3 之间的数字");
+                        Utils.Toast.Error(Utils.LanguageManager.GetString("PomodoroInvalidModeNumber"));
                     }
                 }
                 else
                 {
-                    Utils.Toast.Error("请输入有效的数字");
+                    Utils.Toast.Error(Utils.LanguageManager.GetString("PomodoroInvalidNumber"));
                 }
             }
         );
+        _dispatcher.Register(
+            "Pomodoro.SetMode.Automatic",
+            () =>
+            {
+                _mainService.SetPomodoroMode(Models.PomodoroMode.Automatic);
+            }
+        );
+        _dispatcher.Register(
+            "Pomodoro.SetMode.SemiAuto",
+            () =>
+            {
+                _mainService.SetPomodoroMode(Models.PomodoroMode.SemiAuto);
+            }
+        );
+        _dispatcher.Register(
+            "Pomodoro.SetMode.Manual",
+            () =>
+            {
+                _mainService.SetPomodoroMode(Models.PomodoroMode.Manual);
+            }
+        );
+        _windowCMDService.Initialize();
     }
 }

@@ -112,10 +112,28 @@ public class KeyMapRepository : IKeyMapRepository
                     new()
                     {
                         Key = "s",
-                        Text = "切换模式",
-                        Action = "Pomodoro.SetMode",
-                        RequiresInput = true,
-                        InputHint = "输入 1 - 3 之间的数值",
+                        Text = "设置模式",
+                        Children =
+                        [
+                            new()
+                            {
+                                Key = "q",
+                                Text = "自动",
+                                Action = "Pomodoro.SetMode.Automatic",
+                            },
+                            new()
+                            {
+                                Key = "w",
+                                Text = "半自动",
+                                Action = "Pomodoro.SetMode.SemiAuto",
+                            },
+                            new()
+                            {
+                                Key = "e",
+                                Text = "手动",
+                                Action = "Pomodoro.SetMode.Manual",
+                            },
+                        ],
                     },
                     new()
                     {
@@ -262,7 +280,7 @@ public class KeyMapRepository : IKeyMapRepository
                     new()
                     {
                         Key = "s",
-                        Text = "切换场景",
+                        Text = "设置场景",
                         Action = "Scene.Switch",
                         RequiresInput = true,
                         InputHint = "输入场景的英文短名称 (如: Coun, Pit, Gamble)",
@@ -338,9 +356,37 @@ public class KeyMapRepository : IKeyMapRepository
                     {
                         Key = "r",
                         Text = "设置位置",
-                        Action = "App.SetPosition",
-                        RequiresInput = true,
-                        InputHint = "0 左上 1 右上 2 左下 3 右下",
+                        Children =
+                        [
+                            new()
+                            {
+                                Key = "q",
+                                Text = "左上",
+                                Action = "App.SetPosition.TopLeft",
+                                RequiresInput = false,
+                            },
+                            new()
+                            {
+                                Key = "w",
+                                Text = "右上",
+                                Action = "App.SetPosition.TopRight",
+                                RequiresInput = false,
+                            },
+                            new()
+                            {
+                                Key = "e",
+                                Text = "左下",
+                                Action = "App.SetPosition.BottomLeft",
+                                RequiresInput = false,
+                            },
+                            new()
+                            {
+                                Key = "r",
+                                Text = "右下",
+                                Action = "App.SetPosition.BottomRight",
+                                RequiresInput = false,
+                            },
+                        ],
                     },
                     new KeyMapNode
                     {
